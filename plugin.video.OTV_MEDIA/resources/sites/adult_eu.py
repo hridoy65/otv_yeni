@@ -239,7 +239,7 @@ def orhantvalman():
    
     oGui.setEndOfDirectory()
 #ADDON_DATA_DIR = xbmc.translatePath(addon.getAddonInfo('path'))
-RESOURCES_ = os.path.join(ADDON_DATA_DIR, 'resources','sayfa')
+RESOURCES_ = os.path.join(ADDON_DATA_DIR, 'resources','sites')
 RESOURCES = os.path.join(ADDON_DATA_DIR, 'resources','sites')
 def turkupdate(): 
     oGui = cGui()
