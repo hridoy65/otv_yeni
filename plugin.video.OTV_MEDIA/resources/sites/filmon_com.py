@@ -120,10 +120,10 @@ def FILMON():
                    
                     
     oGui.setEndOfDirectory()
-def Hosterster():
+def FILMON():
     oGui = cGui()
     oInputParameterHandler = cInputParameterHandler()
-    url = oInputParameterHandler.getValue('siteUrl')
+    url = 'http://www.filmon.com/tv/live'
     sMovieTitle = oInputParameterHandler.getValue('sMovieTitle')
     sThumbnail = oInputParameterHandler.getValue('sThumbnail')
     
@@ -268,6 +268,7 @@ def sshow3Filmon():
         for aEntry in aResult[1]:
             #sPic = str(aEntry[0])
             Url = aEntry[0]
+            logger.info("Url: %s" %Url)
             sTitle = malfabekodla( aEntry[1])
             oOutputParameterHandler = cOutputParameterHandler()
             oOutputParameterHandler.addParameter('siteUrl', Url)
@@ -627,12 +628,14 @@ def Filmonvod33():
 	   
     url = oInputParameterHandler.getValue('siteUrl')
     
+    Ur=resolve(url)
+    logger.info("-------: %s" %Ur)
     Url='http://www.filmon.com/channel/' + url
  #   cookie = getUrl(url, output='cookie').result
 #    headers = {'cookie': cookie,'X-Requested-With': 'XMLHttpRequest'}
 
    
-    
+    logger.info("Url: %s" %Url)
     oRequest = cRequestHandler(Url)
     oRequest.addHeaderEntry('Referer', 'http://www.filmon.com/group/')
     oRequest.addHeaderEntry('Accept-Language', 'en-US,en;q=0.5')
@@ -644,7 +647,7 @@ def Filmonvod33():
   
 #    sHtmlContent  = getUrl(url, cookie=cookie, headers=headers)
     sHtmlContent = str(sHtmlContent).replace('\/','/')                 
-        #sPattern = '<div class="imagefilm"> *<a href="(.+?)" title="(.+?)".+?<img src="(.+?)" alt="(.+?)"'
+    logger.info("sHtmlContent: %s" %sHtmlContent)
     sPattern = '"quality":"(.*?)","url":"(.*?)"'
     
     
@@ -665,7 +668,7 @@ def Filmonvod33():
             
             sTitle = aEntry[0]
             h =  '|Referer=' + Url + '&User-Agent=Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0'
-            sUrl = aEntry[1]+h
+            sUrl = aEntry[1]#+h
             sPicture='https://static.filmon.com/theme/img/watch-hd-without-ads.png'
            
             sTitle = malfabekodla(sTitle)
@@ -733,7 +736,7 @@ def mFilmonvod33():
            
             sTitle = aEntry[0]
             h =  '|Referer=' + Url + '&User-Agent=Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0'
-            sUrl = aEntry[1]+h
+            sUrl = aEntry[1]#+h
             sPicture='https://static.filmon.com/theme/img/watch-hd-without-ads.png'
            
             sTitle = malfabekodla(sTitle)
@@ -841,26 +844,29 @@ def partplay__():
   
     oGui.setEndOfDirectory()
 
+def resolve(cid, html = '', referer=None):
+		
+			urll='https://www.filmon.com/group/uk-live-tv'# + cid
+			headers = {'X-Requested-With': 'XMLHttpRequest', 'Referer': urll}
 
+			url = 'http://www.filmon.com/ajax/getChannelInfo?channel_id=%s' % cid
+			s = requests.session()
+			s.headers.update(headers)
+			result = s.get(url).text
 
+			return  json.loads(result)
+	
+		#	return result  
 
 def sshowBox3():
-    oGui = cGui()
-    oInputParameterHandler = cInputParameterHandler()
-    sHosterUrl = oInputParameterHandler.getValue('siteUrl')
-    sTitle = oInputParameterHandler.getValue('sMovieTitle')
-    sTitle = malfabekodla(sTitle)
-    
-    
-    
-    
-    oGuiElement = cGuiElement()
-    oGuiElement.setSiteName(SITE_IDENTIFIER)
-    oGuiElement.setTitle(sTitle)
-    oGuiElement.setMediaUrl(sHosterUrl)
-        
-
-    oPlayer = cPlayer()
-    oPlayer.clearPlayList()
-    oPlayer.addItemToPlaylist(oGuiElement)
-    oPlayer.startPlayer()  
+  oGui = cGui()
+  oInputParameterHandler = cInputParameterHandler()
+  Url = oInputParameterHandler.getValue('siteUrl')
+  sTitle = oInputParameterHandler.getValue('sMovieTitle')
+  if '.json' in Url:#sTitle = malfabekodla(sTitle)
+    son =gegetHtml(Url)
+    jsonn =json.loads(son)
+    logger.info("json: %s" %jsonn)
+    Url =jsonn[0]['file']
+  import streamer
+  streamer.sstreamer(sTitle,Url)

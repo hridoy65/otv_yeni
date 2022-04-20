@@ -13,7 +13,7 @@ def iostreamcanlitv():
     oGui = cGui()
     urlkk= "http://www.canlitv.stream/" 
     oInputParameterHandler = cInputParameterHandler()
-    sUrl = 'http://www.canlitv.stream/kategoriler'
+    sUrl = 'https://www.canlitv.today/kategoriler'
    
     oRequestHandler = cRequestHandler(sUrl)
     sHtmlContent = oRequestHandler.request()

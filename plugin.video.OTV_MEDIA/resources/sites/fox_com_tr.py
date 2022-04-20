@@ -64,12 +64,12 @@ def orhatvturk():
     oGui.addDir(SITE_IDENTIFIER, 'tviptv', 'Türk IPTV 2', 'turkey-free-iptv.png', oOutputParameterHandler)
 
     oOutputParameterHandler = cOutputParameterHandler()
-    oOutputParameterHandler.addParameter('siteUrl', 'https://www.sporizle1.pw')
+    oOutputParameterHandler.addParameter('siteUrl', 'https://www.sporizle7.pw')
     oGui.addDir(SITE_IDENTIFIER, 'rakiptv', 'Türk IPTV 3', 'turkey-free-iptv.png', oOutputParameterHandler)
 
-    oOutputParameterHandler = cOutputParameterHandler()
-    oOutputParameterHandler.addParameter('siteUrl', 'http://')
-    oGui.addDir(SITE_IDENTIFIER, 'rmootatam', 'Türk VE AZ TV HD', 'turkazeri.jpg', oOutputParameterHandler)
+   # oOutputParameterHandler = cOutputParameterHandler()
+   # oOutputParameterHandler.addParameter('siteUrl', 'http://')
+   # oGui.addDir(SITE_IDENTIFIER, 'rmootatam', 'Türk VE AZ TV HD', 'turkazeri.jpg', oOutputParameterHandler)
 
     oOutputParameterHandler = cOutputParameterHandler()
     oOutputParameterHandler.addParameter('siteUrl', 'http://')
@@ -120,9 +120,9 @@ def tviptv():
 def rakiptv():
     oGui = cGui()
     oInputParameterHandler = cInputParameterHandler()
-    Url = 'https://www.sporizle6.pw'
-    oRequestHandler = cRequestHandler(Url)
-    sHtmlContent = oRequestHandler.request()
+    Url = 'https://www.sporizle7.pw'
+    #oRequestHandler = cRequestHandler(Url)
+    sHtmlContent = gegetHtml(Url)
     sPattern = '<a href="/live/turkish/(.*?)" title=".*?" class="list-group-item"> <div class="row"> <div class="col-xs-4 col-sm-2 col-md-4"> <img src="(.*?)" alt=".*?"> </div> <div class="col-xs-20 col-sm-22 col-md-20"> <div class="sidenavChannel"><strong style="color:red">CANLI</strong> - (.+?)</div> <div class="sidenavShortdesc">Turkish</div>'
     oParser = cParser()
     aResult = oParser.parse(sHtmlContent, sPattern)
@@ -130,7 +130,7 @@ def rakiptv():
         total = len(aResult[1])
         for aEntry in aResult[1]:
             sTitle = aEntry[2]
-            sPicture = 'https://www.sporizle6.pw'+aEntry[1]
+            sPicture = 'https://www.sporizle7.pw'+aEntry[1]
             sUrl = str(aEntry[0])
             sTitle = malfabekodla(sTitle)
             
@@ -142,6 +142,28 @@ def rakiptv():
 
     oGui.setEndOfDirectory()
 
+def cookie2( Url ):
+    oGui = cGui()
+   
+    
+  
+
+    UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36'
+    headers = {"User-Agent": UA}
+    req = urllib2.Request(Url, None, headers)
+    try:
+       response = urllib2.urlopen(req)
+    except UrlError as e:
+       print(e.read())
+       print(e.reason)
+    return response.headers
+   # sHtmlContent = to_utf8(response.read())
+  #  head = response.headers
+   # sPattern = 'Set-Cookie: token=(.*?);'
+   # oParser = cParser()
+    #aResult = oParser.parse(head, sPattern)
+   # if (aResult[0] == True):
+#         return  aResult[1][0]
 
 UA = 'Mozilla/5.0 (Linux; Android 7.1.2; SM-N976N Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/75.0.3770.143 Mobile Safari/537.36'
 def rakip24():
@@ -153,65 +175,54 @@ def rakip23():
         oGui = cGui()
         oInputParameterHandler = cInputParameterHandler()
         Url = oInputParameterHandler.getValue('siteUrl')
-        sUrl = 'https://www.sporizle6.pw/live/turkish/' + Url 
+        sUrl = 'https://www.sporizle7.pw/live/turkish/' + Url 
         sThumbnail = oInputParameterHandler.getValue('sThumbnail')
         name = oInputParameterHandler.getValue('sMovieTitle')
-        Urluu = 'https://www.sporizle6.pw/embed/' + Url + '?web'
+        Urluu = 'https://www.sporizle7.pw/embed/' + Url + '?web'
         cf = getHtml(Urluu)
         ata= re.search('data-i="(.+?)"', cf).group(1)        
-        url1 = 'https://www.sporizle6.pw/cdn/js/ads.php?'+ata+'&www.sporizle6.pw' 
-        headers1 = {'user-agent':UA,
-               'Host':'www.sporizle6.pw',
-               'Connection':'keep-alive',
-               'Referer':Urluu,
-               'X-Requested-With':'com.android.browser' 
+        url1 = 'https://www.sporizle7.pw/cdn/js/ads.php?'+ata+'&www.sporizle7.pw' 
+       # Ur = 'https://www.sporizle7.pw/'
+        #cooki =cookie2(Ur)
+        #logger.info("cooki : %s" % cooki) 
+        headers1 = {'Cookie':'_ga=GA1.2.423130517.1645557964; pop_4=1; _gid=GA1.2.1638336219.1647975119; dom3ic8zudi28v8lr6fgphwffqoz0j6c=b13d7ddb-9928-4b24-98d7-a8006b184997%3A1%3A1; pop_2=1; _gat=1',
+               'Host':'www.sporizle7.pw',
+               'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36',
+               'Accept-Language':'de,en-US;q=0.7,en;q=0.3',
+               'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+               
+               'Referer':'https://www.sporizle7.pw',
+               'Connection':'close',
+               'Accept-Encoding':'gzip, deflate'
                 }
-#Host: www.sporizle6.pw
-#Connection: keep-alive
-#User-Agent: Mozilla/5.0 (Linux; Android 7.1.2; SM-N976N Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/75.0.3770.143 Mobile Safari/537.36
-#Accept: */*
-#Referer: https://www.sporizle6.pw/embed/beinsport-1-live?web
-#Accept-Language: de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7
-#X-Requested-With: com.android.browser
-#Accept-Encoding: gzip, deflate
 
-#Host: www.sporizle6.pw
-#Connection: keep-alive
-#Accept: */*
-#Origin: https://www.sporizle6.pw
-#X-Requested-With: XMLHttpRequest
-#User-Agent: Mozilla/5.0 (Linux; Android 7.1.2; SM-N976N Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/75.0.3770.143 Mobile Safari/537.36
-#Content-Type: application/x-www-form-urlencoded; charset=UTF-8
-#Referer: https://www.sporizle6.pw/embed/beinsport-1-live?web
-#Accept-Language: de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7
-#Cookie: pop_4=1
-#Accept-Encoding: gzip, deflate
-#Content-Length: 49
-        
         req = s.get(url1, headers=headers1)
         data = req.text
-        import httpcore
-        
+        data =to_utf8(data)
+         
         #response =httpcore.request("GET", url1)
         #data =response.content
         #dat=response.headers
-        data= to_utf8(data)
-        #data = req.text
-        logger.info("ads.php : %s" % data)
+         #data = req.text
+        logger.info("Urluu : %s" % Urluu)
         sec= re.search('sec:"(.+?)"', data).group(1) 
         logger.info("sec: %s" % sec)
        # logger.info("captoken(): %s" % captoken())
+#        post_data = {"e": captoken(),"sec": sec,"id": ata}
         post_data = {"e": captoken(),"sec": sec,"id": ata}
-        r = s.post(Urluu , headers={"Host": "www.sporizle6.pw","Cookie": "pop_4=1","Origin": "https://www.sporizle6.pw","Referer": sUrl,"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8","User-Agent": UA,"Connection": "Keep-Alive","x-requested-with": "XMLHttpRequest"}, data=post_data, timeout=10)
+        r = s.post(Urluu , headers={"Host": "www.sporizle7.pw","Cookie": "_ga=GA1.2.423130517.1645557964; pop_4=1; _gid=GA1.2.1638336219.1647975119; dom3ic8zudi28v8lr6fgphwffqoz0j6c=b13d7ddb-9928-4b24-98d7-a8006b184997%3A1%3A1; pop_2=1; _gat=1","Origin": "https://www.sporizle7.pw","Referer": sUrl,"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8","User-Agent": UA,"Connection": "Keep-Alive","x-requested-with": "XMLHttpRequest"}, data=post_data, timeout=10)
         suby = r.text                                                                                                   
         suby =to_utf8(suby)
+        from resources.lib.handler.requestHandler import cRequestHandler
+
         logger.info("suby: %s" % suby)
         sub =suby[::-1]+'=='
         m3u8=yaz64(sub)
-        m3u8=m3u8.replace('c10','c3')#+'|Host=c6.izletv.xyz\/\/orhan-t&Access-Control-Allow-Origin=https://www.sporizle6.pw&Referer=https://www.sporizle6.pw/&User-Agent='+ generate_user_agent()
-                #dom3ic8zudi28v8lr6fgphwffqoz0j6c/dom3ic8zudi28v8lr6fgphwffqoz0j6cv10'
-        
-        logger.info("m3u8 : %s" % m3u8)
+        #m3u8=m3u8.replace('c10','c3')#+'|Host=c6.izletv.xyz\/\/orhan-t&Access-Control-Allow-Origin=https://www.sporizle6.pw&Referer=https://www.sporizle6.pw/&User-Agent='+ generate_user_agent()
+                    #dom3ic8zudi28v8lr6fgphwffqoz0j6c/dom3ic8zudi28v8lr6fgphwffqoz0j6cv10'
+# Sec-WebSocket-Extensions: permessage-deflate
+#Sec-WebSocket-Key: kqO92pVyeqqhpF2ilUFsxA==       
+#text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9        
         ref ='|User-Agent=Mozilla/5.0%20%28Linux%3B%20Android%207.0%3B%20SM-G892A%20Build/NRD90M%3B%20wv%29%20AppleWebKit/537.36%20%28KHTML%2C%20like%20Gecko%29%20Version/4.0%20Chrome/67.0.3396.87%20Mobile%20Safari/537.36&Accept=%2A/%2A&DNT=1&Accept-Encoding=gzip%2C%20deflate&Accept-Language=en-US%2Cen%3Bq%3D0.5'
         addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]'+name,m3u8+ref,'')           
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36'
@@ -484,7 +495,7 @@ def foxcomtr():
     oGui = cGui()
     liste = []
     liste.append( ['FOX_TV CANLI YAYIN','https://www.fox.com.tr/canli-yayin'] ) 
-    liste.append( ['FOX_TV Yedek','https://www.canlitv.me/fox-canli-izle'] ) 
+    liste.append( ['FOX_TV Yedek','https://www.canlitv.today/fox-tv-1'] ) 
     liste.append( ['DİZİLER+PROGRAMLAR','https://www.fox.com.tr/canli-yayin'] )
 #    liste.append( ['FILMLER','https://www.foxplay.com.tr/ajax/movies/1/20/date'] )
 
@@ -853,25 +864,40 @@ def Auth():
     return sHosterUrl        
  
 def sshowBox3():
-    oGui = cGui()
+   try:
     
-    oInputParameterHandler = cInputParameterHandler()
-    url = oInputParameterHandler.getValue('siteUrl')
-    name = oInputParameterHandler.getValue('sMovieTitle')
+        oInputParameterHandler = cInputParameterHandler()
+        url = oInputParameterHandler.getValue('siteUrl')
+        name = oInputParameterHandler.getValue('sMovieTitle')
+                  
+    
    
-    
-    
-    url  = "https://www.fox.com.tr/canli-yayin"                   
-    data=getHtml(url) 
-    data = str(data).replace("' + '","").replace("'+'","") 
-    rUrl = re.findall("videoSrc :.*?st=(.*?)'", data, re.S)[0]
-    logger.info("Good ata :" +rUrl)
-    rUrl = rUrl.replace("\\","")
-          
-    url = 'https://foxtv-live-ad.ercdn.net/foxtv/playlist.m3u8?st='+ rUrl
-    Header = 'User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.75 Safari/537.36'
-    #+ '|' + Header                          
-    addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]'+name,url,'')
+        url  = "https://www.fox.com.tr/canli-yayin"                   
+        data=getHtml(url)                                         # videoSrc : !activateDAI ? '
+        data = str(data).replace("videoSrc : !activateDAI ? '","videoSrc='")#.replace("'+'","") 
+        rUrl = re.findall("videoSrc='.*?' : '(.*?)'", data, re.S)[0]
+    #logger.info("Good ata :" +str(rUrl))
+        rUrl = rUrl.replace("\\","")
+        ref ='|User-Agent=Mozilla/5.0%20%28Linux%3B%20Android%207.0%3B%20SM-G892A%20Build/NRD90M%3B%20wv%29%20AppleWebKit/537.36%20%28KHTML%2C%20like%20Gecko%29%20Version/4.0%20Chrome/67.0.3396.87%20Mobile%20Safari/537.36&Accept=%2A/%2A&DNT=1&Accept-Encoding=gzip%2C%20deflate&Accept-Language=en-US%2Cen%3Bq%3D0.5'
+           
+        url =  rUrl #+ref
+            # referer=https://www.fox.com.tr/canli-yayin&
+                            
+        addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]'+name,url,'')
+   except Exception as e:
+
+        name = 'FOX_TV CANLI YAYIN 2'  
+        url  = "https://www.fox.com.tr/canli-yayin"                   
+        data=getHtml(url)                                         # videoSrc : !activateDAI ? '
+        data = str(data).replace("videoSrc : !activateDAI ? '","videoSrc='")#.replace("'+'","") 
+        rUrl = re.findall("videoSrc='(.*?)'", data, re.S)[0]
+    #logger.info("Good ata :" +str(rUrl))
+        rUrl = rUrl.replace("\\","")
+        ref ='|User-Agent=Mozilla/5.0%20%28Linux%3B%20Android%207.0%3B%20SM-G892A%20Build/NRD90M%3B%20wv%29%20AppleWebKit/537.36%20%28KHTML%2C%20like%20Gecko%29%20Version/4.0%20Chrome/67.0.3396.87%20Mobile%20Safari/537.36&Accept=%2A/%2A&DNT=1&Accept-Encoding=gzip%2C%20deflate&Accept-Language=en-US%2Cen%3Bq%3D0.5'
+        url =  rUrl +ref
+        addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]'+name,url,'')
+
+
 def playnext(url):
     urla  = "http://www.fox.com.tr/"          
                        
@@ -930,6 +956,23 @@ def foxparca():
     player_type = sPlayerType()
     xbmcPlayer = xbmc.Player (player_type); 
     xbmcPlayer.play (playlist)    
+def sPlayerType():
+        sPlayerType = self.ADDON.getSetting('playerType')
+
+        try:
+            if (sPlayerType == '0'):
+                #VSlog('playertype from config: auto')
+                return xbmc.PLAYER_CORE_AUTO
+
+            if (sPlayerType == '1'):
+                #VSlog('playertype from config: mplayer')
+                return xbmc.PLAYER_CORE_MPLAYER
+
+            if (sPlayerType == '2'):
+                #VSlog('playertype from config: dvdplayer')
+                return xbmc.PLAYER_CORE_DVDPLAYER
+        except:
+            return False
 
 def int_to_str( n, b, symbols='0123456789abcdefghijklmnopqrstuvwxyz'):
 		return (int_to_str(n/b, b, symbols) if n >= b else "") + symbols[n%b]

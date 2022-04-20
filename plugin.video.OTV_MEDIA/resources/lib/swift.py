@@ -23,7 +23,7 @@ from future.moves.http.cookiejar import LWPCookieJar
 from requests.packages.urllib3.util import Retry
 from requests.adapters import HTTPAdapter
 from warnings import simplefilter
-from resources.sites.LIVETV2 import * 
+
 simplefilter("ignore")
 """ disable IPv6 """
 import socket
@@ -95,7 +95,6 @@ class VodStream(BaseModel):
     agent = TextField()
     referer = TextField()
 
-
 class SwiftStream:
     def __init__(self, cache_dir):
         self.CACHE_TIME = 8 * 60 * 60
@@ -104,7 +103,7 @@ class SwiftStream:
         db.init(DB)
         db.connect()
         db.create_tables([Token, Category, Channel, Stream, Video, VodStream], safe=True)
-        self.base_url = "https://www.swiftstreamz.cc/SwiftStreamzv2.2/data.php"
+        self.base_url = "https://www.swiftstreamz.cc/SwiftStreamzv2.4/data.php"
         self.user_agent = "Dalvik/2.1.0 (Linux; U; Android 9; AFTSSS Build/PS7223)"
         self.player_user_agent = "Lavf/56.15.102"
         self.s = requests.Session()
@@ -129,7 +128,7 @@ class SwiftStream:
     def get_post_data(self):
         data = {}
         _hash_int = str(randint(0, 900 - 1))
-        _hash_token = bytearray.fromhex("e4bb96e5aabde79a84e4bda0e5aabde5aabde5928ce5a790e5a790e4b88be59cb0e78d84")
+        _hash_token = bytearray.fromhex("e5b181e882a1e6b7b7e89b8be4bab2e590bbe68891e79a84e9b8a1e5b7b4e4bb96e5a688e79a84")
         _hash_int_bytes = bytearray(_hash_int, "utf-8")
         _hash = md5(_hash_token + _hash_int_bytes).hexdigest()
         data["data"] = _hash_int
@@ -137,8 +136,6 @@ class SwiftStream:
         return data
 
     def api_request(self, url, params=None, data=None, r_json=True):
-        
-        logger.info('url>%s' % url) 
         headers = {"Connection": "Keep-Alive", "Accept-Encoding": "gzip"}
         if data:
             headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
@@ -160,7 +157,7 @@ class SwiftStream:
         data = self.get_post_data()
         data["method_name"] = "token_data"
         res = self.api_request(self.base_url, data=data)
-        logger.info('data>%s' % data)
+
         def tokens(res):
             for token in res["token_list"]:
                 yield {"t_id": token.get("t_id"), "token_link": token.get("token_link")}
@@ -324,8 +321,6 @@ class SwiftStream:
 
     def get_stream_link(self, stream):
         data = self.get_post_data()
-        logger.info('stream_url>%s' % stream.stream_url)
-        logger.info('token_link>%s' % stream.token.token_link)
         data["method_name"] = "token_data"
         _token = self.api_request(stream.token.token_link, data=data, r_json=False).partition("=")[2]
         auth_token = "".join(

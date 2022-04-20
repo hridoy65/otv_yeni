@@ -300,7 +300,7 @@ def play_blutv():
 #    ua='Mozilla/5.0 (Windows NT 10.0; rv:62.0) Gecko/20100101'
 #    url=requests.get(urll,headers={'User-Agent':ua,'Referer':'https://hdfilme.tv/','Accept':'/*','Connection':'keep-alive','Origin': 'https://hdfilme.tv','Accept-Language': 'de,en-US;q=0.7,en;q=0.3'}).text
                                   
-        sHosterUrl =sUrl+Url+'|Refererr='+ Referer +'&User-Agentr=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:61.0) Gecko/20100101 Firefox/'+Url
+        sHosterUrl =sUrl+Url+'|Refererr=https://www.tv8.com.tr/&User-Agentr=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'#+Url
         sTitle = oInputParameterHandler.getValue('sMovieTitle')
               
        
@@ -587,42 +587,44 @@ def tv8canli():
     dat=gegetUrl(UrlL,headers=referer) 
         
     Url= re.findall('file: "(.*?)"', dat, re.S)[0]
-    
-    h = '|Referer=http://www.blutv.com.tr&User-Agent=Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36 OPR/41.0.2353.69'
+    Url=Url.replace("https://tv8-tb-live.ercdn.net/","http://tb-live.cdn.tv8.com.tr/")
     ua='Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
-    Content=requests.get(Url,headers={'User-Agent': ua,'Referer': 'https://www.tv8.com.tr','Accept':'/*','Connection':'keep-alive','Origin': 'https://www.blutv.com.tr','Accept-Language': 'de,en-US;q=0.7,en;q=0.3'}).text
+    Content=requests.get(Url,headers={'User-Agent': ua,'Referer': 'https://www.tv8.com.tr/canli-yayin'}).text
     sHtmlContent = re.findall('#EXT-X-STREAM.*?RESOLUTION=.*?x.*?NAME=(.*?)\n(.*?)\n', Content, re.S)
     for sTitle,UrlL  in sHtmlContent:          
-                              
+                                                      
 
             
-            UrlL =UrlL.replace('playlist.m3u8','').replace('tv8int','tv8hd')
+            #UrlL =UrlL.replace('playlist.m3u8','').replace('tv8int','tv8hd')#.replace('tv8-geo','tv8')
            
             sTitle=sTitle.replace(',CODECS="avc1.64e00a,mp4a.40.2"','')
             oOutputParameterHandler = cOutputParameterHandler()
             oOutputParameterHandler.addParameter('sMovieTitle', sTitle)
             oOutputParameterHandler.addParameter('Referer', 'https://www.tv8.com.tr')
-            oOutputParameterHandler.addParameter('siteUrl','https://tv8-tb-live.ercdn.net/tv8-geo/'+ UrlL)
+#            oOutputParameterHandler.addParameter('siteUrl','https://tv8-tb-live.ercdn.net/tv8-geo/'+ UrlL)
+            oOutputParameterHandler.addParameter('siteUrl','http://tb-live.cdn.tv8.com.tr/tv8-geo/'+ UrlL)
+
             oOutputParameterHandler.addParameter('UrlL', UrlL)
             oGui.addTV(SITE_IDENTIFIER, 'play_blutv', sTitle, '', '', '', oOutputParameterHandler)
 
         
     oGui.setEndOfDirectory()
-        
-              
+                                                              
+                        
 def play_blutv():
         oGui = cGui()
         oInputParameterHandler = cInputParameterHandler()
         Referer =oInputParameterHandler.getValue('Referer')
         sUrl = oInputParameterHandler.getValue('UrlL')
         Url = oInputParameterHandler.getValue('siteUrl')#Referer:'+ Referer +'&User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:61.0) Gecko/20100101 Firefox/61.0
-                                  
-        url =Url+'|Referer='+ Referer +'/&User-Agentr=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36'
+
+             #Referer=https://www.tv8.com.tr/canli-yayin&                     
+        url =Url+'|Referer=http://tb-live.cdn.tv8.com.tr/&Host=tv8-tb-live.ercdn.net&User-Agentr=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36'
         name = oInputParameterHandler.getValue('sMovieTitle')
-        addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]'+name,url,'')#    url= getUrl(osta).result 
+        addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]'+name,url.replace('tv8int','tv8hd').replace('720','1080'),'')#    url= getUrl(osta).result 
 #    url=url[0]
 #    url=url.replace('tv8hd_720p', 'https://tv8-tb-live.ercdn.net/tv8-geo/tv8hd_720p')
-        
+                    #   UrlL =UrlL.replace('playlist.m3u8','').replace('tv8int','tv8hd')            
 #    url=sHosterUrl+ '|' + Header 
 
 

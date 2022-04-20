@@ -27,7 +27,7 @@ def sEcho(s):
 def CanLiTVlive():
     oGui = cGui()
    
-    
+    addons = addon()
     oInputParameterHandler = cInputParameterHandler()
     Url = oInputParameterHandler.getValue('siteUrl')
    
@@ -49,20 +49,46 @@ def CanLiTVlive():
                 break
            
             sTitle = aEntry[1]
-            sPicture = aEntry[2]
-            if not 'http' in sPicture:
-                sPicture = str(urlkkmm) + sPicture   
+            sThumb = aEntry[2]
+            if not 'http' in sThumb:
+                sThumb = str(urlkkmm) + sThumb   
             sUrl = str(aEntry[0])
             if not 'http' in sUrl:
                 sUrl = str(urlkkmm) + sUrl
-           
-            #sTitle = alfabekodla(sTitle)
             
+            from PIL import Image
+            response =  gegetHtml(sThumb)
+            from resources.lib import comon
+            response = to_utf8(response)
+            response = urlopen(sThumb)
+            logger.info("response: %s" % response)
+            from io import BytesIO                      #  sThumb = to_utf8(sThumb)
+            img = Image.open()
+            
+            img = img.resize((285,428), Image.ANTIALIAS)
+            sFanart=sThumb
             oOutputParameterHandler = cOutputParameterHandler()
             oOutputParameterHandler.addParameter('siteUrl', sUrl)
             oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
-            oOutputParameterHandler.addParameter('sThumbnail', sPicture) #sortis du poster
-            oGui.addMovie(SITE_IDENTIFIER, 'sshowBox19', sTitle, sPicture, sPicture, '', oOutputParameterHandler)
+            oOutputParameterHandler.addParameter('sThumbnail', img) #sortis du poster
+            cGui.CONTENT = "movies"
+            oGuiElement = cGuiElement()
+            oGuiElement.setTmdbId(sUrl)
+            oGuiElement.setFunction('sshowBox19')
+            oGuiElement.setTitle(sTitle)
+            oGuiElement.setFileName(sTitle)
+            oGuiElement.setIcon('libretv.jpg')
+            oGuiElement.setMeta(1)
+            oGuiElement.setThumbnail(img)
+            oGuiElement.setPoster(img)
+            oGuiElement.setFanart(sFanart)
+            oGuiElement.setCat(1)
+            #    oGuiElement.setDescription(sDesc)
+            #    oGuiElement.setYear(sYear)
+            #    oGuiElement.setGenre(sYear)
+
+            oGui.addFolder(oGuiElement, oOutputParameterHandler)
+
  
         progress_.VSclose(progress_)
         sNextPage =sEcho(str(Url))
@@ -70,7 +96,9 @@ def CanLiTVlive():
         oOutputParameterHandler.addParameter('siteUrl', sNextPage)
         oGui.addDir(SITE_IDENTIFIER, 'CanLiTVlive', '[COLOR teal]Next >>>[/COLOR]', 'next.png', oOutputParameterHandler)
   
-    oGui.setEndOfDirectory()
+    view = addons.getSetting('visuel-view')
+
+    oGui.setEndOfDirectory(view)   
 
 
 

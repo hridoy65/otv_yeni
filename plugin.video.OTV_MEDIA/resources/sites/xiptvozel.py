@@ -16,7 +16,7 @@ class NoRedirection(urllib2.HTTPErrorProcessor):
   def http_response(self, request, response):
     return response
 
-
+HOST = 'XBMC'
 addon = xbmcaddon.Addon()
 class track():
     def __init__(self, length, title, path, icon,data=''):
@@ -41,7 +41,7 @@ if not os.path.exists(USER_DATA_DIR):
 
 cert_file = os.path.join(RESOURCES_DIR, "com.android.browser-key.cer")
 cert_key_file = os.path.join(RESOURCES_DIR, "com.android.browser.cer")
-
+sRootArt = 'special://home/addons/plugin.video.OTV_MEDIA/resources/art/tv'
 #s.cert = (cert_file, cert_key_file)
 ddatam_url = 'http://app.liveplanettv.com/beta/api.php?device_id=354630080742220'
 AddonID = 'plugin.video.OTV_MEDIA'
@@ -94,7 +94,7 @@ headers = {'User-Agent': UA, 'Accept': '*/*', 'Connection': 'keep-alive'}
 icon = 'tv.png'
 # /home/lordvenom/.kodi/
 # sRootArt = cConfig().getRootArt()
-sRootArt = 'special://home/addons/plugin.video.vstream/resources/art/tv'
+#sRootArt = 'special://home/addons/plugin.video.vstream/resources/art/tv'
 
 
 from requests.sessions import Session
@@ -144,36 +144,183 @@ def iptvuser_info():
     oOutputParameterHandler.addParameter('siteUrl', 'https://')
     oGui.addDir('Swift', 'root', 'SwiftStream', 'SWIFTlogo.png', oOutputParameterHandler)
     
-#    oOutputParameterHandler = cOutputParameterHandler()
-#    oOutputParameterHandler.addParameter('siteUrl', 'https://')
-#    oGui.addDir('seyiret', 'maina', 'LIVE NET', 'turkey-free-iptv.png', oOutputParameterHandler)
     
       
     oOutputParameterHandler = cOutputParameterHandler()
     oOutputParameterHandler.addParameter('siteUrl', 'https://')
     oGui.addDir('livenettv', 'root', 'Live NetTV v4.8.2', 'LIVENETLogo.png', oOutputParameterHandler)
+    oOutputParameterHandler = cOutputParameterHandler()
+    oOutputParameterHandler.addParameter('siteUrl', 'https://')
+    oGui.addDir(SITE_IDENTIFIER, 'peerstv', 'Peers.TV', 'turkey-free-iptv.png', oOutputParameterHandler)
     
     
     oOutputParameterHandler = cOutputParameterHandler()
     oOutputParameterHandler.addParameter('siteUrl', 'https://')
     oGui.addDir(SITE_IDENTIFIER, 'iptvtv','TV WORLD', 'turkey-free-iptv.png', oOutputParameterHandler)
+
+    oOutputParameterHandler = cOutputParameterHandler()
+    oOutputParameterHandler.addParameter('siteUrl', 'https://')
+    oGui.addDir(SITE_IDENTIFIER, 'STB_link3','FREE IPTV (DAILY)', 'turkey-free-iptv.png', oOutputParameterHandler)
+
     oOutputParameterHandler = cOutputParameterHandler()
     oOutputParameterHandler.addParameter('siteUrl', 'https://')
     oGui.addDir(SITE_IDENTIFIER, 'OKliveTV', 'OKliveTV World ', 'turkey-free-iptv.png', oOutputParameterHandler)
      
     
+    oOutputParameterHandler = cOutputParameterHandler()
+    oOutputParameterHandler.addParameter('siteUrl', 'https://')
+    oGui.addDir(SITE_IDENTIFIER, 'getStreams', 'OKliveTV World ', 'turkey-free-iptv.png', oOutputParameterHandler)
+     
+    oOutputParameterHandler = cOutputParameterHandler()
+    oOutputParameterHandler.addParameter('siteUrl', 'https://')
+    oGui.addDir(SITE_IDENTIFIER, 'mgetStreams', 'OKliveTV World ', 'turkey-free-iptv.png', oOutputParameterHandler)
     
-#    oOutputParameterHandler = cOutputParameterHandler()
-#    oOutputParameterHandler.addParameter('siteUrl', 'https://')
-#    oGui.addDir(SITE_IDENTIFIER, 'iptvtv', 'OKliveTV World ', 'turkey-free-iptv.png', oOutputParameterHandler)
     
-    
-
+                            
+          
     oGui.setEndOfDirectory()
+          #Host: turkvod.online           
+             # Accept-Encoding: gzip, deflate
+def Url_Al(url):
+    if url:
+        req = Request(url, None, {'User-agent': 'Mozilla/5.0 TURKvod-10',
+        'Host': 'turkvod.online',
+        'Connection': 'Keep-Alive',
+        'Accept-Encoding': 'gzip, deflat'})
+    
+    else:
+        req = Request(url, None, {'User-agent': 'Mozilla/5.0 TURKvod-10',
+        'Host': 'turkvod.online',
+        'Connection': 'Keep-Alive',
+        'Accept-Encoding': 'gzip, deflat'})
+    xmlstream = urlopen(req).read()
+    if PY3:
+        xmlstream = to_utf8(xmlstream)    
+    return xmlstream
+
+                #http://turkvod.org/10/modul.php?site=hdfilmcehennemi2&tur=f&url=https%3A%2F%2Fwww.hdfilmcehennemi2.co%2Fcesetler-evi-izle.html&title=CESETLER+EVI+
+def getStreams():
+       # from resources.lib import cache
+      # http://turkvod.online/apk/2/all_movies.php?box_mac=23:23:23:23:23:23&key=turkvod
+       #url='http://turkvod.online/10/tv_index.php?&box_mac=08:00:27:79:88:1D&key=turkvod'
+    oGui = cGui()
+    url='http://www.sawlive.tv/embed/durmoun'
+    cf=getHtml(url)
+    
+    from OTVJSfuckdec import OTVJSfuck  
+  #  data= re.search("http://www.'(.+?);",cf).group(1)
+    #data1= re.search('replace("/strea/",(.+?);',cf).group(1)
+    #Urll=OTVJSfuck(data1).decode()
+    #logger.info("Urrl : %s" % Urll)
+                                  
+    urll= OTVJSfuck(cf).decode()
+    logger.info("ret: %s" %str(urll))
+def loadTxt(filenameTxt):
+    for line in filenameTxt:
+         return  line
+def mgetStreams():
+       # from resources.lib import cache
+      # http://turkvod.online/apk/2/all_movies.php?box_mac=23:23:23:23:23:23&key=turkvod
+       #url='http://turkvod.online/10/tv_index.php?&box_mac=08:00:27:79:88:1D&key=turkvod'
+    oGui = cGui()
+    url='https://v2.sportsonline.to/prog.txt'
+    line=getHtml(url)
+    #line = loadTxt(infile)
+    line = line.split('  ')
+    logger.info("ret0: %s" %str(line))
+#    line = line.split('\t')
+#    logger.info("ret1: %s" %str(line))
+   # line = line.split('\u')
+   # logger.info("ret2: %s" %str(line)) 
+#    line = line.split('\n')
+#    logger.info("ret3: %s" %str(line))
+        #ret = json.loads(ret)
+        #info, key = ret['i7'], ret['k7']
 
 
-        
+    try:
+        total = len(result)
+        if (total > 0):
+            total = len(result)
+            progress_ = progress().VScreate(SITE_NAME)
 
+            for i in result:
+                progress_.VSupdate(progress_, total)
+                if progress_.iscanceled():
+                    break
+
+                # Mise en forme des infos (au format meta imdb)
+              #  i = grab._format(i, '',"movie")
+
+                sId=i['fileUrl'] 
+                sTitle=i['movieName']
+                sThumb=i['imageUrl']
+                sFanart=i['imageUrl']
+                sDesc=i['description'] 
+                logger.info("sTitle: %s" %str(sTitle))
+
+                oOutputParameterHandler = cOutputParameterHandler()
+                oOutputParameterHandler.addParameter('siteUrl',  sId)
+                oOutputParameterHandler.addParameter('sMovieTitle', sTitle)
+                oOutputParameterHandler.addParameter('sThumb', sThumb)
+                oOutputParameterHandler.addParameter('sTmdbId', sId)
+                oOutputParameterHandler.addParameter('type', 'film')
+
+                if isMatrix():
+                    oOutputParameterHandler.addParameter('searchtext', sTitle)
+                else:
+                    oOutputParameterHandler.addParameter('searchtext', cUtil().CleanName(sTitle))
+
+                cGui.CONTENT = "movies"
+                oGuiElement = cGuiElement()
+                oGuiElement.setTmdbId(sId)
+                oGuiElement.setSiteName('globalSearch')
+                oGuiElement.setFunction('showSearch')
+                oGuiElement.setTitle(sTitle)
+                oGuiElement.setFileName(sTitle)
+                oGuiElement.setIcon('films.png')
+                oGuiElement.setMeta(1)
+                oGuiElement.setThumbnail(sThumb)
+                oGuiElement.setPoster(sThumb)
+                oGuiElement.setFanart(sFanart)
+                oGuiElement.setCat(1)
+                oGuiElement.setDescription(sDesc)
+                #oGuiElement.setYear(sYear)
+               # oGuiElement.setGenre(sGenre)
+
+                oGui.addFolder(oGuiElement, oOutputParameterHandler)
+
+            progress_.VSclose(progress_)
+
+            if (int(iPage) > 0):
+                iNextPage = int(iPage) + 1
+                oOutputParameterHandler = cOutputParameterHandler()
+                if sSearch:
+                    oOutputParameterHandler.addParameter('sSearch', sSearch)
+
+                oOutputParameterHandler.addParameter('siteUrl', sUrl)
+                oOutputParameterHandler.addParameter('page', iNextPage)
+                oGui.addNext(SITE_IDENTIFIER, 'showMovies', 'Page ' + str(iNextPage), oOutputParameterHandler)
+
+    except TypeError as e:
+        oGui.addText(SITE_IDENTIFIER, '[COLOR red]Aucun résultat n\'a été trouvé.[/COLOR]')
+
+    # changement mode
+    view = addon.getSetting('visuel-view')
+
+    oGui.setEndOfDirectory(view)   
+
+from itertools import cycle
+def xor_crypt_string(data, key, encode = False, decode = False):
+    if decode:
+        data = base64.b64decode(data)
+    xored = ''.join(chr(ord(x) ^ ord(y)) for (x,y) in zip(data, cycle(key)))
+    logger.info("ret2: %s" %xored)
+    if encode:
+       # logger.info("ret1: %s" %base64.encodestring(xored).strip())
+        return base64.encodestring(xored).strip()
+    
+    return xored
 
 
 
@@ -218,7 +365,7 @@ def spor():
    
     oOutputParameterHandler = cOutputParameterHandler()
     oOutputParameterHandler.addParameter('siteUrl', 'https://')
-    oGui.addDir('ssport365', 'Main_menu', 'sporthd Live event, Sport Streams', 'sports.png', oOutputParameterHandler)
+    oGui.addDir('ssport365', 'Main_menu', 'Live event, Sport Streams', 'sports.png', oOutputParameterHandler)
 
 
     oOutputParameterHandler = cOutputParameterHandler()
@@ -247,9 +394,19 @@ def spor():
     oOutputParameterHandler = cOutputParameterHandler()
     oOutputParameterHandler.addParameter('siteUrl', '1')
     oGui.addDir(SITE_IDENTIFIER, 'sporturke', 'TURK SPORTTV', 'sports.png', oOutputParameterHandler)
+
+    oOutputParameterHandler = cOutputParameterHandler()
+    oOutputParameterHandler.addParameter('siteUrl', '1')
+    oGui.addDir(SITE_IDENTIFIER, 'freestreamsbas', 'SPORT TV', 'sports.png', oOutputParameterHandler)
+
+    oOutputParameterHandler = cOutputParameterHandler()
+    oOutputParameterHandler.addParameter('siteUrl', '1')
+    oOutputParameterHandler.addParameter('stream', 'ts')
+    oOutputParameterHandler.addParameter('sitem', 'http://portal.zexo.site:8080/panel_api.php?username=zero&password=zero&type=m3u')
+    oGui.addDir(SITE_IDENTIFIER, 'live_nlpanel', 'TURK SPORT TV test', 'sports.png', oOutputParameterHandler)
    
-                                            
-#    oOutputParameterHandler = cOutputParameterHandler()
+                                   #  stream=ts           
+#    oOutputParameterHandler = cOutputParameterHandler()                    1
 #    oOutputParameterHandler.addParameter('siteUrl', '1')
 #    oGui.addDir(SITE_IDENTIFIER, 'Open_settings', '[COLOR lime][B]Open Setting- Saat ayari-Time setting [/B][/COLOR]', 'sports.png', oOutputParameterHandler)
     
@@ -262,10 +419,331 @@ def spor():
     
     oGui.setEndOfDirectory()
 
+def freestreamsbas():
+    oGui = cGui()
+    oOutputParameterHandler = cOutputParameterHandler()
+    oOutputParameterHandler.addParameter('siteUrl', '1')
+    oGui.addDir(SITE_IDENTIFIER, 'freestreamsbas2', 'ALL Channels', 'sports.png', oOutputParameterHandler)
+
+    oInputParameterHandler = cInputParameterHandler()
+    urg= oInputParameterHandler.getValue('urg')
+    url="http://rf.freestreams-live1.com/"                          
+#    logger.info("Json url: %s" % url)                                                
+    sHtmlContent = getHtml(url)
+    sPattern = '<a href=".+?" aria-current="page">Home</a></li>(.+?)</nav>'
+    oParser = cParser()
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    sHtmlContent = aResult
+               
+                                            # menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-
+    sPattern = '<a href="(.+?)"><img src="(.+?)" width=".+?" height=".+?">(.+?)</a></li>'
+    oParser = cParser()                                                                                                                          
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    if aResult[0] == True:
+        total = len(aResult[1])
+                                         
+        for aEntry in aResult[1]:
+           sPicture =aEntry[1]
+           urll =aEntry[0]
+           sTitle = aEntry[2]
+           oOutputParameterHandler = cOutputParameterHandler()
+           oOutputParameterHandler.addParameter('siteUrl',urll)
+           oOutputParameterHandler.addParameter('sMovieTitle',sTitle)
+           oGui.addTV(SITE_IDENTIFIER, 'freestreamsbassi', sTitle, sPicture, sPicture, '', oOutputParameterHandler)
+
+
+    oGui.setEndOfDirectory() 
+def freestreamsbassi():
+    oGui = cGui()
+    oInputParameterHandler = cInputParameterHandler()
+    urg= oInputParameterHandler.getValue('urg')
+    url= oInputParameterHandler.getValue('siteUrl')                          
+#    logger.info("Json url: %s" % url)                                                
+    HtmlContent = getHtml(url)
+    sPattern = '<tbody id="myTable">(.+?)</table>'
+    oParser = cParser()
+    aResult = oParser.parse(HtmlContent, sPattern)
+#    logger.info("aResult: %s" % aResult) 
+    sHtmlContent = aResult                                                                                                                
+    Pattern = '<a href="(.+?)" k=".+?" l=".+?" class="button">(.+?)</a>'
+    Result = oParser.parse(sHtmlContent, Pattern)                                                                               # <a href="http://mk.freestreams-live1.com/bt3-sd/" k="10231" l="3" class="button">BT Sport (SD)</a>
+   
+    sPattern = '<td width=".+?" class="matchtime">(.+?)</td>.+?<img src="(.+?)".+?<td class="event-title" width=".+?">(.+?)</td>'
+    oParser = cParser()                                                                                                                          
+    aResult = oParser.parse(sHtmlContent, sPattern)                                                                               # <a href="http://mk.freestreams-live1.com/bt3-sd/" k="10231" l="3" class="button">BT Sport (SD)</a>
+    if aResult[0] == True:
+      for aEntry in aResult[1]:  
+        for Entry in Result[1]:
+         
+           sPicture =aEntry[1]                  
+                                                   
+           #saat =to_utf8( saat)
+           urll =Entry[0]
+           sTitle = aEntry[0]+ '-'+ aEntry[2].replace('vs','-vs-') + ':'+ str(Entry[1])
+           oOutputParameterHandler = cOutputParameterHandler()
+           oOutputParameterHandler.addParameter('siteUrl',urll)
+           oOutputParameterHandler.addParameter('sMovieTitle',sTitle)
+           oGui.addTV(SITE_IDENTIFIER, 'otvplay__', sTitle, sPicture, sPicture, '', oOutputParameterHandler)
+
+
+    oGui.setEndOfDirectory() 
+
+def freestreamsbas2():
+    oGui = cGui()
+    oInputParameterHandler = cInputParameterHandler()
+    urg= oInputParameterHandler.getValue('urg')
+    url="http://fb.freestreams-live1.com/"                          
+#    logger.info("Json url: %s" % url)                                                
+    sHtmlContent = getHtml(url)
+    sPattern = '<ul id="menu-live-channles" class="menu">(.+?)</aside>'
+    oParser = cParser()
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    sHtmlContent = aResult
+                
+                                             # menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-
+    sPattern = '<li id="menu-item-.+?" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-(.+?)"><a href="(.+?)">(.+?)</a>'
+    oParser = cParser()                                                                                                                          
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    if aResult[0] == True:
+        total = len(aResult[1])
+                                         
+        for aEntry in aResult[1]:
+           urlla =aEntry[0]
+           urll =aEntry[1]
+           sTitle = aEntry[2]
+           oOutputParameterHandler = cOutputParameterHandler()
+           oOutputParameterHandler.addParameter('siteUrl',urll)
+           oOutputParameterHandler.addParameter('siteUrll',urlla)
+           oOutputParameterHandler.addParameter('sMovieTitle', urlla)
+           oGui.addDir(SITE_IDENTIFIER, 'ffreestreamsbas', sTitle, 'genres.png', oOutputParameterHandler)
+
+    oGui.setEndOfDirectory() 
+
+
+
+
+                  
+
+def ffreestreamsbas():
+    oGui = cGui()
+    oInputParameterHandler = cInputParameterHandler()
+    
+    Title= oInputParameterHandler.getValue('sMovieTitle') 
+    url= oInputParameterHandler.getValue('siteUrl')                         
+    urg= oInputParameterHandler.getValue('siteUrll')
+    if '1991' in urg:
+          sporturke()
+    logger.info("urg: %s" % urg)                                                
+    sHtmlContent = getHtml(url)
+#    sHtmlContent =re.findall('<li id="menu-item-'+urg+'" class=".+?menu-item-'+urg+'">.+?<ul class="sub-menu">(.+?)</ul>', sHtmlContent, re.S)
+#    sHtmlContent =re.findall('<a href="'+url+'">'+Title+'</a>.+?<ul class="sub-menu">(.+?)</ul>', sHtmlContent, re.S)
+    oParser = cParser() 
+    sPattern = '<li id="menu-item-'+urg+'" class=".+?menu-item-'+urg+'">.+?<ul class="sub-menu">(.+?)</ul>|</aside>'
+    oParser = cParser()
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    sHtmlContent = aResult
+                       #  <li id="menu-item-1991" class=".+?menu-item-1991">
+#    logger.info("sHtmlContent: %s" % sHtmlContent)            
+
+    sPattern = '<a href="(.+?)">(.+?)</a>'
+    logger.info("aResult: %s" %str(aResult))                                                                                                                         
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    if aResult[0] == True:
+        total = len(aResult[1])
+                                         
+        for aEntry in aResult[1]:
+          # urlla =aEntry[0]
+           urll =aEntry[0]
+           sTitle = aEntry[1]
+           oOutputParameterHandler = cOutputParameterHandler()
+           oOutputParameterHandler.addParameter('siteUrl',urll)
+          # oOutputParameterHandler.addParameter('siteUrla',urlla)
+           oOutputParameterHandler.addParameter('sMovieTitle', sTitle)
+           oGui.addDir(SITE_IDENTIFIER, 'showHosters', sTitle, 'genres.png', oOutputParameterHandler)
+
+    oGui.setEndOfDirectory() 
+
+
+def RealUrl(url):
+   
+           
+             
+    data =getHtml(url)
+    data =data.replace('+', '').replace('&#8243;', '"')
+    logger.info("urlla----: %s" %data)
+    sPattern = '<link rel="canonical" href="(.+?)" />'
+    oParser = cParser()
+    aResult = oParser.parse(data, sPattern)
+    if (aResult[0] == True):
+         return RealUrl2( aResult[1][0])
+def RealUrl2(url):  # Recupere les liens des regex
+    logger.info("urlla----: %s" %url)
+    data =getHtml(url)
+    r = re.search('<iframe.+?src="(.+?)"', data)
+    if (r):
+        urll = r.group(1)
+        return urll
+
+def showHosters():  # affiche les videos disponible du live
+    oGui = cGui()
+    UA = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0'
+    oInputParameterHandler = cInputParameterHandler()
+    sUrl4 = oInputParameterHandler.getValue('siteUrl')
+    sMovieTitle2 = oInputParameterHandler.getValue('sMovieTitle')
+    name = oInputParameterHandler.getValue('sMovieTitle')
+    sThumb = oInputParameterHandler.getValue('sThumb')
+#    if 'fb.freestreams-live1.com' in  sUrl4:
+#       Entry = getHtml(sUrl4)
+      # 
+#       urll = re.findall('<ifram.+?src="(.+?)"', Entry, re.S)[0]
+#       if    'nba-streams.online' in urll:
+#            getHosterIframe2(urll)
+   
+       
+#    Entry = getHtml(sUrl4)
+#    logger.info("Entry--urla: %s" %Entry)
+    urll = RealUrl(sUrl4)
+    urll=str(urll).replace('https://href.li/?','')
+    urlla = getHtml(urll)
+    if '<b>Stream 1</b>' in urlla:
+          getHosterIframe2(urll)
+    import ssport365
+    ssport365.showHosters1(sUrl4,name)
+    oGui.setEndOfDirectory()
+def RetRealUrl(chain):  # Recupere les liens des regex
+   # chain  =getHtml(sUrl)
+    r = re.search('<iframe src="(.+?)"', chain)
+    if (r):
+        url = r.group(1)
+        return url
+    r = re.search("fid='(.+?)'", chain)
+    if (r):
+        url = r.group(1)
+        return url
+    r = re.search('"0;URL=(.+?)"', chain)
+    if (r):
+        url = r.group(1)
+        return url
+#    if 'ragnaru.net/embed.js' in chain:
+#    r = re.search("fid='(.+?)'", chain)             
+#    url = r.group(1)
+#    url ='https://ragnaru .net/embed.php?player=desktop&live='+url 
+#    return url
+    
+def getHosterIframe2(url):
+    oGui = cGui()
+    sHtmlContent = getHtml(url)
+    
+    sHtmlContent = sHtmlContent.replace("'", '"')
+   
+    pi = re.findall('href="(.+?)"><b>(.+?)</b>', sHtmlContent, re.S)
+    for urla ,adi in pi:
+       logger.info("urla: %s" %urla)
+       oOutputParameterHandler = cOutputParameterHandler()
+       oOutputParameterHandler.addParameter('siteUrl',urla)
+       oOutputParameterHandler.addParameter('sMovieTitle', adi)
+       oGui.addDir('ssport365', 'showHosters', adi, 'genres.png', oOutputParameterHandler)
+
+    oGui.setEndOfDirectory()
+
+
+def tstreams2():
+            oInputParameterHandler = cInputParameterHandler()
+            Url = oInputParameterHandler.getValue('siteUrl')
+            name = oInputParameterHandler.getValue('sMovieTitle')
+            Url='https://ragnaru.net/embed.php?player=desktop&live=do22'                                               
+            sHtmlContent=gegetHtml(Url)
+            sHtmlContent = sHtmlContent.replace('return(["h', 'return"h').replace('"].join("") ', '"').replace('"', '')
+            logger.info("sHtmlConten: %s" % sHtmlContent)
+            if '<div id="player"></div>' in   sHtmlContent:
+               
+               U = re.search('return"(.+?)"', sHtmlContent).group(1)
+               U = U+'|Referer=https://fakirelinkcom.blogspot.com/?'
+               addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, U, '')
+                 
+            else:   
+               Url4 = re.search('<iframe allowfullscreen="allowfullscreen" frameborder="0" height=".+?" id="ifplayer".+?src="(.+?)"', sHtmlContent).group(1)
+               logger.info("Url4 : %s" % Url4)
+               Url4 = Url4.replace("https://nullreferer.com/?", "").replace(" ", "%20").replace("https://eplayer.click/tv4embed.php", "https://key.licenses4.me//eplayer.php")
+               if 'cdn.crichd.pro' in Url4:
+                    sHtmlContent=getHtml(Url4) 
+                    fid ='https://123zcast.com/embed.php?player=desktop&v='+re.search('fid="(.+?)"', sHtmlContent).group(1)
+                    Content=getHtml(fid)
+                    logger.info("Conten: %s" %Content)
+               #logger.info("sUrl : %s" % urll)
+                    U = re.search("source: '(.+?)'", Content).group(1)
+                    U = U+'|Referer='+ fid
+                    addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, U, '')
+                        
+               if 'sbautumn.net' in Url4:
+                    sHtmlContent=getHtml(Url4) 
+                    #logger.info("sHtmlConten: %s" % sHtmlContent)
+               #logger.info("sUrl : %s" % urll)
+                    U ='https://sbautumn.net'+ re.search("var videoLink = '(.+?)'", sHtmlContent).group(1)
+                    addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, U, '')
+
+                        
+               if 'key.licenses4.me' in Url4:
+                    logger.info("UrUrl4: %s" % Url4)
+                    referer=[('Referer', Url4)]
+                    sHtml=getHtml(Url4)
+                    sHtml = sHtml.replace("'", '"')
+                    logger.info("sHtml : %s" % sHtml)
+                    Url = re.search('<iframe allow="encrypted-media".+?src="(.+?)"', sHtml).group(1)
+                    eferer=[('Referer', Url4)]
+                    sHtmlContent=gegetUrl(Url,headers=eferer)
+                    sHtmlContent = sHtmlContent.replace("'", '"')
+                    logger.info("sHtmlContent : %s" % sHtmlContent)
+                    U =re.search('dash:  "(.+?)"', sHtmlContent).group(1)
+                    
+                    addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, U, '')
+
+               
+               if 'sport365hd.com' in Url4:
+                    U = Url4.replace("https://href.li/?https://sport365hd.com/channel", "https://5-61-37-22.livesports24.online") + ".m3u8"
+                    addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, U, '')
+
+               logger.info("Url5 : %s" % Url4)
+               sHtmlContent=getHtml(Url4) 
+               logger.info("sHtml: %s" % sHtmlContent)
+               #logger.info("sUrl : %s" % urll)
+               U = re.search('"file": "(.+?)"', sHtmlContent).group(1)
+               token = 'https://tracker.cdnbye.com/v1/channel'
+               time_stamp = str(int(time.time() ))
+               post_data = {
+               "device": "PC-web",
+               "netType": "wifi",
+               "player": "jwplayer",
+               "tag": "hlsjs0.14.17Chromes",
+               "live": "",
+               "type": "hls",
+               "channel": "cG1wYS4wOWZiMTUyOTg0MDQyOC5jZG4uZmRjc2VydmVycy5jb20lMkZ0ZXN0JTJGY2hhbm4yJTJGY2h1bmtsaXN0JTdDJTVCNSU1RA==",
+               "ts": time_stamp,
+               "version": "1.19.5",
+               "v": "3729e290",
+               "announce": "tracker.cdnbye.com"
+               }
+               s = requests.Session()
+               r = s.post(token, headers={'Content-Type': 'text/plain;charset=UTF-8',
+                   'Referer': 'https://fakirelinkcom.blogspot.com/',
+                   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36',
+                   'Origin': 'https://fakirelinkcom.blogspot.com',
+             #'Connection': 'Keep-Alive',
+                   'Accept-Encoding': 'gzip, deflate, br'}, data=post_data, timeout=10)
+               urll = r.text#.replace("\\", '')
+               logger.info("time_stamp: %s" % time_stamp)
+               logger.info("urll: %s" % urll)
+               U = U+'|Cookie=__utmz=79581574.1642333290.1.1.utmcsr=google&User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36'
+               addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, U, '')
+
+
+
+
+
 def Open_settings():
   
       cConfig().showSettingsWindow()
-
+      return
                                
                              
 def sporturke(): #affiche les genres
@@ -281,8 +759,15 @@ def sporturke(): #affiche les genres
     oOutputParameterHandler.addParameter('siteUrl', 'https://www.canlifutbolaz.com/2018/01/kanal-3.html')
     oOutputParameterHandler.addParameter('sMovieTitle', 'TR-BEIN SPOR 1 HD')
     oGui.addDir(SITE_IDENTIFIER, 'tstreams2', 'TR-BEIN SPOR 1 HD', 'beinsports1.jpg', oOutputParameterHandler)
+
+    oOutputParameterHandler.addParameter('siteUrl', '1')
+    oOutputParameterHandler.addParameter('sMovieTitle', 'TR-BEIN SPOR 1 MAX')
+    oGui.addDir(SITE_IDENTIFIER, 'freestreams2', 'TR-BEIN SPOR 1 MAX', 'beinspor4.png', oOutputParameterHandler)
+    oOutputParameterHandler.addParameter('siteUrl', '2')
+    oOutputParameterHandler.addParameter('sMovieTitle', 'TR-BEIN SPOR 1 MAX')
+    oGui.addDir(SITE_IDENTIFIER, 'freestreams2', 'TR-BEIN SPOR 2 MAX', 'beinspor4.png', oOutputParameterHandler)
    
-    oOutputParameterHandler.addParameter('siteUrl', '63')
+    oOutputParameterHandler.addParameter('siteUrl', '63')                                                                    
     oOutputParameterHandler.addParameter('sMovieTitle', 'TR-BEIN SPOR 2 HD')
     oGui.addDir(SITE_IDENTIFIER, 'freestreams2', 'TR-BEIN SPOR 2 HD', 'beinspor2.png', oOutputParameterHandler)
                             #videoLink = '(.*?)'
@@ -296,10 +781,11 @@ def sporturke(): #affiche les genres
 
     oOutputParameterHandler.addParameter('siteUrl', '67')
     oOutputParameterHandler.addParameter('sMovieTitle', 'TR-BEIN SPOR 4 HD')
-    oGui.addDir(SITE_IDENTIFIER, 'freestreams2', 'TR-BEIN SPOR 4 HD', 'beinspor4.png', oOutputParameterHandler)
-
+    oGui.addDir(SITE_IDENTIFIER, 'tstreams3', 'TR-BEIN SPOR 4 HD', 'beinspor4.png', oOutputParameterHandler)
+        # tstreams3
 
     oGui.setEndOfDirectory() 
+
 
 def SSSTB_EMUM_info():
   from xstream import run
@@ -361,24 +847,151 @@ interpreter=""
 
 import sys
 import re
+def cookie2( Url ):
+    oGui = cGui()
+   
+    
+  
 
-#      json.loads(
+    UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36'
+    headers = {"User-Agent": UA}
+    req = urllib2.Request(Url, None, headers)
+    try:
+       response = urllib2.urlopen(req)
+    except UrlError as e:
+       print(e.read())
+       print(e.reason)
+
+    sHtmlContent = to_utf8(response.read())
+    head = response.headers
+    sPattern = 'Set-Cookie: token=(.*?);'
+    oParser = cParser()
+    aResult = oParser.parse(head, sPattern)
+    if (aResult[0] == True):
+         return  aResult[1][0]
+
+    
+ 
+def peerstv(): #affiche les genres
+    oGui = cGui()
+    sUrl='http://api.peers.tv/iptv/2/playlist.m3u?cb=1527362148860'
+#    sHtmlContent = getUrl(Url).result
+
+   
+    playlist = parseWebM3U(sUrl)                              
+    for track in playlist: 
+            
+            sTitle =  str(track.title)
+            sPicture =track.icon
+                    #https://peers.tv/pingvin_lolo/priklyucheniya_na_volshebnom_ostrove/#294371773
+            urll = "https://peers.tv/pingvin_lolo/priklyucheniya_na_volshebnom_ostrove/#144978622"
+                       
+            token =  cookie2(urll) 
+            #logger.info("cookie: %s" %str(page))
+            #token = re.findall('Set-Cookie: token=(.*?);', page)[0]
+            sPicture='https://s0.peers.tv/i/peerstv/logo255.png'
+            TIK='|Referer=http://m.peers.tv/show/karusel/mi_mi_mishki/98451739/?autoplay=1&User-Agent=Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Mobile Safari/537.36'
+                         
+                              
+            url = str(track.path)+'?token=' + token +'&client=81'  +TIK 
+            oOutputParameterHandler = cOutputParameterHandler()                         
+            oOutputParameterHandler.addParameter('siteUrl', url)
+            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
+            oGui.addTV(SITE_IDENTIFIER, 'otvplay__', sTitle, sPicture, sPicture, '', oOutputParameterHandler)
+       
+
+    oGui.setEndOfDirectory() 
+def parseWebM3U(sUrl):
+    inf = getHtml(sUrl)
+   
+    inf = inf.split('\n')
+
+    playlist = []
+    song = track(None, None, None, None)
+    ValidEntry = False
+
+    for line in inf:
+        line = line.strip()
+        if line.startswith('#EXTINF:'):
+            length, title = line.split('#EXTINF:')[1].split(',', 1)
+            try:
+                licon = line.split('#EXTINF:')[1].partition('tvg-logo=')[2]
+                icon = licon.split('"')[1]
+            except:
+                icon = 'tv.png'
+            ValidEntry = True
+            song = track(length, title, None, icon)
+
+        elif (len(line) != 0):
+            if ValidEntry and (not (line.startswith('!') or line.startswith('#'))):
+                ValidEntry = False
+                song.path = line
+                playlist.append(song)
+                song = track(None, None, None, None)
+
+    return playlist
+def otvplay__():
+    oGui = cGui()
+
+    oInputParameterHandler = cInputParameterHandler()
+    sUrl = oInputParameterHandler.getValue('siteUrl')
+    sTitle = oInputParameterHandler.getValue('sMovieTitle')
+    sThumbnail = oInputParameterHandler.getValue('sThumbnail')
+   # TIK='|User-Agent=ozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36'
+   
+#    sTitle =  alfabekodla(sTitle)
+    oGuiElement = cGuiElement()
+    oGuiElement.setSiteName(SITE_IDENTIFIER)
+    oGuiElement.setTitle(sTitle)
+    oGuiElement.setMediaUrl(sUrl)
+        
+
+    oPlayer = cPlayer()
+    oPlayer.clearPlayList()
+    oPlayer.addItemToPlaylist(oGuiElement)
+    oPlayer.startPlayer()  
+def repl_json_chars(line):	# für json.loads (z.B.. in router) json-Zeichen in line entfernen
+	line_ret = line
+	#PLog(type(line_ret))
+	for r in	((u'"', u''), (u'\\', u''), (u'\'', u'')
+		, (u'&', u'und'), ('(u', u'<'), (u'(', u'<'),  (u')', u'>'), (u'∙', u'|')
+		, (u'„', u'>'), (u'“', u'<'), (u'”', u'>'),(u'°', u' Grad'), (u'u00b0', u' Grad')
+		, (u'\r', u''), (u'#', u'*'), (u'u003e', u'')):		# u'u003e' 	-> u'®'
+		line_ret = str(line_ret).replace(*r)
+	
+	return line_ret
+#-
+def stringextract(mFirstChar, mSecondChar, mString):  	# extrahiert Zeichenkette zwischen 1. + 2. Zeichenkette
+	pos1 = mString.find(mFirstChar)						# return '' bei Fehlschlag
+	ind = len(mFirstChar)
+	#pos2 = mString.find(mSecondChar, pos1 + ind+1)		
+	pos2 = mString.find(mSecondChar, pos1 + ind)		# ind+1 beginnt bei Leerstring um 1 Pos. zu weit
+	rString = ''
+
+	if pos1 >= 0 and pos2 >= 0:
+		rString = mString[pos1+ind:pos2]	# extrahieren 
+		
+	#PLog(mString); PLog(mFirstChar); PLog(mSecondChar); 	# bei Bedarf
+	#PLog(pos1); PLog(ind); PLog(pos2);  PLog(rString); 
+	return rString
+#
 AddonID = 'plugin.video.OTV_MEDIA'
 addon = xbmcaddon.Addon(AddonID)
 ADDON_DATA_DIR = xbmc.translatePath(addon.getAddonInfo('path'))
 RESOURCES_DIR = os.path.join(ADDON_DATA_DIR, 'resources')
-iptvhtml = to_utf8(os.path.join(RESOURCES_DIR, 'browser.json'))
+iptvhtml=os.path.join(RESOURCES_DIR, 'convertjson.xml')
 def pipiptvtv(pi,tle):
          #sourcestr = 'https://raw.githubusercontent.com/iptv-org/iptv/master/scripts/data/countries.json'
          #sHtmlContent = getHtml(sourcestr) 
-        # logger.info("metin-%s " %metin)
+         # logger.info("metin-%s " %metin)
          from resources.lib import comon
+       #  iptvhtml=repl_json_chars(iptvhtml)
          sUrl=comon.ReadList3(iptvhtml)
-         sUrl=sUrl.replace(' { ','')          
-                             #"YT":"name": "Mayotte"
+                 
+                            #"YT":"name": "Mayotte"
          pi = pi.upper()
          logger.info("pi-%s " %pi)
-         sPattern = '"'+pi+'":"name": "(.+?)"'
+         sPattern = '<'+pi+'>.+?<name>(.+?)</name>'
          oParser = cParser()
          aResult = oParser.parse(sUrl, sPattern)
          if (aResult[0] == True):
@@ -386,29 +999,31 @@ def pipiptvtv(pi,tle):
             
 #tle=''
 def iptvtv():
-    oGui = cGui()
-#    global tle
-    Urrl = 'https://github.com/iptv-org/iptv/tree/master/channels'
+    oGui = cGui()        
+           
+    Urrl = 'https://github.com/iptv-org/iptv/tree/master/streams'
     sHtmlContent = getHtml(Urrl)       
-    sPattern = '<a class="js-navigation-open Link--primary" title="(.*?)" data-pjax="#repo-content-pjax-container" href="/iptv-org/iptv/blob/master/channels/(.*?).m3u">'
+    #logger.info(" sHtmlContent: %s" % sHtmlContent)
+    sPattern = '<a class="js-navigation-open Link--primary" title="(.*?)" data-pjax="#repo-content-pjax-container" href="/iptv-org/iptv/blob/master/streams/(.*?).m3u"'
     oParser = cParser()
     aResult = oParser.parse(sHtmlContent, sPattern)
     if aResult[0] == True:
       total = len(aResult[1])
       for aEntry in aResult[1]:                               
          
-              Link = 'https://raw.githubusercontent.com/iptv-org/iptv/master/channels/' +  aEntry[1]+ '.m3u'
+              Link = 'https://raw.githubusercontent.com/iptv-org/iptv/master/streams/' +  aEntry[1]+ '.m3u' 
               Link=Link.replace('us_adultiptv.m3u','')  
                            
                          
               #pi = re.findall('.*?/channels/(.*?)_.*?', Link, re.S)[0]
               tle =aEntry[1][2:]
-              pi = re.findall('(\w\w)|_.*?|.m3u', aEntry[0], re.S)[0]
-              #pi = str(aEntry[0])
+              pi = re.findall('(\w\w)|_.*?|.m3u', aEntry[1], re.S)[0]
+              #pi =aEntry[1]
               
-              sTitle =pipiptvtv(pi,tle)
-             # sTitle ='_%s' %str(tle)
+              sTitle =pipiptvtv(pi, tle)
+              #sTitle ='_%s' %str(pi)
               #logger.info("pi-%s " %pi)
+              pi =pi.replace("uk",'gb')         
               sPicture='https://raw.githubusercontent.com/hampusborgos/country-flags/main/png1000px/'+pi+'.png'
               oOutputParameterHandler = cOutputParameterHandler()
               oOutputParameterHandler.addParameter('siteUrl', Link)
@@ -752,7 +1367,7 @@ def pradiokurdtv():
     name = oInputParameterHandler.getValue('sMovieTitle')
     Thum = oInputParameterHandler.getValue('sThumbnail')
     TIK='|Referer='+rUrl+'&User-Agent=Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'                                                                                                  
-    rUrl =rUrl.replace(".html",'').replace("https://karwan.tv/",'https://karwan.tv/live/radio/')
+    rUrl =rUrl.replace(".html",'').replace("https://karwan.tv/",'https://karwan.tv/live/')
     logger.info("rUrl: %s" %rUrl)
     data= getHtml(rUrl) 
     logger.info("data: %s" %data)
@@ -807,18 +1422,29 @@ def turkom2():
 #https://key.licenses4.me//eplayer.php?id=sport-tv-2
 #cdn.crichd.pro
 #                     https://eplayer.click/tv4embed.php
-#https://123zcast.com/embed.php?player=desktop&v=      
+def tstreams3():
+            oInputParameterHandler = cInputParameterHandler()
+            Url = oInputParameterHandler.getValue('siteUrl')
+            name = oInputParameterHandler.getValue('sMovieTitle')
+            Url='https://ragnaru.net/embed.php?player=desktop&live=do22'                                               
+            sHtmlContent=gegetHtml(Url)
+            sHtmlContent = sHtmlContent.replace('return(["h', 'return"h').replace('"].join("") ', '"').replace('\/', '/').replace('","', '')
+            logger.info("sHtmlConten: %s" % sHtmlContent)
+            U = re.search('return"(.+?)"', sHtmlContent).group(1)
+            U = U+'|Referer=https://ragnaru.net/'
+            addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, U, '')
+
 def tstreams2():
             oInputParameterHandler = cInputParameterHandler()
             Url = oInputParameterHandler.getValue('siteUrl')
             name = oInputParameterHandler.getValue('sMovieTitle')
-                                                           
-            sHtmlContent=getHtml(Url)
-            sHtmlContent = sHtmlContent.replace("'", '"').replace('<iframe loading="lazy" id="ifplayer"', '<iframe allowfullscreen="allowfullscreen" frameborder="0" height="580" id="ifplayer"').replace('<iframe allow="encrypted-media" width="640" height="560" marginwidth="0"', '<iframe allowfullscreen="allowfullscreen" frameborder="0" height="580" id="ifplayer"')
-            #logger.info("sHtmlConten: %s" % sHtmlContent)
+            Url='https://ragnaru.net/embed.php?player=desktop&live=do22'                                               
+            sHtmlContent=gegetHtml(Url)
+            sHtmlContent = sHtmlContent.replace('return(["h', 'return"h').replace('"].join("") ', '"').replace('"', '')
+            logger.info("sHtmlConten: %s" % sHtmlContent)
             if '<div id="player"></div>' in   sHtmlContent:
                
-               U = re.search('source: "(.+?)"', sHtmlContent).group(1)
+               U = re.search('return"(.+?)"', sHtmlContent).group(1)
                U = U+'|Referer=https://fakirelinkcom.blogspot.com/?'
                addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, U, '')
                  
@@ -927,22 +1553,69 @@ def m3uliste():
     e = [i for i in e if 'username=' in i]
     
     return e[:8]
+def ccookie2( Url ):
+    oGui = cGui()
+   
+    
+  
 
+    UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36'
+    headers = {"User-Agent": UA,"Host":"iptvhit.com"}
+    req = urllib2.Request(Url, None, headers)
+    try:                                         
+       response = urllib2.urlopen(req)
+    except UrlError as e:
+       print(e.read())
+       print(e.reason)
+
+    sHtmlContent = to_utf8(response.read())
+    head = response.headers
+    return head 
+#    sPattern = 'Set-Cookie: token=(.*?);'
+#    oParser = cParser()
+#    aResult = oParser.parse(head, sPattern)
+#    if (aResult[0] == True):
+UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36'
 def STB_link3():
     oGui = cGui()
-    import parsers
+    time  = datetime.now().strftime('%d/%m/%Y')
     oInputParameterHandler = cInputParameterHandler()
 #  Urrl = oInputParameterHandler.getValue('siteUrl')
     sTitle = oInputParameterHandler.getValue('sMovieTitle')
-          
-    Urrl ='http://iptvhit.com/freeiptv'                         
-    sHtmlContent = getHtml(Urrl) 
+    Urluu ='http://iptvhit.com/freeiptv_get'       
+    Urrla ='http://iptvhit.com/freeiptv?'+time                       
+    Html = gegetHtml(Urrla) 
+    token= re.search("token:'(.+?)'", Html).group(1)        
+    Urrl=re.search("window.location.href = '(.+?)'", Html).group(1) 
+    dat =ccookie2(Urrla)
+                           
+            
+    post_data = {"token": token}
+    r = s.post(Urluu , headers={"Referer": Urrla,"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8","User-Agent": UA,"Connection": "Keep-Alive","x-requested-with": "XMLHttpRequest"}, data=post_data, timeout=10)
+    data = r.text                                                                                                   
+        
+    suby=to_utf8(data )
+    logger.info("suby: %s" %suby) 
+    from resources.lib.handler.requestHandler import cRequestHandler
+    oRequestHandler = cRequestHandler(Urrl)
+    oRequestHandler.addHeaderEntry('User-Agent','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36')
+        
+    oRequestHandler.addHeaderEntry('Referer',Urrl)
+    oRequestHandler.addHeaderEntry('Host','iptvhit.com')#        oRequestHandler.addHeaderEntry('Connection','close')
+    #oRequestHandler.addParameters('token', token)
+#    oRequestHandler.addParameters('sec', sec)
+#    oRequestHandler.addParameters('id', ata)
+    data = oRequestHandler.request()
+    sHtmlContent=to_utf8(data )
+    
+    logger.info("sHtmlContent: %s" % sHtmlContent)
     oOutputParameterHandler = cOutputParameterHandler()
     time  = datetime.now().strftime('%d/%m/%Y')
-    Lin  = 'http://iptvhit.com/freeiptv'
+    Lin  = 'http://iptvhit.com/freeiptv?'+ time +'#goog_rewarded'
     oOutputParameterHandler.addParameter('siteUrl', Lin)
     oGui.addDir(SITE_IDENTIFIER,'find_lpanel2', time,  'turkey-free-iptv.png', oOutputParameterHandler)
-   
+    sHtmlContent = gegetHtml(Urrl)
+    
     sPattern = "<a href='(.*?)/(.*?)/(.*?)'"
     oParser = cParser()
     aResult = oParser.parse(sHtmlContent, sPattern)
@@ -965,15 +1638,30 @@ def STB_link3():
     oGui.setEndOfDirectory()          
 def find_lpanel2():
     oGui = cGui()
-    import parsers                           
+    Urluu ='http://iptvhit.com/freeiptv_get'       
+    Urrla ='http://iptvhit.com/freeiptv'                        
+    Html = gegetHtml(Urrla) 
+    token= re.search("token:'(.+?)'", Html).group(1)        
+    Urrl=re.search("window.location.href = '(.+?)'", Html).group(1)                          
     oInputParameterHandler = cInputParameterHandler()
     Urrl = oInputParameterHandler.getValue('siteUrl')
     logger.info("STB_EMU STB_EMU_Urll: %s" % Urrl )
+    post_data = {"token": token}
+    r = s.post(Urluu , headers={"Referer": Urrla,"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8","User-Agent": UA,"Connection": "Keep-Alive","x-requested-with": "XMLHttpRequest"}, data=post_data, timeout=10)
+    data = r.text                                                                                                   
+        
+    suby=to_utf8(data )
+    logger.info("suby: %s" %suby) 
+
+
+
+    from resources.lib.handler.requestHandler import cRequestHandler
+    time  = datetime.now().strftime('%d/%m/%Y')
     oRequest = cRequestHandler(Urrl)
     oRequest.addHeaderEntry('Cokie', 'google_push_rEzvK8ZSZWntL5tCdTSnDdZgSSQlzv=1536; google_push_X8yAHZPuFpNRSKIgE0HIfAmCo8CHrJ=864; google_push_O4WDV39XkHVft8OwDcTVxP4k9l2CZH=true; google_push_lnN9EHyICEdpW0S0nchJRDS410eXjk=100; _ga=GA1.2.1640535275.1641218418; _gid=GA1.2.1540386571.1641218418; CountryCode=DE; userFromEEA=true; _lo_uid=269703-1641218417620-1a19e9be5048c15c; _lorid=269703-1641218417620-364efaf88714c9c2; _lo_v=1; __lotl=http://iptvhit.com/freeiptv?02/01/2022; __cmpconsentx13566=CPSPg6NPSPg6NAfYeBENB8CgAP_AAH_AAAigG7pV9W_XaXNhePp7a7sEYIUV11bto-QhCgCAE4gByHKAcIQGVmA4IAyAJKgCoBAgIFZAAAVsCEkAQUCAAIARABHIAAAQIgBCACIECCEZEkAAAAAYAAAAAAAQACAGAAAAgAAAABMIAAAAAAAAAAEAAAgbulX1b9dpc2F4-ntruwRghRXXVu2j5CEKAIATiAHIcoBwhAZWYDggDIAkqAKgECAgVkAABWwISQBBQIAAgBEAEcgAABAiAEIAIgQIIRkSQAAAABgAAAAAABAAIAYAAACAAAAAEwgAAAAAAAAAAQAACAAA; __cmpcccx13566=aBPSPg6OgABGwABAAMAA8ACwANAAmABWAC4AMAAagA4AD0AIAAiABQAC4AGMAMwA0ABwADwAH0AQABBACGAEWAJgAmgBXAC8AGYAOgAewA-wB_AICAQ4BEACLAEwAKEAVQAvABiADHAGUANGAbABsgD4AH7AQsBDACHgEaAI6ASQAlgBMACcAE8AKMAU8Aq4BZACzQGNAY4AyoBoQDfAHJAOYAdQA8QB6wD5gIAAQMAhMBDoCHwESQInAigBFoCPQEhAJdATkAngBQcCjQKOAU0AqABa4DAwGDAMmAaCA00BqMDcwN2gbwBvIDfQHAAOCAcNA4kDigHJAOZAdwA8sB5wD0QHtgQZgg2CDgESYImAiaBMACZcFLwUwAp6BUUCpwFgQLLgWZAtEBagC3gFw4MbgxwBpYDWoG5AOlAeMA9GB7YD4oH0wQbgiDBFOCN8EewI_gSXglBBKkCbeE3gTegodAAA; google_push_DCpl6ALxAv6E9J0uYWUNwkHTbHtbNZ=http://iptvhit.com/freeiptv?01/01/2022; google_push_98UBvSc2oJkvxqEqz0YwE7NauYFpTc=Mon Jan 03 2022 15:09:11 GMT+0100 (Mitteleuropäische Normalzeit); __gads=ID=d3e6acb502eb7e08:T=1641218417:S=ALNI_MaUTne2YSGjU_nKL1ig-f2bMlA7Vg')
     #oRequest.addHeaderEntry('Host', 'mode.cfnode.cloud')
     #oRequest.addHeaderEntry('Origin', 'https://www.golvar54.co')
-    oRequest.addHeaderEntry('Referer', 'http://iptvhit.com/freeiptv?01/01/2022')
+    oRequest.addHeaderEntry('Referer', 'http://iptvhit.com/freeiptv?'+time)
     #oRequest.addHeaderEntry('Sec-Fetch-Dest', 'empty')
     #oRequest.addHeaderEntry('Sec-Fetch-Mode', 'cors')
     #oRequest.addHeaderEntry('Sec-Fetch-Site', 'cross-site')
@@ -1004,7 +1692,7 @@ def find_lpanel():#affiche les genres
     sUrl = oInputParameterHandler.getValue('siteUrl')
     sUrl=sUrl.replace('get.php','panel_api.php')
     logger.info("==text_pattern: %s" %  sUrl)
-    sHtmlContent=getHtml(sUrl) 
+    sHtmlContent=gegetHtml(sUrl) 
     logger.info("==text_pattern: %s" %  sHtmlContent)
     aJson = json.loads(sHtmlContent)
     for cat in aJson['categories']:
@@ -1051,7 +1739,7 @@ def find_elpanel():
 #    ssUrl=ssUrl.replace('get.php','panel_api.php')
     
   
-    sHtmlContent=getHtml(ssUrl) 
+    sHtmlContent=gegetHtml(ssUrl) 
     aJson = json.loads(sHtmlContent)
     for cat in aJson['categories'][''+cid]:
           Link= cat['category_id']
@@ -1077,7 +1765,7 @@ def live_nlpanel():
     cid = oInputParameterHandler.getValue('siteUrl')
     ssUrl = oInputParameterHandler.getValue('sitem')
     stream = oInputParameterHandler.getValue('stream')
-    sHtmlContent=getHtml(ssUrl) 
+    sHtmlContent=gegetHtml(ssUrl) 
     sHtmlContent =sHtmlContent.replace('"container_extension":""','"container_extension":null,')
     Json =sHtmlContent                   
     aJson = json.loads(Json)
@@ -1867,38 +2555,77 @@ def selcuksport():
             
               
              
-                             
-def iptvturkem(): #affiche les genres
-    oGui = cGui()
+def getday(liste):
+      if  '---------------->\n<button class="accordion">' in  liste:    
+        free = re.findall('---------------->\n<button class="accordion">.+?<span style="color:#fff;">(.+?)</span>', liste)
+        for Title in free:  
+           return Title
+        
+  
+                                                                              
 
-    oInputParameterHandler = cInputParameterHandler()
-    sUrl='https://www.unacanita.com'
-    sHtmlContent=getHtml(sUrl)
-    sHtmlContent = sHtmlContent.replace(' target','target')                                                     
-    sPattern = '<tr>.*?<td>(.*?)</td>.*?<td>(.*?)</td>.*?<td>(.*?)</td>.*?<td>(.*?)</td>.*?<td><a href=/canal/(.*?)target="_blank"> <span>(.*?)</span></a></td>.*?</tr>'
-    oParser = cParser()
-    aResult = oParser.parse(sHtmlContent, sPattern)
-    if (aResult[0] == True):
-        total = len(aResult[1])
-        for aEntry in aResult[1]:
-            tarih=  aEntry[0] 
-            saat = aEntry[1]
-            turu= aEntry[2]
-            ulke=  aEntry[3]                                                                     
-            canal=  aEntry[5]
-            Link=  aEntry[4]
-            canal= '[COLOR lightblue][B]%s[/B][/COLOR]'%(canal) 
-            saat= '[COLOR red][B]%s[/B][/COLOR]'%(saat) 
-            sTitle =tarih+' '+saat+' '+turu+'-'+ulke+'(%s)'%canal                                     
+
+def iptvturkem(): #affiche les genres
+    oGui = cGui()                            
+     
+                                           
+    oOutputParameterHandler = cOutputParameterHandler()
+    sUrl='https://1.vecdn.pw/program.php'
+    data=getHtml(sUrl)
+    # xbmc.log('@#@EDATAAA: {}'.format(data))
+    data = six.ensure_text(data, encoding='utf-8', errors='ignore')
+    days = list(zip(client.parseDOM(data, 'button', attrs={'class': 'accordion'}),
+                    client.parseDOM(data, 'div', attrs={'class': "panel"})))
+    # data = client.parseDOM(str(data), 'div', attrs={'class': "panel"})
+    # xbmc.log('@#@DAYSSS: {}'.format(str(days)))
+    for day, events in days:
+        dia = client.parseDOM(day, 'span')[0]
+        events = six.ensure_text(events, encoding='utf-8', errors='ignore')
+        events = list(zip(client.parseDOM(events, 'div', attrs={'class': "left.*?"}),
+                          client.parseDOM(events, 'div', attrs={'class': "containe"})))
+        # xbmc.log('@#@EVENTS: {}'.format(str(events)))
+    # addDir('[COLORcyan]Time in GMT+2[/COLOR]', '', 'BUG', ICON, FANART, '')
+        addDir(dia, '', '', ICON, FANART, name)
+        tevents = []
+        for event, streams in events:
+            if '\n' in event:
+                ev = event.split('\n')
+                for i in ev:
+                    tevents.append((i, streams))
+            else:
+                tevents.append((event, streams))
+
+        for event, streams in sorted(tevents):
+            # links = re.findall(r'<a href="(.+?)".+?>( Link.+? )</a>', event, re.DOTALL)
+            streams = str(quote(base64.b64encode(six.ensure_binary(streams))))
+
+            event = event.encode('utf-8') if six.PY2 else event
+            event = '[COLOR gold][B]{}[/COLOR][/B]'.format(event)
+              # logger.info("Title: %s" %Title)
+            #sTitle =sTitle.replace('</div>', '-------------')#.replace('  ',"").replace('<!--p', '').replace('-->', '').replace('-', '=').replace('                                                   ',"") #+" %s" %getday(sHtmlContent)
+            sPicture ='https://p.kindpng.com/picc/s/78-784109_fortnite-live-youtube-twitch-sign-hd-png-download.png'
+            logger.info("sTitle: %s" %sTitle)
             oOutputParameterHandler = cOutputParameterHandler()
             oOutputParameterHandler.addParameter('sMovieTitle', sTitle)
             oOutputParameterHandler.addParameter('siteUrl', Link)
-            oGui.addDir(SITE_IDENTIFIER, 'freestreams2', sTitle, 'genres.png', oOutputParameterHandler)
+           # oGui.addEpisode(SITE_IDENTIFIER, 'tstreams4', sTitle, '', sPicture, '', oOutputParameterHandler)
+            oGui.addDir(SITE_IDENTIFIER, 'tstreams4', sTitle, 'genres.png', oOutputParameterHandler)
     oGui.setEndOfDirectory() 
+def tstreams4():
+            oInputParameterHandler = cInputParameterHandler()
+            Url = oInputParameterHandler.getValue('siteUrl')
+            name = oInputParameterHandler.getValue('sMovieTitle')
+            Url='https://ragnaru.net/embed.php?player=desktop&live=do'+ Url                                              
+            sHtmlContent=gegetHtml(Url)
+            sHtmlContent = sHtmlContent.replace('return(["h', 'return"h').replace('"].join("") ', '"').replace('\/', '/').replace('","', '')
+            logger.info("sHtmlConten: %s" % sHtmlContent)
+            U = re.search('return"(.+?)"', sHtmlContent).group(1)
+            U = U+'|Referer=https://ragnaru.net/'
+            addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, U, '')
       
 def GetRealUrl(sUrl): 
     chain  =getHtml(sUrl)
-    r = re.search('<video.+?src="(.+?)"', chain)
+    r = re.search('<video.+?src="(.+?)"', chain.group(1))
     if (r):
         url = r.group(1)
         return url
@@ -1961,7 +2688,20 @@ def freestreams4():
 
    
 
-                                                     
+#GET /cdn/premium2/chunks.m3u8 HTTP/1.1
+#Host=www.mireasa-live.com
+#User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0
+#Accept: */*
+#Accept-Language: tr-TR,tr;q=0.8,en-US;q=0.5,en;q=0.3
+#Origin: https://player.licenses4.me
+#Connection: keep-alive
+#Referer: https://player.licenses4.me/
+#Sec-Fetch-Dest: empty
+#Sec-Fetch-Mode: cors
+#Sec-Fetch-Site: cross-site
+#Accept-Encoding: gzip, deflate                                                     
+ 
+UA = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0'
 def freestreams2():
             oInputParameterHandler = cInputParameterHandler()
             Url = oInputParameterHandler.getValue('siteUrl')
@@ -1971,15 +2711,19 @@ def freestreams2():
             ssHtmlContent=getHtml(Url2)
             logger.info("ssHtmlContent: %s" % ssHtmlContent)
             Url4 = re.search('<iframe src="(.+?)"', ssHtmlContent).group(1)
-            referer=[('Referer',Url3)]
-            sHtmlContent=getHtml(Url4) 
-            Url5 = re.search('<iframe src="(.+?)"', sHtmlContent).group(1)
-            referer=[('Referer',Url3)]
+            logger.info("Url4: %s" % Url4) 
+            sHtmlContent = requests.session().get(Url4, headers={'Content-Type': 'text/html',
+                'User-Agent': 'Mozilla/5.0 (QtEmbedded; U; Linux; C) AppleWebKit/533.3 (KHTML, like Gecko) MAG200 stbapp ver: 2 rev: 250 Safari/533.3',
+                'Referer':Url3,
+                'Accept': 'text/html, */*'}).text 
+            logger.info("sHtmlConten: %s" % sHtmlContent) 
+            Url5 = re.search('<iframe src="(.+?)"', sHtmlContent).group(1)     # Url5 = re.search('<iframe src="(.+?)"', sHtmlContent).group(1)
+            referer=[('Referer',Url3)]                                           
             lsHtmlContent=getHtml(Url5) 
-            logger.info("sHtmlConten: %s" % lsHtmlContent)
+            logger.info("sHtmlConten: %s" % lsHtmlContent)                        # Origin=https://player.licenses4.me&
             if 'source' in   sHtmlContent:
-               U = re.search("//source:'(.+?)'", lsHtmlContent).group(1)
-               U = U+'|Referer=' + Url5
+               U = re.search("//source:'(.+?)/chunks.m3u8.+?'", lsHtmlContent).group(1)
+               U = U+'/chunks.m3u8|Accept-Language=tr-TR,tr;q=0.8,en-US;q=0.5,en;q=0.3&Host=www.mireasa-live.com&User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0&Referer=https://player.licenses4.me/'
                addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, U, '')
             #
             else:
@@ -1995,10 +2739,10 @@ def freestreams2():
                   logger.info("cookie data1: %s" %data1)
                   U = re.search('source:"(.+?)"', data1).group(1)
                      # logger.info("U: %s" %U)
-                      #tent=getHtml(data2)
+                      #tent=getHtml(data2)         
                   
                      # logger.info("Url: %s" %tent)
-                  U = U+'|Referer=https://wigistream.to/'
+                  U = U+'|Host=www.mireasa-live.com'
                   addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, U, '')
 
 
@@ -2683,7 +3427,9 @@ def madulto():
                   auti=oklidecode(aut)
                   autim =okliDecode(auti)
                   logger.info("cookie data1: %s" %autim)
-                  TIK='|Referer='+autim+'&User-Agent=User-Agent='+ generate_user_agent()
+                  TIK='|Referer='+Url2 +'&User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36' 
+                 #
+
                   baddLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, autim+TIK,Url2 , '')
 
                                                                 

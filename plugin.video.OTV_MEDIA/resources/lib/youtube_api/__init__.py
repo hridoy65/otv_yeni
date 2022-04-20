@@ -1,5 +1,20 @@
-from youtube_api.youtube_api import YouTubeDataAPI
-import youtube_api.parsers as P
-import youtube_api.youtube_api_utils as youtube_api_utils
+# -*- coding: utf-8 -*-
 
-__version__ = '0.0.21'
+
+
+key_sets = {
+    'youtube-tv': {
+        'id': 'ODYxNTU2NzA4NDU0LWQ2ZGxtM2xoMDVpZGQ4bnBlazE4azZiZThiYTNvYzY4',
+        'key': 'QUl6YVN5QzZmdlpTSkhBN1Z6NWo4akNpS1J0N3RVSU9xakUyTjNn',
+        'secret': 'U2JvVmhvRzlzMHJOYWZpeENTR0dLWEFU'
+    },
+    'provided': {
+        '0': {
+            'id': '',
+            'key': '',
+            'secret': ''
+        }
+    }
+}
+
+__all__ = ['kodion', 'youtube', 'key_sets', 'refresh']

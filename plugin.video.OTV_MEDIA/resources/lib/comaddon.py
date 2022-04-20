@@ -534,6 +534,27 @@ class siteManager:
 
         return sourceData
     
+def isMatrix():
+    try:
+        version = xbmc.getInfoLabel('system.buildversion')
+        if version[0:2] >= '19':
+            return True
+        else:
+            return False
+    except:
+        return False
+
+
+def isNexus():
+    try:
+        version = xbmc.getInfoLabel('system.buildversion')
+        if version[0:2] >= '20':
+            return True
+        else:
+            return False
+    except:
+        return False
+
     
 
 class addonManager:

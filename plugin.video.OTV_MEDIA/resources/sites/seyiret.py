@@ -200,10 +200,10 @@ def message():
             settings.setSetting('e_mail', '')
             settings.setSetting('user_id', '')
         if settings.getSetting("message") != flag:
-            ok1 = dialog.ok("[COLOR orange][B]seyirTURK Kodi[/B][/COLOR] Mesajınız var !", mesaj)
+            ok1 = dialog.ok("[COLOR orange][B]OTV_MEDIA Kodi[/B][/COLOR] Mesajınız var !", mesaj)
             settings.setSetting('message', flag)
         if settings.getSetting("u_message") != u_flag and u_flag != '' and u_mesaj != '':
-            ok1 = dialog.ok("[COLOR orange][B]seyirTURK Kodi[/B][/COLOR]", u_mesaj)
+            ok1 = dialog.ok("[COLOR orange][B]OTV_MEDIA Kodi[/B][/COLOR]", u_mesaj)
             settings.setSetting('u_message', u_flag)
         cache_key = mesaj_json["message"][0]["cache_key"]
         if  cache_key != settings.getSetting("cache_key_local"):
@@ -226,8 +226,11 @@ def save_m3u_link():
         except:
             pass
 
-#def Basla():
-#    main()
+def Baslat(): #affiche les genres
+    oGui = cGui()
+    oInputParameterHandler = cInputParameterHandler()
+    Url = oInputParameterHandler.getValue('siteUrl')
+    maina(Url)
 def Basla(): #affiche les genres
     oGui = cGui()
     oInputParameterHandler = cInputParameterHandler()
@@ -238,11 +241,31 @@ def ayarlar():
     __settings__.openSettings()
 
 
+def maina(url):
+  #  url = root2 + '/kodi/main.php?ct=' + tc
+                logger.info('url>%s' % url)
+                f = parsers.fetch(url)
+                logger.info('f>%s' % f)
+                jr = json.loads(f)
+                for js in jr["movies"]:
+                    idx = js["ID"]
+                    baslik = js["Name"]
+                    sign = '?'
+                    logger.info('baslik>%s' % baslik)
+                    try:
+                        resim = js["Image"]
+                    except:
+                        resim = ""
+                    link = js["Link"] + sign + 'ct=' + tc
+                    desc = None
+                    addDir('[COLOR blue]>>> [/COLOR]'+ baslik +'[/B][/COLOR]',Quote_plus(link),302,resim,idx, desc, None)
+                
+
+                
 
 def main():
     url = root2 + '/kodi/main.php?ct=' + tc
     page = parsers.cache(url)
-    logger.info('page)>%s' % page)
     if page != "":
         jr = json.loads(page)
         for rj in jr["main"]:
@@ -250,7 +273,7 @@ def main():
             resim = rj["icon"]
             isim = rj["title"]
             try:
-                fanart = rj["Backdrop"]
+                fanart ="https://raw.githubusercontent.com/orhantv/otv_yeni/master/plugin.video.OTV_MEDIA/fanart.jpg"#.replace(' hd','https://raw.githubusercontent.com/orhantv/otv_yeni/master/plugin.video.OTV_MEDIA/icon.png')
             except:
                 fanart = resim
             try:
@@ -261,25 +284,28 @@ def main():
             if '?' in link:
                 sign = '&'
             link = link   + sign + 'ct=' + tc
-            logger.info('ct=>%s' % link)
             if '&id=' in link:
                 link = link.replace('&id=','') + '&id='
-                logger.info('&id=>%s' % link)
             if '/iptv.php' in link: 
                 link = link 
-                logger.info('link)>%s' % link)
             if settings.getSetting('isAdult') == "Rabbit" and settings.getSetting( "user_id" ) :
-                addDir('[B][COLOR blue]> [/COLOR]'+isim+']',Quote_plus(link),302,resim, 0, desc, None,fanart)
+                addDir('[COLOR orange][B][COLOR blue]> [/COLOR]'+isim+'[/B][/COLOR]',Quote_plus(link),2,resim, 0, desc, None,fanart)
             else:
                 if not 'Adult' in isim:
-                    addDir('[][B][COLOR blue]> [/COLOR]'+isim+'',Quote_plus(link),302,resim, 0, desc,None,fanart)
+                    addDir('[COLOR orange][B][COLOR blue]> [/COLOR]'+isim+'[/B][/COLOR]',Quote_plus(link),2,resim, 0, desc,None,fanart)
 
         if settings.getSetting('m3u'):
             if 'type=m3u'in settings.getSetting('m3u') or '.m3u'in settings.getSetting('m3u') :
                 linkos = Quote(settings.getSetting('m3u'))
-                desc = ' te kendi kendi IPTV lerinizi bu alanda bulabilirsiniz.'
-                addDir('[COLOR orange][B][COLOR blue]> [/COLOR]Benim Iptv[/B][/COLOR]',linkos,302,os.path.join(IMAGES_PATH, 'myiptv.png'),0, desc,None,fanart)
+                desc = '[COLOR orange][B]seyirTURK[/B][/COLOR] te kendi kendi IPTV lerinizi bu alanda bulabilirsiniz.'
+                addDir('[COLOR orange][B][COLOR blue]> [/COLOR]Benim Iptv[/B][/COLOR]',linkos,2,os.path.join(IMAGES_PATH, 'myiptv.png'),0, desc,None,fanart)
                 
+        desc = '[COLOR orange][B]seyirTURK[/B][/COLOR] hakkımızdaki bilgileri görebileceğiniz alan.'
+        addDir('[COLOR orange][B][COLOR blue]> [/COLOR]Bilgiler[/B][/COLOR]','bilgiler.php',5,os.path.join(IMAGES_PATH, 'info2.png'),0, desc, None, fanart, "0", "bilgiler")
+
+        desc = '[COLOR orange][B]seyirTURK[/B][/COLOR] ayarlarını yapabileceğiniz alan.'
+        addDir('[COLOR orange][B][COLOR blue]> [/COLOR]Ayarlar[/B][/COLOR]','main.php',5,os.path.join(IMAGES_PATH, 'settings.png'),0, desc, None, fanart,"0","ayarlar")
+
 
 
     
@@ -290,6 +316,8 @@ def listele(url):
         kokd = kok()
         isSearchNegative = 0
         searchstring=""
+
+
         if ("?name" in url or '&name' in url) and not ('isAdult=1&name=' in url or 'iptv/search.php?name=' in url):
                 key = dialog.select('', ['[B]Dublaj yada Altyazı Önemsiz[/B]', '[B]Türkçe Dublaj[/B]', '[B]Türkçe Altyazı[/B]', '[B]Almanca Dublaj[/B]', '[B]Kişi Arama[/B]'])
                 if key != -1:
@@ -367,6 +395,7 @@ def listele(url):
                         f = ''
                 else:
                     f = parsers.cache(url)
+                    logger.info('ffff>%s' % f)
             else:
                 if "bilgiler.php" not in url:
                     url1 = os.path.join(__addonuserdata__, settings.getSetting('m3u') )
@@ -376,13 +405,14 @@ def listele(url):
                     f = data
                 else:
                     f=''
-            #f = parsers.cache(url)
+
+
             if "movies" in f and not 'm3u' in url:
                     js = json.loads(f)
                     idx = '0'
-                    if 'iptv.php' in url and not 'Adultkodiiptv.php' in url:
-                        link = root2 + '/kodi/iptv/search.php?name='
-                        addDir('[COLOR blue]> [/COLOR] IPTV Arama [/B][/COLOR]',Quote_plus(link),302,os.path.join(IMAGES_PATH, 'ara.png'),'0', 'desc', None)
+                    if 'miptv.php' in url and not 'Adultkodiiptv.php' in url:
+                        link = url 
+                        addDir('[COLOR blue]> [/COLOR] IPTV [/B][/COLOR]',Quote_plus(link),302,os.path.join(IMAGES_PATH, 'ara.png'),'0', 'desc', None)
                     for rs in js['movies']:
                             language = ''
                             son_ek = ''
@@ -418,7 +448,7 @@ def listele(url):
                                 pass
                             resim = rs['Image']
                             try:
-                                fanart = rs["Backdrop"]
+                                fanart ="https://raw.githubusercontent.com/orhantv/otv_yeni/master/plugin.video.OTV_MEDIA/fanart.jpg"#.replace(' hd','https://raw.githubusercontent.com/orhantv/otv_yeni/master/plugin.video.OTV_MEDIA/icon.png')
                             except:
                                 fanart = resim
                             try:
@@ -437,11 +467,11 @@ def listele(url):
                                 try:
                                     if settings.getSetting('uclugorunum') == "true":
                                         desc = '[COLOR green][B]IMDb: ' + imdbscore +'[/COLOR][COLOR blue] Tarih: ' + releasedate.replace(' 00:00:00','') + '[/COLOR][/B]\n[COLOR yellow]Türler: ' + genres + '[/COLOR]\n' + rs['Summary']
-                                        if  'turler.php' in url or 'turlerdizi.php' in url or 'diziler.php' in url or 'filmler.php' in url :
+                                        if   'turler.php' in url or 'turlerdizi.php' in url or 'diziler.php' in url or 'filmler.php' in url :
                                             desc = rs['Summary'] 
                                     else:
                                         desc =  baslik.replace(' TD','').replace(' TA','').replace(' TA - TD',''.replace(" GE","") ).replace("-","") +  '\n' +'[COLOR green][B]IMDb: ' + imdbscore +'[/COLOR][COLOR blue] Tarih: ' + releasedate.replace(' 00:00:00','') + '[/COLOR][/B]\n[COLOR yellow]Türler: ' + genres + '[/COLOR]\n' + rs['Summary']
-                                        if  'turler.php' in url or 'turlerdizi.php' in url or 'diziler.php' in url or 'filmler.php' in url :
+                                        if   'turler.php' in url or 'turlerdizi.php' in url or 'diziler.php' in url or 'filmler.php' in url :
                                             desc =  baslik.replace(' TD','').replace(' TA','').replace(' TA - TD',''.replace(" GE","") ).replace("-","") + '\n' + rs['Summary']  
                                             
                                 except:
@@ -600,18 +630,18 @@ def listele(url):
                         isTv = "0"
                     addDir(baslik, link, 303, resim, m_id, desc1, timestamp, resim, isTv)
             elif "bilgiler.php" in url:
-                desc = '[COLOR orange][B]seyirTURK[/B][/COLOR] istatistiklerini görebileceğiniz alan.'
+                desc = '[COLOR orange][B]OTV_MEDIA[/B][/COLOR] istatistiklerini görebileceğiniz alan.'
                 addDir('[COLOR orange][B][COLOR blue]> [/COLOR]İstatistik[/B][/COLOR]','istatistik.php',5,os.path.join(IMAGES_PATH, 'stat.png'),0, desc, None, os.path.join(IMAGES_PATH, 'stat.png'),"0",'istatistik')
-                desc = '[COLOR orange][B]seyirTURK[/B][/COLOR] sürüm notlarını görebileceğiniz alan.'
+                desc = '[COLOR orange][B]OTV_MEDIA[/B][/COLOR] sürüm notlarını görebileceğiniz alan.'
                 addDir('[COLOR orange][B][COLOR blue]> [/COLOR]Sürüm Notları[/B][/COLOR]','surum.php',5,os.path.join(IMAGES_PATH, 'vers.png'),0, desc, None, os.path.join(IMAGES_PATH, 'vers.png'),"0", "surum")
-                desc = '[COLOR orange][B]seyirTURK[/B][/COLOR] hakkımızdaki bilgileri görebileceğiniz alan.'
+                desc = '[COLOR orange][B]OTV_MEDIA[/B][/COLOR] hakkımızdaki bilgileri görebileceğiniz alan.'
                 addDir('[COLOR orange][B][COLOR blue]> [/COLOR]Hakkında[/B][/COLOR]','hakkinda.php',5,os.path.join(IMAGES_PATH, 'info.png'),0, desc, None, os.path.join(IMAGES_PATH, 'info.png'),"0","hakkında")
-                desc = '[COLOR orange][B]seyirTURK[/B][/COLOR] VIP üyelik hakkında bilgi alabileceğiniz alan.'
+                desc = '[COLOR orange][B]OTV_MEDIA[/B][/COLOR] VIP üyelik hakkında bilgi alabileceğiniz alan.'
                 addDir('[COLOR orange][B][COLOR blue]> [/COLOR]VIP bilgi[/B][/COLOR]','vip_uyelik.php',5,os.path.join(IMAGES_PATH, 'vip.png'),0, desc, None, os.path.join(IMAGES_PATH, 'vip.png'),"0","vip")
-                desc = '[COLOR orange][B]seyirTURK[/B][/COLOR] Yasal bilgi alabileceğiniz alan.'
+                desc = '[COLOR orange][B]OTV_MEDIA[/B][/COLOR] Yasal bilgi alabileceğiniz alan.'
                 addDir('[COLOR orange][B][COLOR blue]> [/COLOR]Yasal bilgi[/B][/COLOR]','yasal.php',5,os.path.join(IMAGES_PATH, 'yasal.png'),0, desc, None, os.path.join(IMAGES_PATH, 'yasal.png'),"0","yasal")
-                desc = '[COLOR orange][B]seyirTURK[/B][/COLOR] seyirTURK kullanımı hakkında bilgi alabileceğiniz alan. Bu kısmı seçtiğinizde sisteminizde yüklü bulunan internet tarayıcısı açılacaktır.'
-                addDir('[COLOR orange][B][COLOR blue]> [/COLOR]seyirTURK Kullanıcı Elkitabı[/B][/COLOR]','seyirturkelkitabi.php',302,os.path.join(IMAGES_PATH, 'handbook.png'),0, desc, None, os.path.join(IMAGES_PATH, 'yasal.png'),"0","yasal")
+                desc = '[COLOR orange][B]OTV_MEDIA[/B][/COLOR] OTV_MEDIA kullanımı hakkında bilgi alabileceğiniz alan. Bu kısmı seçtiğinizde sisteminizde yüklü bulunan internet tarayıcısı açılacaktır.'
+                addDir('[COLOR orange][B][COLOR blue]> [/COLOR]OTV_MEDIA Kullanıcı Elkitabı[/B][/COLOR]','OTV_MEDIAelkitabi.php',302,os.path.join(IMAGES_PATH, 'handbook.png'),0, desc, None, os.path.join(IMAGES_PATH, 'yasal.png'),"0","yasal")
             elif ".m3u" in url or "type=m3u" in url:
                 channels = m3uarray(f)
                 tip = re.findall('.*?#(.*?)$',url)
@@ -621,7 +651,7 @@ def listele(url):
                         baslik = a
                         if a == "":
                             baslik = "Kategorisiz"
-                        desc = "[COLOR orange][B]seyirTURK[/B][/COLOR] IPTV nizin kategorisi."
+                        desc = "[COLOR orange][B]OTV_MEDIA[/B][/COLOR] IPTV nizin kategorisi."
                         addDir('[COLOR blue][B]~ ' + parsers.to_utf8(baslik) + '',Quote(parsers.to_utf8(url) + '#' + parsers.to_utf8(a)),302,os.path.join(IMAGES_PATH, 'kategori.png'),None, desc,None)
                 else:
                     x = 0
@@ -713,13 +743,13 @@ def listele(url):
                     xbmc.executebuiltin('Action(back)')
                     if isSearchNegative == 0:
                         if 'name=' not in url and "0 Games" not in f:
-                            parsers.showMessage("[COLOR orange][B]seyirTURK KODI[/B][/COLOR]", "Link Bulunamadı!")
+                            parsers.showMessage("[COLOR orange][B]OTV_MEDIA KODI[/B][/COLOR]", "Link Bulunamadı!")
                         elif "0 Games" not in f:
-                            parsers.showMessage("[COLOR orange][B]seyirTURK KODI[/B][/COLOR]","Arama sayfası boş döndü.")
+                            parsers.showMessage("[COLOR orange][B]OTV_MEDIA KODI[/B][/COLOR]","Arama sayfası boş döndü.")
                         elif "0 Games" in f and "istory" in url:
-                            parsers.showMessage("[COLOR orange][B]seyirTURK KODI[/B][/COLOR]","İzlemeye Başladıklarım bölümü boş!.")
+                            parsers.showMessage("[COLOR orange][B]OTV_MEDIA KODI[/B][/COLOR]","İzlemeye Başladıklarım bölümü boş!.")
                     if isSearchNegative == -1:
-                        parsers.showMessage("[COLOR orange][B]seyirTURK KODI[/B][/COLOR]","Şifreniz yanlış. Kod: -1")
+                        parsers.showMessage("[COLOR orange][B]OTV_MEDIA KODI[/B][/COLOR]","Şifreniz yanlış. Kod: -1")
 
         else:
             mania()
@@ -784,7 +814,7 @@ def oynat(url,baslik,resim,desc,m_id,timestamp,isTv="0"):
             #sys.exit(playList)
             if s>0 :
                 if url is not None:
-                    key = dialog.yesno('[COLOR orange][B]seyirTURK Kodi[/B][/COLOR]', '\nVideo nereden başlatılsın?', yeslabel='Baştan', nolabel='Kaldığım Yerden')
+                    key = dialog.yesno('[COLOR orange][B]OTV_MEDIA Kodi[/B][/COLOR]', '\nVideo nereden başlatılsın?', yeslabel='Baştan', nolabel='Kaldığım Yerden')
                     if key ==1:
                         s=0
                     else:
@@ -799,8 +829,8 @@ def oynat(url,baslik,resim,desc,m_id,timestamp,isTv="0"):
             xbmc.executebuiltin('Dialog.Close(busydialognocancel)')
             parsers.error(main_url)
     
-def addDir(name, url, mode, iconimage, m_id, desc, timestamp, fanart="", isTv="0", konu = ''):
-        desc= desc.replace('seyirTURK','')
+def addDir(name, url, mode, iconimage, m_id, desc, timestamp, fanart="https://raw.githubusercontent.com/orhantv/otv_yeni/master/plugin.video.OTV_MEDIA/fanart.jpg", isTv="0", konu = ''):
+        desc= str(desc).replace('seyirTURK','')
         name= name.replace('seyirTURK','')
         kokd = kok()
         if desc == None :
@@ -821,31 +851,31 @@ def addDir(name, url, mode, iconimage, m_id, desc, timestamp, fanart="", isTv="0
         if settings.getSetting( "user_id" ):
             if '*'  in name:
                 if "İzlendi" in name:
-                    liz.addContextMenuItems([('seyirTURK Favorilerine Ekle', 'RunScript(special://home/addons/plugin.video.seyirTURK/resources/scripts/ekle.py,' + m_id + ')'),
+                    liz.addContextMenuItems([('OTV_MEDIA Favorilerine Ekle', 'RunScript(special://home/addons/plugin.video.OTV_MEDIA/resources/scripts/ekle.py,' + m_id + ')'),
                                              ('Benzer Filmleri Listele','Container.Update(%s?mode=302&url=%s)'% (sys.argv[0],Quote_plus(kokd + 'recom.php?movie_id=' + m_id))),
                                              ('Yönetmen','Container.Update(%s?mode=302&url=%s)'% (sys.argv[0],Quote_plus(kokd + 'recomSearch.php?type=0&m_id=' + m_id))),
                                              ('Senarist','Container.Update(%s?mode=302&url=%s)'% (sys.argv[0],Quote_plus(kokd + 'recomSearch.php?type=1&m_id=' + m_id))),
                                              ('Oyuncular','Container.Update(%s?mode=302&url=%s)'% (sys.argv[0],Quote_plus(kokd + 'recomSearch.php?type=2&m_id=' + m_id))),
-                                             ('İzlendi İşaretini Kaldır','RunScript(special://home/addons/plugin.video.seyirTURK/resources/scripts/watched_remove.py,' + m_id + ')')])
+                                             ('İzlendi İşaretini Kaldır','RunScript(special://home/addons/plugin.video.OTV_MEDIA/resources/scripts/watched_remove.py,' + m_id + ')')])
                     
                 else:
-                    liz.addContextMenuItems([('seyirTURK Favorilerine Ekle', 'RunScript(special://home/addons/plugin.video.seyirTURK/resources/scripts/ekle.py,' + m_id + ')'),
+                    liz.addContextMenuItems([('OTV_MEDIA Favorilerine Ekle', 'RunScript(special://home/addons/plugin.video.OTV_MEDIA/resources/scripts/ekle.py,' + m_id + ')'),
                                          ('Benzer Filmleri Listele','Container.Update(%s?mode=302&url=%s)'% (sys.argv[0],Quote_plus(kokd + 'recom.php?movie_id=' + m_id))),
                                          ('Yönetmen','Container.Update(%s?mode=302&url=%s)'% (sys.argv[0],Quote_plus(kokd + 'recomSearch.php?type=0&m_id=' + m_id))),
                                          ('Senarist','Container.Update(%s?mode=302&url=%s)'% (sys.argv[0],Quote_plus(kokd + 'recomSearch.php?type=1&m_id=' + m_id))),
                                          ('Oyuncular','Container.Update(%s?mode=302&url=%s)'% (sys.argv[0],Quote_plus(kokd + 'recomSearch.php?type=2&m_id=' + m_id))),
-                                         ('İzlendi Olarak İşaretle','RunScript(special://home/addons/plugin.video.seyirTURK/resources/scripts/watched_add.py,' + m_id + ')')])
+                                         ('İzlendi Olarak İşaretle','RunScript(special://home/addons/plugin.video.OTV_MEDIA/resources/scripts/watched_add.py,' + m_id + ')')])
             elif '{f}'  in name:
                 if "İzlendi" in name:
-                    liz.addContextMenuItems([('İzlendi İşaretini Kaldır','RunScript(special://home/addons/plugin.video.seyirTURK/resources/scripts/watched_remove.py,' + m_id + ')')])
+                    liz.addContextMenuItems([('İzlendi İşaretini Kaldır','RunScript(special://home/addons/plugin.video.OTV_MEDIA/resources/scripts/watched_remove.py,' + m_id + ')')])
                 else:
-                    liz.addContextMenuItems([('İzlendi Olarak İşaretle','RunScript(special://home/addons/plugin.video.seyirTURK/resources/scripts/watched_add.py,' + m_id + ')')])
+                    liz.addContextMenuItems([('İzlendi Olarak İşaretle','RunScript(special://home/addons/plugin.video.OTV_MEDIA/resources/scripts/watched_add.py,' + m_id + ')')])
             elif '#' in name:
-                liz.addContextMenuItems([('seyirTURK Favorilerinden Kaldır', 'RunScript(special://home/addons/plugin.video.seyirTURK/resources/scripts/sil.py,' + m_id + ')')])  
+                liz.addContextMenuItems([('seyirTURK Favorilerinden Kaldır', 'RunScript(special://home/addons/plugin.video.OTV_MEDIA/resources/scripts/sil.py,' + m_id + ')')])  
             elif '»' in name:
-                liz.addContextMenuItems([('IPTV Favorilerine Ekle', 'RunScript(special://home/addons/plugin.video.seyirTURK/resources/scripts/iptvekle.py,?image=' + iconimage + '&link=' + Unquote(url) + '&name=' + name +')')])  
+                liz.addContextMenuItems([('IPTV Favorilerine Ekle', 'RunScript(special://home/addons/plugin.video.OTV_MEDIA/resources/scripts/iptvekle.py,?image=' + iconimage + '&link=' + Unquote(url) + '&name=' + name +')')])  
             elif '«' in name:
-                liz.addContextMenuItems([('IPTV Favorilerden Kaldır', 'RunScript(special://home/addons/plugin.video.seyirTURK/resources/scripts/iptvsil.py,?link=' + Unquote(url) +')')]) 
+                liz.addContextMenuItems([('IPTV Favorilerden Kaldır', 'RunScript(special://home/addons/plugin.video.OTV_MEDIA/resources/scripts/iptvsil.py,?link=' + Unquote(url) +')')]) 
         liz.setArt({'thumb': iconimage, 'icon': iconimage, 'fanart': fanart, 'poster': iconimage})
         desc =  Unquote_plus(desc)
         liz.setInfo( type="Video", infoLabels={ "Title": name,'plot': desc})
@@ -860,17 +890,17 @@ def bilgi(konu):
         xbmc.executebuiltin('ActivateWindow(busydialognocancel)')
         if konu == 'istatistik':
             stats = parsers.cache(kok() + 'stats.php').replace('<br>','\n').replace('<b>','[B]').replace('</b>','[/B]')
-            dialog.textviewer("[COLOR orange][B]seyirTURK Kodi[/B][/COLOR]", stats)
+            dialog.textviewer("[COLOR orange][B]OTV_MEDIA Kodi[/B][/COLOR]", stats)
         elif konu == 'yasal':
             uyari_page = parsers.cache('https://seyirturk.tk/yasal-bilgi/')
             uyari = re.findall('<p class="has-text-align-left"><strong>(.*?)<p>',uyari_page, re.DOTALL)[0].replace('<p class="has-text-align-left"><strong>','[B]').replace('</strong></p>','[/B]\n')
             uyari = '[B]' + uyari.replace('&#8220;','"').replace('&#8221;','"').replace('<a href="https://seyirturk.tk/iletisim">','').replace('</a>','').replace('<a href="mailto:seyirturk@yandex.com">','').replace('&nbsp;','')
-            dialog.textviewer("[COLOR orange][B]seyirTURK Kodi[/B][/COLOR]", uyari)
+            dialog.textviewer("[COLOR orange][B]OTV_MEDIA Kodi[/B][/COLOR]", uyari)
         elif konu == 'surum':
             page = parsers.cache('https://seyirturk.tk/forum/viewtopic.php?f=14&t=51')
             text = re.findall('color:#0080FF"><br>(.*?)<\/span><br>', page, re.DOTALL)[0]
             text = text.replace('\n','').replace('<br>','\n').replace('<strong class="text-strong">','[B]').replace('</strong>','[/B]')
-            dialog.textviewer("[COLOR orange][B]seyirTURK Kodi - Sürüm Notları[/B][/COLOR]", text)
+            dialog.textviewer("[COLOR orange][B]OTV_MEDIA Kodi - Sürüm Notları[/B][/COLOR]", text)
         elif konu == 'hakkında':
             with closing(File(os.path.join(ADDON_PATH, "addon.xml"))) as fo:
                 t = fo.read()
@@ -881,10 +911,10 @@ def bilgi(konu):
                 website = re.findall('<website>(.*?)</website>', t)[0]
                 email = re.findall('<email>(.*?)</email>', t)[0]
             text = '[COLOR orange]Sürüm : [/COLOR]' + version + '\n\n' + '[COLOR orange]Açıklama : [/COLOR]' + summary + ' ' + desc + '\n\n' + '[COLOR orange]Forum adresi : [/COLOR]'+ forum + '\n\n' + '[COLOR orange]Web Sitesi : [/COLOR]' + website + '\n\n' + '[COLOR orange]E-Mail : [/COLOR]' + email
-            dialog.textviewer("[COLOR orange][B]seyirTURK Kodi - Hakkında[/B][/COLOR]", text)
+            dialog.textviewer("[COLOR orange][B]OTV_MEDIA Kodi - Hakkında[/B][/COLOR]", text)
         elif konu == 'vip':
             desc = parsers.cache(kok() + 'vipbilgi.php').replace('<br>','\n').replace('<b>','[B]').replace('</b>','[/B]')
-            dialog.textviewer("[COLOR orange][B]seyirTURK Kodi VIP Üyelik Açıklaması[/B][/COLOR]", desc)
+            dialog.textviewer("[COLOR orange][B]OTV_MEDIA Kodi VIP Üyelik Açıklaması[/B][/COLOR]", desc)
         elif konu == 'bilgiler':
             listele('bilgiler.php')
         elif konu == 'ayarlar':
@@ -892,7 +922,7 @@ def bilgi(konu):
             xbmc.executebuiltin('Container.Refresh')
         xbmc.executebuiltin('Dialog.Close(busydialognocancel)')
     except:
-        ok = dialog.ok("[COLOR orange][B]seyirTURK Kodi[/B][/COLOR]", "\nSunucu ile bağlantı kurulamıyor.\nLütfen daha sonra tekrar deneyiniz.")            
+        ok = dialog.ok("[COLOR orange][B]OTV_MEDIA Kodi[/B][/COLOR]", "\nSunucu ile bağlantı kurulamıyor.\nLütfen daha sonra tekrar deneyiniz.")            
         xbmc.executebuiltin('Dialog.Close(busydialognocancel)')
        
 def Remove(duplicate): 
@@ -923,7 +953,7 @@ def mail_gir(root):
                     add_mail(u_name, d, root)
                     settings.setSetting("e_mail", d.strip())
                 else:
-                    key = dialog.ok('[COLOR orange][B]seyirTURK Kodi[/B][/COLOR]', '\nGeçersiz E-Mail. Lütfen bir sonraki açılışta tekrar deneyiniz.')
+                    key = dialog.ok('[COLOR orange][B]OTV_MEDIA Kodi[/B][/COLOR]', '\nGeçersiz E-Mail. Lütfen bir sonraki açılışta tekrar deneyiniz.')
         else:
             settings.setSetting("e_mail", page.strip())
     else:
@@ -959,7 +989,7 @@ def mem_cont():
                 settings.setSetting('user_id', '')
                 parsers.cache_clear()
                 settings.setSetting("temp_watched","mids")
-                ok = dialog.ok("[COLOR orange][B]seyirTURK Kodi[/B][/COLOR]","Bu kullanıcı, daha önceden isteğiniz üzerine silinmişti.")
+                ok = dialog.ok("[COLOR orange][B]OTV_MEDIA Kodi[/B][/COLOR]","Bu kullanıcı, daha önceden isteğiniz üzerine silinmişti.")
   
     elif not settings.getSetting( "mail" ).strip() or not settings.getSetting( "sifre" ).strip() :
         settings.setSetting('user_id', '')
@@ -996,20 +1026,20 @@ def update(text,surum):
             fff.write(f)
             fff.close()
         except:
-            pass
+            pass                                                                                                       
     elif 'mandatory' in text:
         try:
-            ico = xbmc.translatePath("special://home/addons/plugin.video.seyirTURK/resources/media/seyir.png") 
+            ico = xbmc.translatePath("special://home/addons/plugin.video.OTV_MEDIA/resources/media/seyir.png") 
             xbmc.executebuiltin('ActivateWindow(busydialognocancel)')
             xbmc.executebuiltin("UpdateAddonRepos")
             settings.setSetting('surum_kontrol', rakam)
             time.sleep(2)
             xbmc.executebuiltin('Dialog.Close(busydialognocancel)')
-            key = dialog.ok('[COLOR orange][B]seyirTURK Kodi[/B][/COLOR]', '\nseyirTURK ' + rakam + ' sürümüne güncellendi.')
+            key = dialog.ok('[COLOR orange][B]OTV_MEDIA Kodi[/B][/COLOR]', '\nOTV_MEDIA ' + rakam + ' sürümüne güncellendi.')
             parsers.cache_clear()
             maina()
         except:
-            ok = dialog.ok("[COLOR orange][B]seyirTURK Kodi[/B][/COLOR]", "\nGüncelleme başarısız oldu! Lütfen eklentiyi kendiniz güncelleyiniz.")             
+            ok = dialog.ok("[COLOR orange][B]OTV_MEDIA Kodi[/B][/COLOR]", "\nGüncelleme başarısız oldu! Lütfen eklentiyi kendiniz güncelleyiniz.")             
 
 def m3uarray(f):
     channels = []
@@ -1116,11 +1146,15 @@ except:
            
 if mode == None or url == None or len(url) < 1:
         listele(url)
-elif mode == 302:
+elif mode == 302:                                                
         listele(url)
         logger.info('urllll>%s' % url)
 elif mode == 303:
         oynat(url,name,resim,desc,m_id,timestamp,isTv)
+elif mode == 304:                                                 
+        main(url)
+        logger.info('urllll>%s' % url)
+
 elif mode == 4:
     ayarlar()
     xbmc.executebuiltin('Container.Refresh')

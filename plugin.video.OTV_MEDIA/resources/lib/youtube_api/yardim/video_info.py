@@ -41,7 +41,7 @@ import copy
 import re
 import json
 import random
-import httpx
+
 import requests
 from resources.lib.youtube_api.yardim import is_httpd_live, make_dirs, DataCache
 from resources.lib.youtube_api.yardim.exceptions import Exception

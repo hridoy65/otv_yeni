@@ -24,7 +24,7 @@ import settings
 import urllib.request
 from six.moves import urllib_request, urllib_parse, http_cookiejar
 from kodi_six import xbmcvfs, xbmcaddon, xbmcplugin, xbmcgui
-
+from resources.lib.handler.ParameterHandler import ParameterHandler
 # python 2 and 3 compatibility defs
 INFO = xbmc.LOGINFO if six.PY3 else xbmc.LOGNOTICE
 TRANSLATEPATH = xbmcvfs.translatePath if six.PY3 else xbmc.translatePath
@@ -44,6 +44,7 @@ fanart = os.path.join(home, 'resources/fanart.jpg')
 icon = os.path.join(home, 'resources/icon.png')
 logos = os.path.join(home, 'resources/logos\\')  # subfolder for logos
 homemenu = os.path.join(home, 'resources', 'playlists')
+HANDLE			= sys.argv[1]
 
 #addon = settings.addon()
 cookiejar = http_cookiejar.LWPCookieJar()
@@ -961,20 +962,20 @@ def get_params():
 			if (len(splitparams)) == 2:
 				param[splitparams[0]] = splitparams[1]
 	return param
-
+                      
 def add_dir(name, url, mode, iconimage, fanart):
 	u = sys.argv[0] + '?url=' + urllib_parse.quote_plus(url) + '&mode=' + str(mode) +\
-		'&name=' + urllib_parse.quote_plus(name) + '&iconimage=' + str(iconimage)
+		'&name=' + urllib_parse.quote_plus(name) + '&iconimage=' + str(iconimage)+ '&adult=' + 'adult'
 	ok = True
 	liz = xbmcgui.ListItem(name)
 	liz.setArt({ 'thumb': iconimage, 'icon': icon, 'fanart': fanart})
 	ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u,
 									listitem=liz, isFolder=True)
 	return ok
-
+#  xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 def add_link(name, url, mode, iconimage, fanart):
 	u = sys.argv[0] + '?url=' + urllib_parse.quote_plus(url) + '&mode=' + str(mode)\
-		+ '&name=' + urllib_parse.quote_plus(name) + "&iconimage=" + urllib.parse.quote_plus(iconimage)
+		+ '&name=' + urllib_parse.quote_plus(name) + "&iconimage=" + urllib.parse.quote_plus(iconimage)+ '&adult=' + 'adult'
 	ok = True
 	liz = xbmcgui.ListItem(name)
 	liz.setArt({'thumb': iconimage, 'icon': icon, 'fanart': iconimage})
@@ -987,7 +988,7 @@ def add_link(name, url, mode, iconimage, fanart):
 	ok = xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u,
 									listitem=liz, isFolder=False)
 	return ok
-
+#  xbmcplugin.endOfDirectory(HANDLE, cacheToDisc=False)
 def uflash_nextpage(current_url, content):
 	match = re.compile('<span class="currentpage">([0-9]+)</span>', re.DOTALL).findall(content)
 	next_page = int(match.pop()) + 1

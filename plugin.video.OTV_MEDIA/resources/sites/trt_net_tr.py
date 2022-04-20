@@ -121,7 +121,7 @@ def trtradyo():
             oOutputParameterHandler.addParameter('siteUrl',surl )
             oOutputParameterHandler.addParameter('sMovieTitle', sTitle)            
             oOutputParameterHandler.addParameter('sThumbnail',  sPicture) 
-            oGui.addMovie(SITE_IDENTIFIER, 'TRTRADYO', sTitle, sPicture, sPicture, cat, oOutputParameterHandler)
+            oGui.addMovie(SITE_IDENTIFIER, 'TRTRADYO', sTitle.upper(), sPicture, sPicture, cat, oOutputParameterHandler)
     oGui.setEndOfDirectory()       
 
 
@@ -144,7 +144,7 @@ def trttebaelevis():
             oOutputParameterHandler.addParameter('siteUrl',surl )
             oOutputParameterHandler.addParameter('sMovieTitle', sTitle)            
             oOutputParameterHandler.addParameter('sThumbnail',  sPicture) 
-            oGui.addMovie(SITE_IDENTIFIER, 'TRTcanli', sTitle, sPicture, sPicture, cat, oOutputParameterHandler)
+            oGui.addMovie(SITE_IDENTIFIER, 'TRTcanli', sTitle.upper(), sPicture, sPicture, cat, oOutputParameterHandler)
     oGui.setEndOfDirectory()       
 
 def trttelevis():
@@ -166,7 +166,7 @@ def trttelevis():
             oOutputParameterHandler.addParameter('siteUrl',surl )
             oOutputParameterHandler.addParameter('sMovieTitle', sTitle)            
             oOutputParameterHandler.addParameter('sThumbnail',  sPicture) 
-            oGui.addMovie(SITE_IDENTIFIER, 'TRTcanli', sTitle, sPicture, sPicture, cat, oOutputParameterHandler)
+            oGui.addMovie(SITE_IDENTIFIER, 'TRTcanli', sTitle.upper(), sPicture, sPicture, cat, oOutputParameterHandler)
     oGui.setEndOfDirectory()       
 
 

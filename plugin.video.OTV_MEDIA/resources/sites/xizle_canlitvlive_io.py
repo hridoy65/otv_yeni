@@ -136,6 +136,29 @@ def deCFEmail(fp):
         except (ValueError):
             pass
 
+def cookie2( Url ):
+    oGui = cGui()
+   
+    
+  
+
+    UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36'
+    headers = {"User-Agent": UA}
+    req = urllib2.Request(Url, None, headers)
+    try:
+       response = urllib2.urlopen(req)
+    except UrlError as e:
+       print(e.read())
+       print(e.reason)
+
+    sHtmlContent = to_utf8(response.read())
+    head = response.headers
+    return head
+#    sPattern = 'Set-Cookie: token=(.*?);'
+#    oParser = cParser()
+#    aResult = oParser.parse(head, sPattern)
+#    if (aResult[0] == True):
+#         return  aResult[1][0]
 
 def Canlitvlivedecode():
     oGui = cGui()
@@ -151,7 +174,7 @@ def Canlitvlivedecode():
     try:
        response = urllib2.urlopen(req)
     except UrlError as e:
-       print(e.read())
+     #  print(e.read())
        print(e.reason)
                     
     sHtmlContent = response.read()
@@ -184,7 +207,7 @@ def Canlitvlivedecode():
     body = response.read()
     head = response.headers
     response.close()
-        
+    logger.info("cookies : %s" % cookies )    
     cf =to_utf8(body)
     if not  '/cdn-cgi/l/email-protectio' in cf:
         tokenn= re.search('"token": "(.+?)"', cf).group(1)
@@ -194,10 +217,21 @@ def Canlitvlivedecode():
         token= re.search('data-cfemail="(.+?)"', cf).group(1)
         decodemail=deCFEmail(cfmail)
         payload = {'email' : decodemail ,'data' : token}
+    #'https://izle.canlitvlive.io/ctlio.php?data={"url":"https://izle.canlitvlive.io/watch.php?tv=show-tv","ref":"","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36","if":false,"ifurl":"2"}
+    #https://izle.canlitvlive.io/ctlio.php?data=%7B%22url%22%3A%22https%3A%2F%2Fizle.canlitvlive.io%2Fwatch.php%3Ftv%3Dshow-tv%22%2C%22ref%22%3A%22%22%2C%22ua%22%3A%22Mozilla%2F5.0%20(Windows%20NT%2010.0%3B%20Win64%3B%20x64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F98.0.4758.102%20Safari%2F537.36%22%2C%22if%22%3Afalse%2C%22ifurl%22%3A%222%22%7D
+   # Urrlm='https://izle.canlitvlive.io/ctlio.php?data=%7B%22url%22%3A%22https%3A%2F%2Fizle.canlitvlive.io%2Fshow-tv-canli-izle-220304%22%2C%22ref%22%3A%22https%3A%2F%2Fizle.canlitvlive.io%2F%22%2C%22ua%22%3A%22Mozilla%2F5.0%20(Windows%20NT%2010.0%3B%20Win64%3B%20x64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F98.0.4758.102%20Safari%2F537.36%22%2C%22if%22%3Afalse%2C%22ifurl%22%3A%222%22%7D'
+#    Urrlm='https://raw.githubusercontent.com/orhantv/otv_yeni/master/plugin.video.OTV_MEDIA/220301.html'
     
+#    tent = getHtml(Urrlm) 
+    #logger.info("tent : %s" % tent )
     from OTVJSfuckdec import OTVJSfuck  
-    data= re.search('mplayer.src\((.+?)\);', cf).group(1)
-    Urll= OTVJSfuck(data).decode()
+#    data= re.search('mplayer.src\((.+?)\);',cf).group(1)
+   # Urll=OTVJSfuck(data).decode()
+   # logger.info("Urrl : %s" % data )
+    
+    Ur= OTVJSfuck(cf).decode()
+    Urll= re.search('mplayer.src.(.+?);',Ur).group(1)
+    #logger.info("cookies : %s" % cookies )
     headerss = {   'Host': 'izle.canlitvlive.io',
                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
                    'Accept': '*/*',
@@ -207,16 +241,20 @@ def Canlitvlivedecode():
                    'Cookie': cookies}                     
    
    
-   
+                                      
     
     s = requests.Session()
     r = s.post(Urll ,  headers=headerss,data=payload , allow_redirects=False)
     urrl=r.headers['Location']
-   
-    Urll =urrl+'|Host=izle.canlitvlive.io&User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36&Referer='+Urrl
+  
+    logger.info("Urrl : %s" % urrl)
+    Urll =urrl+'|Host=str01.mitream.net&User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36&Referer='+Urrl
     addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]'+name,Urll ,'')  
       
-                               
+
+
+
+#print("OK")#?data=%7B%22url%22%3A%22https%3A%2F%2Fizle.canlitvlive.io%2Fwatch.php%3Ftv%3Dshow-tv%22%2C%22ref%22%3A%22%22%2C%22ua%22%3A%22Mozilla%2F5.0%20(Windows%20NT%2010.0%3B%20Win64%3B%20x64)%20AppleWebKit%2F537.36%20(KHTML%2C%20like%20Gecko)%20Chrome%2F98.0.4758.102%20Safari%2F537.36%22%2C%22if%22%3Afalse%2C%22ifurl%22%3A%222%22%7D                               
 def addLink(name, url, iconimage):
     ok = True
     

@@ -12,771 +12,1083 @@ def Series():
 #from youtube_api import datetime_parser
 #pd=datetime_parser.now().strftime('%Y-%m-%dT%H:%M:%SZ')
 from resources.sites.LIVETV2 import *
-from resources.lib.youtube_api.youtube_api_utils import (
-    _load_response,
-    parse_yt_datetime,
-    _chunker,
-)
-from resources.lib.youtube_api import parsers as P
+
+import copy
+import json
+import re
+import threading
+import traceback
+import xml.etree.ElementTree as ET
+
+import requests
+from six import PY3
+
 from resources.lib.youtube_api.yardim.video_info import VideoInfo
 """
 This script has the YouTubeDataAPI class and functions for the API's endpoints.
 """
+from resources.lib.youtube_api.yardim.xbmc.xbmc_plugin_settings import XbmcPluginSettings as Settings
+#from resources.lib.youtube_api.yardim.xbmc.xbmc_context import XbmcContext as Context
+#from resources.lib.youtube_api.yardim.xbmc.xbmc_context_ui import XbmcContextUI as ContextUI
+#from resources.lib.youtube_api.yardim.xbmc.xbmc_runner import XbmcRunner as Runner
 
-__all__ = ['YoutubeDataApi', 'YouTubeDataAPI']
-from resources.lib.youtube_api.yardim.OAuth import OAuth, API_KEY
-class YouTubeDataAPI:
-    """
-    The Youtube Data API handles the keys and methods to access data from the YouTube Data API
+from resources.lib.logger import logger
 
-     :param key: YouTube Data API key. Get a YouTube Data API key here: https://console.cloud.google.com/apis/dashboard
-    """
-    def __init__(
-        self,key,  api_version='3', verify_api_key=True, verbose=False, timeout=20 
-    ):
-        """
-        :param key: YouTube Data API key
-        Get a YouTube Data API key here: https://console.cloud.google.com/apis/dashboard
-        """
-        self.key = API_KEY
-        self.api_version = int(api_version)
-        self.verbose = verbose
-        self._timeout = timeout
+from resources.lib.youtube_api.yardim.xbmc.abstract import AbstractSettings
 
-        # check API Key
-        if not self.key:
-            raise ValueError('No API key used to initate the class.')
-        if verify_api_key and not self.verify_key():
-            raise ValueError('The API Key is invalid')
-
-        # creates a requests sessions for API calls.
-        self._create_session()
+def get_key(x):
+	p = 3
+	while True:
+		if p > len(x):
+			break
+		pl = len(str(p))
+		x = x[:p] + x[p + pl:]
+		p += 12 - pl
+	x = x.replace('w_OizD', 'a')
+	x = x.replace('Xhi_Lo', 'A')
+	return x
 
 
-    def verify_key(self):
-        '''
-        Checks it the API key is valid.
+API_KEY = get_key('Xhi3_LoIzw_OizD15SyCNReMvKL27nw_OizDWRR395T5uGWpvn451I2VYc78Gy463')
+CLIENT_ID = get_key('4113447027255-v15bgs05u1o3m278mpjs2vcd0394w_OizDfrg5160drbw_Oiz63D.w_OizDpp75s.googleus87ercontent.99com')
+CLIENT_SECRET = get_key('Zf93pqd2rxgY2ro159rK20BMxif27')
 
-        :returns: True if the API key is valid, False if the key is not valid.
-        :rtype: bool
-        '''
-        http_endpoint = ("https://www.googleapis.com/youtube/v{}/playlists"
-                         "?part=id&id=UC_x5XG1OV2P6uZZ5FSM9Ttw&"
-                         "key={}&maxResults=2".format(self.api_version, self.key))
-        response = requests.get(http_endpoint)
+class YouTube():
+    def __init__(self, config=None, language='en-US', region='US', items_per_page=50, access_token='', access_token_tv=''):
+
+        self._max_results = items_per_page
+
+        self._language = language
+        self._region = region
+        self._access_token = access_token
+        self._access_token_tv = access_token_tv
+        self._log_error_callback = None
+        self._verify=''
+
+    def get_max_results(self):
+        return self._max_results
+
+    def get_language(self):
+        return self._language
+
+    def get_region(self):
+        return self._region
+
+    @staticmethod
+    def calculate_next_page_token(page, max_result):
+        page -= 1
+        low = 'AEIMQUYcgkosw048'
+        high = 'ABCDEFGHIJKLMNOP'
+        len_low = len(low)
+        len_high = len(high)
+
+        position = page * max_result
+
+        overflow_token = 'Q'
+        if position >= 128:
+            overflow_token_iteration = position // 128
+            overflow_token = '%sE' % high[overflow_token_iteration]
+        low_iteration = position % len_low
+
+        # at this position the iteration starts with 'I' again (after 'P')
+        if position >= 256:
+            multiplier = (position // 128) - 1
+            position -= 128 * multiplier
+        high_iteration = (position // len_low) % len_high
+
+        return 'C%s%s%sAA' % (high[high_iteration], low[low_iteration], overflow_token)
+
+    def update_watch_history(self, video_id, url):
+        headers = {'Host': 'www.youtube.com',
+                   'Connection': 'keep-alive',
+                   'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36',
+                   'Accept': 'image/webp,*/*;q=0.8',
+                   'DNT': '1',
+                   'Referer': 'https://www.youtube.com/tv',
+                   'Accept-Encoding': 'gzip, deflate',
+                   'Accept-Language': 'en-US,en;q=0.8,de;q=0.6'}
+        params = {'noflv': '1',
+                  'html5': '1',
+                  'video_id': video_id,
+                  'referrer': '',
+                  'eurl': 'https://www.youtube.com/tv#/watch?v=%s' % video_id,
+                  'skl': 'false',
+                  'ns': 'yt',
+                  'el': 'leanback',
+                  'ps': 'leanback'}
+        if self._access_token:
+            params['access_token'] = self._access_token
+
         try:
-            response.raise_for_status()
-            return True
+            _ = requests.get(url, params=params, headers=headers, verify=self._verify, allow_redirects=True)
         except:
-            return False
+            logger.error('Failed to update watch history |%s|' % traceback.print_exc())
 
-
-    def _create_session(self, max_retries=2, backoff_factor=.5, status_forcelist=[500, 502, 503, 504], **kwargs):
-        '''
-        Creates a requests session to retry API calls when any `status_forcelist` codes are returned.
-
-        :param max_retries: How many times to retry an HTTP request (API call) when a `status_forcelist` code is returned
-        :type max_retries: int
-        :param backoff_factor: How long to wait between retrying API calls. Scales exponentially.
-        :type backoff_factor: float
-        :param status_forcelist: Retry when any of these http response codes are returned.
-        :type status_forcelist: list
-        '''
-        session = requests.Session()
-        retries = Retry(total=max_retries,
-                        backoff_factor=backoff_factor,
-                        status_forcelist=status_forcelist,
-                        **kwargs)
-        session.mount('http://', HTTPAdapter(max_retries=retries))
-        self.session = session
-
-    def _http_request(self, http_endpoint, timeout_in_n_seconds=False):
-        '''
-        A wrapper function for making an http request to the YouTube Data API.
-        Will print the `http_endpoint` if the YouTubeDataAPI class is instantiated with verbose = True.
-        Attempts to load the response of the http request,
-        and returns json response.
-        '''
-        if self.verbose:
-            # Print the Http req and replace the API key with a placeholder
-            print(http_endpoint.replace(self.key, '{API_KEY_PLACEHOLDER}'))
-        response = self.session.get(http_endpoint, timeout=self._timeout)
-        response_json = _load_response(response)
-        return response_json
-
-    def get_channel_id_from_user(self, username, **kwargs):
-        """
-        Get a channel_id from a YouTube username. These are the unique identifiers for all YouTube "uers". IE. "Munchies" -> "UCaLfMkkHhSA_LaCta0BzyhQ".
-
-        Read the docs: https://developers.google.com/youtube/v3/docs/channels/list
-
-        :param username: the username for a YouTube channel
-        :type username: str
-
-        :returns: YouTube Channel ID for a given username
-        :rtype: str
-        """
-        http_endpoint = ("https://www.googleapis.com/youtube/v{}/channels"
-                         "?part=id"
-                         "&forUsername={}&key={}".format(self.api_version,
-                                                         username, self.key))
-        for k,v in kwargs.items():
-            http_endpoint += '&{}={}'.format(k, v)
-        response_json = self._http_request(http_endpoint)
-        channel_id = None
-        if response_json.get('items'):
-            channel_id = response_json['items'][0]['id']
-        return channel_id
-    def get_video_streams(self, video_title, video_container, video_id):
+    def get_video_streams(self,  video_id):
         context=''
         video_info = VideoInfo(context, access_token='', language='en-US')
 
         video_streams = video_info.load_stream_infos(video_id)
-        logger.info("video_streams : %s" % video_streams) 
-        # update title
-        for video_stream in video_streams:
-            title = '%s (%s)' % (video_title, video_container)
 
-            if 'audio' in video_stream and 'video' in video_stream:
-                if video_stream['audio']['bitrate'] > 0 and video_stream['video']['encoding'] and \
-                        video_stream['audio']['encoding']:
-                    title = '%s ' % (video_title)
-                                                     
-
-                elif video_stream['video']['encoding'] and video_stream['audio']['encoding']:
-                    title = '%s ' % (video_title)
-                                                 
-            elif 'audio' in video_stream and 'video' not in video_stream:
-                if video_stream['audio']['encoding'] and video_stream['audio']['bitrate'] > 0:
-                    title = '%s ' % (video_title)
-                                               
-
-            elif 'audio' in video_stream or 'video' in video_stream:
-                encoding = video_stream.get('audio', dict()).get('encoding')
-                if not encoding:
-                    encoding = video_stream.get('video', dict()).get('encoding')
-                if encoding:
-                    title = '%s ' % (video_title)
-
-            video_stream['title'] = title
 
         return video_streams
 
+    def remove_playlist(self, playlist_id):
+        params = {'id': playlist_id,
+                  'mine': 'true'}
+        return self.perform_v3_request(method='DELETE', path='playlists', params=params)
 
-    def get_channel_metadata_gen(self, channel_id, parser=P.parse_channel_metadata,
-                                 part=["id", "snippet", "contentDetails", "statistics",
-                                       "topicDetails", "brandingSettings"],
-                                **kwargs):
-        '''
-        Gets a dictionary of channel metadata given a channel_id, or a list of channel_ids.
+    def get_supported_languages(self, language=None):
+        _language = language
+        if not _language:
+            _language = self._language
+        _language = _language.replace('-', '_')
+        params = {'part': 'snippet',
+                  'hl': _language}
+        return self.perform_v3_request(method='GET', path='i18nLanguages', params=params)
 
-        :param channel_id:  channel id(s)
-        :type channel_id: str or list
-        :param parser: the function to parse the json document.
-        :type parser: :mod:`youtube_api.parsers module`
-        :param part: The part parameter specifies a comma-separated list of one or more resource properties that the API response will include. Different parameters cost different quota costs from the API.
-        :type part: list
+    def get_supported_regions(self, language=None):
+        _language = language
+        if not _language:
+            _language = self._language
+        _language = _language.replace('-', '_')
+        params = {'part': 'snippet',
+                  'hl': _language}
+        return self.perform_v3_request(method='GET', path='i18nRegions', params=params)
 
-        :returns: yields the YouTube channel metadata
-        :rtype: dict
-        '''
-        parser=parser if parser else P.raw_json
-        part = ','.join(part)
-        if isinstance(channel_id, list):
-                id_input = ','.join( channel_id)
-                http_endpoint = ("https://www.googleapis.com/youtube/v{}/channels?"
-                                "part={}&id={}&key={}&maxResults=50".format(
-                                    self.api_version, part, id_input, self.key))
-                for k,v in kwargs.items():
-                    http_endpoint += '&{}={}'.format(k, v)
-                response_json = self._http_request(http_endpoint)
-                if response_json.get('items'):
-                    for item in response_json['items']:
-                        yield parser(item)
-                else:
-                    yield parser(None)
+    def rename_playlist(self, playlist_id, new_title, privacy_status='private'):
+        params = {'part': 'snippet,id,status'}
+        post_data = {'kind': 'youtube#playlist',
+                     'id': playlist_id,
+                     'snippet': {'title': new_title},
+                     'status': {'privacyStatus': privacy_status}}
+        return self.perform_v3_request(method='PUT', path='playlists', params=params, post_data=post_data)
 
+    def create_playlist(self, title, privacy_status='private'):
+        params = {'part': 'snippet,status'}
+        post_data = {'kind': 'youtube#playlist',
+                     'snippet': {'title': title},
+                     'status': {'privacyStatus': privacy_status}}
+        return self.perform_v3_request(method='POST', path='playlists', params=params, post_data=post_data)
 
-    def get_channel_metadata(self, channel_id, parser=P.parse_channel_metadata,
-                             part=["id", "snippet", "contentDetails", "statistics",
-                                   "topicDetails", "brandingSettings"],  **kwargs):
-        '''
-        Gets a dictionary of channel metadata given a channel_id, or a list of channel_ids.
-
-        Read the docs: https://developers.google.com/youtube/v3/docs/channels/list
-
-        :param channel_id: the channel id(s)
-        :type channel_id: str or list
-        :param parser: the function to parse the json document.
-        :type parser: :mod:`youtube_api.parsers module`
-        :param part: The part parameter specifies a comma-separated list of one or more resource properties that the API response will include. Different parameters cost different quota costs from the API.
-        :type part: list
-
-        :returns: the YouTube channel metadata
-        :rtype: dict
-        '''
-        parser=parser if parser else P.raw_json
-        channel_meta = []
-        if isinstance(channel_id, str):
-            part = ','.join(part)
-            http_endpoint = ("https://www.googleapis.com/youtube/v{}/channels?"
-                             "part={}&id={}&key={}&maxResults=50".format(
-                                 self.api_version, part, channel_id, self.key))
-            for k,v in kwargs.items():
-                http_endpoint += '&{}={}'.format(k, v)
-            response_json = self._http_request(http_endpoint)
-            if response_json.get('items'):
-                channel_meta = parser(response_json['items'][0])
-
-        elif isinstance(channel_id, list):
-            for channel_meta_ in self.get_channel_metadata_gen(channel_id,
-                                                               parser=parser,
-                                                               part=part,
-                                                               **kwargs):
-                channel_meta.append(channel_meta_)
-        else:
-            raise TypeError("Could not process the type entered!")
-
-        return channel_meta
-
-
-    def get_video_metadata_gen(self, video_id, parser=P.parse_video_metadata,
-                               part=['statistics','snippet'],  **kwargs):
-        '''
-        Given a `video_id` returns metrics (views, likes, comments) and metadata (description, category) as a dictionary.
-
-        Read the docs: https://developers.google.com/youtube/v3/docs/videos/list
-
-        :param video_id: The ID of a video IE: "kNbhUWLH_yY", this can be found at the end of YouTube urls and by parsing links using :meth:`youtube_api.youtube_api_utils.strip_youtube_id`.
-        :type video_id: str or list of str
-        :param parser: the function to parse the json document
-        :type parser: :mod:`youtube_api.parsers module`
-        :param part: The part parameter specifies a comma-separated list of one or more resource properties that the API response will include. Different parameters cost different quota costs from the API.
-        :type part: list
-
-        :returns: returns metadata from the inputted ``video_id``s.
-        :rtype: dict
-        '''
-        part = ','.join(part)
-        parser=parser if parser else P.raw_json
+    def get_video_rating(self, video_id):
         if isinstance(video_id, list):
-           
-                id_input =','.join(video_id)
-                http_endpoint = ("https://www.googleapis.com/youtube/v{}/videos"
-                                 "?part={}"
-                                 "&id={}&key={}&maxResults=50".format(
-                                    self.api_version, part, id_input, self.key))
-                for k,v in kwargs.items():
-                    http_endpoint += '&{}={}'.format(k, v)
-                response_json = self._http_request(http_endpoint)
-                if response_json.get('items'):
-                    for item in response_json['items']:
-                        yield parser(item)
-                else:
-                    yield parser(None)
+            video_id = ','.join(video_id)
+
+        params = {'id': video_id}
+        return self.perform_v3_request(method='GET', path='videos/getRating', params=params)
+
+    def rate_video(self, video_id, rating='like'):
+        """
+        Rate a video
+        :param video_id: if of the video
+        :param rating: [like|dislike|none]
+        :return:
+        """
+        params = {'id': video_id,
+                  'rating': rating}
+        return self.perform_v3_request(method='POST', path='videos/rate', params=params)
+
+    def add_video_to_playlist(self, playlist_id, video_id):
+        params = {'part': 'snippet',
+                  'mine': 'true'}
+        post_data = {'kind': 'youtube#playlistItem',
+                     'snippet': {'playlistId': playlist_id,
+                                 'resourceId': {'kind': 'youtube#video',
+                                                'videoId': video_id}}}
+        return self.perform_v3_request(method='POST', path='playlistItems', params=params, post_data=post_data)
+
+    # noinspection PyUnusedLocal
+    def remove_video_from_playlist(self, playlist_id, playlist_item_id):
+        params = {'id': playlist_item_id}
+        return self.perform_v3_request(method='DELETE', path='playlistItems', params=params)
+
+    def unsubscribe(self, subscription_id):
+        params = {'id': subscription_id}
+        return self.perform_v3_request(method='DELETE', path='subscriptions', params=params)
+
+    def subscribe(self, channel_id):
+        params = {'part': 'snippet'}
+        post_data = {'kind': 'youtube#subscription',
+                     'snippet': {'resourceId': {'kind': 'youtube#channel',
+                                                'channelId': channel_id}}}
+        return self.perform_v3_request(method='POST', path='subscriptions', params=params, post_data=post_data)
+
+    def get_subscription(self, channel_id, order='alphabetical', page_token=''):
+        """
+
+        :param channel_id: [channel-id|'mine']
+        :param order: ['alphabetical'|'relevance'|'unread']
+        :param page_token:
+        :return:
+        """
+        params = {'part': 'snippet',
+                  'maxResults': str(self._max_results),
+                  'order': order}
+        if channel_id == 'mine':
+            params['mine'] = 'true'
         else:
-            raise Exception('This function only takes iterables!')
+            params['channelId'] = channel_id
+        if page_token:
+            params['pageToken'] = page_token
 
+        return self.perform_v3_request(method='GET', path='subscriptions', params=params)
 
-    def get_video_metadata(self, video_id, parser=P.parse_video_metadata, part=['statistics','snippet'],  **kwargs):
-        '''
-        Given a single or list of `video_id` returns metrics (views, likes, comments) and metadata (description, category) as a dictionary.
+    def get_guide_category(self, guide_category_id, page_token=''):
+        params = {'part': 'snippet,contentDetails,brandingSettings',
+                  'maxResults': str(self._max_results),
+                  'categoryId': guide_category_id,
+                  'regionCode': self._region,
+                  'hl': self._language}
+        if page_token:
+            params['pageToken'] = page_token
+        return self.perform_v3_request(method='GET', path='channels', params=params)
 
-        Read the docs: https://developers.google.com/youtube/v3/docs/videos/list
+    def get_guide_categories(self, page_token=''):
+        params = {'part': 'snippet',
+                  'maxResults': str(self._max_results),
+                  'regionCode': self._region,
+                  'hl': self._language}
+        if page_token:
+            params['pageToken'] = page_token
 
-        :param video_id:  the ID of a video IE: ['kNbhUWLH_yY'], this can be found at the end of YouTube urls and by parsing links using :meth:`youtube_api.youtube_api_utils.strip_youtube_id`.
-        :type video_id: str or list of str
-        :param parser: the function to parse the json document
-        :type parser: :mod:`youtube_api.parsers module`
-        :param part: The part parameter specifies a comma-separated list of one or more resource properties that the API response will include. Different parameters cost different quota costs from the API.
-        :type part: list
+        return self.perform_v3_request(method='GET', path='guideCategories', params=params)
 
-        :returns: yields a video metadata.
-        :rtype: dict
-        '''
-        video_metadata = []
-        parser=parser if parser else P.raw_json
-        if isinstance(video_id, str):
-            part = ','.join(part)
-            http_endpoint = ("https://www.googleapis.com/youtube/v{}/videos"
-                             "?part={}"
-                             "&id={}&key={}&maxResults=2".format(self.api_version,
-                                                                 part, video_id,
-                                                                 self.key))
-            for k,v in kwargs.items():
-                http_endpoint += '&{}={}'.format(k, v)
-            response_json = self._http_request(http_endpoint)
-            if response_json.get('items'):
-                video_metadata = parser(response_json['items'][0])
+    def get_popular_videos(self, page_token=''):
+        params = {'part': 'snippet,status',
+                  'maxResults': str(self._max_results),
+                  'regionCode': self._region,
+                  'hl': self._language,
+                  'chart': 'mostPopular'}
+        if page_token:
+            params['pageToken'] = page_token
+        return self.perform_v3_request(method='GET', path='videos', params=params)
 
-        elif isinstance(video_id, list) or isinstance(video_id, pd):
-            for video_meta in self.get_video_metadata_gen(video_id,
-                                                          parser=parser,
-                                                          part=part,
-                                                          **kwargs):
-                video_metadata.append(video_meta)
-        else:
-            raise TypeError("Could not process the type entered!")
+    def get_video_category(self, video_category_id, page_token=''):
+        params = {'part': 'snippet,contentDetails,status',
+                  'maxResults': str(self._max_results),
+                  'videoCategoryId': video_category_id,
+                  'chart': 'mostPopular',
+                  'regionCode': self._region,
+                  'hl': self._language}
+        if page_token:
+            params['pageToken'] = page_token
+        return self.perform_v3_request(method='GET', path='videos', params=params)
 
-        return video_metadata
+    def get_video_categories(self, page_token=''):
+        params = {'part': 'snippet',
+                  'maxResults': str(self._max_results),
+                  'regionCode': self._region,
+                  'hl': self._language}
+        if page_token:
+            params['pageToken'] = page_token
 
+        return self.perform_v3_request(method='GET', path='videoCategories', params=params)
 
-    def get_playlists(self, channel_id, next_page_token=False, parser=P.parse_playlist_metadata,
-                      part=['id','snippet','contentDetails'], **kwargs):
-        '''
-        Returns a list of playlist IDs that `channel_id` created.
-        Note that playlists can contains videos from any users.
+    def _get_recommendations_for_home(self):
+        # YouTube has deprecated this API, so use history and related items to form
+        # a recommended set. We cache aggressively because searches incur a high
+        # quota cost of 100 on the YouTube API.
+        # Note this is a first stab attempt and can be refined a lot more.
+        payload = {
+            'kind': 'youtube#activityListResponse',
+            'items': []
+        }
 
-        Read the docs: https://developers.google.com/youtube/v3/docs/playlists/list
+        watch_history_id = AbstractSettings().get_access_manager().get_watch_history_id()
+        if not watch_history_id or watch_history_id == 'HL':
+            return payload
 
-        :param channel_id: a channel_id IE: "UCn8zNIfYAQNdrFRrr8oibKw"
-        :type channel_id: str
-        :param next_page_token: a token to continue from a preciously stopped query IE: "CDIQAA"
-        :type next_page_token: str
+        cache = AbstractSettings().get_data_cache()
 
-        :param parser: the function to parse the json document
-        :type parser: :mod:`youtube_api.parsers module`
-        :param part: The part parameter specifies a comma-separated list of one or more resource properties that the API response will include. Different parameters cost different quota costs from the API.
-        :type part: list
+        # Do we have a cached result?
+        cache_home_key = 'get-activities-home'
+        cached = cache.get_item(cache.ONE_HOUR * 4, cache_home_key)
+        if cache_home_key in cached and cached[cache_home_key].get('items'):
+            return cached[cache_home_key]
 
-        :returns: playlist info that ``channel_id`` is subscribed to.
-        :rtype: list of dict
-        '''
-        parser=parser if parser else P.raw_json
-        part = ','.join(part)
-        playlists = []
-        while True:
-            http_endpoint = ("https://www.googleapis.com/youtube/v{}/playlists"
-                             "?part={}&channelId={}&key={}&maxResults=50".format(
-                                 self.api_version, part, channel_id, self.key))
-            for k,v in kwargs.items():
-                http_endpoint += '&{}={}'.format(k, v)
-            if next_page_token:
-                http_endpoint += "&pageToken={}".format(next_page_token)
-            response_json = self._http_request(http_endpoint)
-            if response_json.get('items'):
-                for item in response_json.get('items'):
-                    playlists.append(parser(item))
-                if response_json.get('nextPageToken'):
-                    next_page_token = response_json.get('nextPageToken')
-                else:
-                    break
+        # Fetch existing list of items, if any
+        items = []
+        cache_items_key = 'get-activities-home-items'
+        cached = cache.get_item(cache.ONE_WEEK * 2, cache_items_key)
+        if cache_items_key in cached:
+            items = cached[cache_items_key]
 
-        return playlists
+        # Fetch history and recommended items. Use threads for faster execution.
+        def helper(video_id, responses):
+            logger.debug(
+                'Method get_activities: doing expensive API fetch for related'
+                'items for video %s' % video_id
+            )
+            di = self.get_related_videos(video_id, max_results=10)
+            if 'items' in di:
+                # Record for which video we fetched the items
+                for item in di['items']:
+                    item['plugin_fetched_for'] = video_id
+                responses.extend(di['items'])
 
+        history = self.get_playlist_items(watch_history_id, max_results=50)
 
-    def get_videos_from_playlist_id(self, playlist_id, next_page_token=None,
-                                    parser=P.parse_video_url, part=['snippet'], max_results=200000,
-                                    **kwargs):
-        '''
-        Given a `playlist_id`, returns `video_ids` associated with that playlist.
+        if not history.get('items'):
+            return payload
 
-        Note that user uploads for any given channel are from a playlist named "upload playlist id". You can get this value using :meth:`youtube_api.youtube_api.get_channel_metadata` or :meth:`youtube_api.youtube_api_utils.get_upload_playlist_id`. The playlist ID for uploads is always the channel_id with "UU" subbed for "UC".
+        threads = []
+        candidates = []
+        already_fetched_for_video_ids = [item['plugin_fetched_for'] for item in items]
+        history_items = [item for item in history['items']
+                         if re.match(r'(?P<video_id>[\w-]{11})',
+                                     item['snippet']['resourceId']['videoId'])]
 
-        Read the docs: https://developers.google.com/youtube/v3/docs/playlistItems
+        # TODO:
+        # It would be nice to make this 8 user configurable
+        for item in history_items[:8]:
+            video_id = item['snippet']['resourceId']['videoId']
+            if video_id not in already_fetched_for_video_ids:
+                thread = threading.Thread(target=helper, args=(video_id, candidates))
+                threads.append(thread)
+                thread.start()
 
-        :param playlist_id: the playlist_id IE: "UUaLfMkkHhSA_LaCta0BzyhQ"
-        :type platlist_id: str
-        :param next_page_token: a token to continue from a preciously stopped query IE: "CDIQAA"
-        :type next_page_token: str
-        :param parser: the function to parse the json document
-        :type parser: :mod:`youtube_api.parsers module`
-        :param part: The part parameter specifies a comma-separated list of one or more resource properties that the API response will include. Different parameters cost different quota costs from the API.
-        :type part: list
-        :param max_results: How many video IDs should returned? Contrary to the name, this is actually the minimum number of results to be returned.
-        :type mac_results: int
-        
-        :returns: video ids associated with ``playlist_id``.
-        :rtype: list of dict
-        '''
-        parser=parser if parser else P.raw_json
-        part = ','.join(part)
-        videos = []
-        run = True
-        while run:
-            http_endpoint = ("https://www.googleapis.com/youtube/v{}/playlistItems"
-                             "?part={}&playlistId={}&maxResults=50&key={}".format(
-                                 self.api_version, part, playlist_id, self.key))
-            for k,v in kwargs.items():
-                http_endpoint += '&{}={}'.format(k, v)
-            if next_page_token:
-                http_endpoint += "&pageToken={}".format(next_page_token)
+        for thread in threads:
+            thread.join()
 
-            response_json = self._http_request(http_endpoint,
-                                               timeout_in_n_seconds=20  )
-            if response_json.get('items'):
-                for item in response_json.get('items'):
-                    videos.append(parser(item))
-                    if len(videos) >= max_results:
-                        run = False
-                        break
-                        
-                if response_json.get('nextPageToken'):
-                    next_page_token = response_json.get('nextPageToken')
-                else:
-                    run=False
-                    break
-            else:
-                run=False
+        # Prepend new candidates to items
+        seen = [item['id']['videoId'] for item in items]
+        for candidate in candidates:
+            vid = candidate['id']['videoId']
+            if vid not in seen:
+                seen.append(vid)
+                candidate['plugin_created_date'] = datetime_parser.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                items.insert(0, candidate)
+
+        # Truncate items to keep it manageable, and cache
+        items = items[:500]
+        cache.set(cache_items_key, json.dumps(items))
+
+        # Build the result set
+        items.sort(
+            key=lambda a: datetime_parser.parse(a['plugin_created_date']),
+            reverse=True
+        )
+        sorted_items = []
+        counter = 0
+        channel_counts = {}
+        while items:
+            counter += 1
+
+            # Hard stop on iteration. Good enough for our purposes.
+            if counter >= 1000:
                 break
 
-        return videos
+            # Reset channel counts on a new page
+            if counter % 50 == 0:
+                channel_counts = {}
 
+            # Ensure a single channel isn't hogging the page
+            item = items.pop()
+            channel_id = item.get('snippet', {}).get('channelId')
+            if not channel_id:
+                continue
 
-    def get_subscriptions(self, channel_id, next_page_token=False,
-                          parser=P.parse_subscription_descriptive,
-                          part=['id', 'snippet'], **kwargs):
-        '''
-        Returns a list of channel IDs that `channel_id` is subscribed to.
+            channel_counts.setdefault(channel_id, 0)
+            if channel_counts[channel_id] <= 3:
+                # Use the item
+                channel_counts[channel_id] = channel_counts[channel_id] + 1
+                item["page_number"] = counter // 50
+                sorted_items.append(item)
+            else:
+                # Move the item to the end of the list
+                items.append(item)
 
-        Read the docs: https://developers.google.com/youtube/v3/docs/subscriptions
+        # Finally sort items per page by date for a better distribution
+        now = datetime_parser.now()
+        sorted_items.sort(
+            key=lambda a: (
+                a['page_number'],
+                datetime_parser.total_seconds(
+                    now - datetime_parser.parse(a['snippet']['publishedAt'])
+                )
+            ),
+        )
 
-        :param channel_id: a channel_id IE: "UCn8zNIfYAQNdrFRrr8oibKw"
-        :type channel_id: str
-        :param next_page_token: a token to continue from a preciously stopped query IE: "CDIQAA"
-        :type next_page_token: str
-        :param stop_after_n_iteration: stops the API calls after N API calls
-        :type stop_after_n_iteration: int
-        :param parser: the function to parse the json document
-        :type parser: :mod:`youtube_api.parsers module`
-        :param part: The part parameter specifies a comma-separated list of one or more resource properties that the API response will include. Different parameters cost different quota costs from the API.
-        :type part: list
+        # Finalize result
+        payload['items'] = sorted_items
+        """
+        # TODO:
+        # Enable pagination
+        payload['pageInfo'] = {
+            'resultsPerPage': 50,
+            'totalResults': len(sorted_items)
+        }
+        """
+        # Update cache
+        cache.set(cache_home_key, json.dumps(payload))
 
-        :returns: channel IDs that ``channel_id`` is subscribed to.
-        :rtype: list
-        '''
-        parser=parser if parser else P.raw_json
-        part = ','.join(part)
-        subscriptions = []
-        while True:
-            http_endpoint = ("https://www.googleapis.com/youtube/v{}/subscriptions"
-                             "?channelId={}&part={}&maxResults=50&key={}".format(
-                                 self.api_version, channel_id, part, self.key))
-            for k,v in kwargs.items():
-                http_endpoint += '&{}={}'.format(k, v)
-            if next_page_token:
-                http_endpoint += "&pageToken={}".format(next_page_token)
+        # If there are no sorted_items we fall back to default API behaviour
+        return payload
 
-            response_json = self._http_request(http_endpoint)
-            if response_json.get('items'):
-                for item in response_json.get('items'):
-                    subscriptions.append(parser(item))
-                if response_json.get('nextPageToken'):
-                    next_page_token = response_json.get('nextPageToken')
-                else:
-                    return subscriptions
+    def get_activities(self, channel_id, page_token=''):
+        params = {'part': 'snippet,contentDetails',
+                  'maxResults': str(self._max_results),
+                  'regionCode': self._region,
+                  'hl': self._language}
 
-        return subscriptions
+        if channel_id == 'home':
+            recommended = self._get_recommendations_for_home()
+            if 'items' in recommended and recommended.get('items'):
+                return recommended
+        if channel_id == 'home':
+            params['home'] = 'true'
+        elif channel_id == 'mine':
+            params['mine'] = 'true'
+        else:
+            params['channelId'] = channel_id
+        if page_token:
+            params['pageToken'] = page_token
 
+        return self.perform_v3_request(method='GET', path='activities', params=params)
 
-    def get_featured_channels_gen(self, channel_id, parser=P.parse_featured_channels,
-                                  part=["id", "brandingSettings"], **kwargs):
-        '''
-        Given a `channel_id` returns a dictionary {channel_id : [list, of, channel_ids]}
-        of featured channels.
+    def get_channel_sections(self, channel_id):
+        params = {'part': 'snippet,contentDetails',
+                  'regionCode': self._region,
+                  'hl': self._language}
+        if channel_id == 'mine':
+            params['mine'] = 'true'
+        else:
+            params['channelId'] = channel_id
+        return self.perform_v3_request(method='GET', path='channelSections', params=params)
 
-        Optionally, can take a list of channel IDS, and returns a list of dictionaries.
+    def get_playlists_of_channel(self, channel_id, page_token=''):
+        params = {'part': 'snippet',
+                  'maxResults': str(self._max_results)}
+        if channel_id != 'mine':
+            params['channelId'] = channel_id
+        else:
+            params['mine'] = 'true'
+        if page_token:
+            params['pageToken'] = page_token
 
-        Read the docs: https://developers.google.com/youtube/v3/docs/channels/list
+        return self.perform_v3_request(method='GET', path='playlists', params=params)
 
-        :param channel_id: channel_ids IE: ['UCn8zNIfYAQNdrFRrr8oibKw']
-        :type channel_id: str of list of str
-        :param parser: the function to parse the json document
-        :type parser: :mod:`youtube_api.parsers module`
-        :param part: The part parameter specifies a comma-separated list of one or more resource properties that the API response will include. Different parameters cost different quota costs from the API.
-        :type part: list
+    def get_playlist_item_id_of_video_id(self, playlist_id, video_id, page_token=''):
+        old_max_results = self._max_results
+        self._max_results = 50
+        json_data = self.get_playlist_items(playlist_id=playlist_id, page_token=page_token)
+        self._max_results = old_max_results
 
-        :returns: yields metadata for featured channels
-        :rtype: dict
-        '''
-        parser = parser if parser else P.raw_json
-        part = ','.join(part)
+        items = json_data.get('items', [])
+        for item in items:
+            playlist_item_id = item['id']
+            playlist_video_id = item.get('snippet', {}).get('resourceId', {}).get('videoId', '')
+            if playlist_video_id and playlist_video_id == video_id:
+                return playlist_item_id
+
+        next_page_token = json_data.get('nextPageToken', '')
+        if next_page_token:
+            return self.get_playlist_item_id_of_video_id(playlist_id=playlist_id, video_id=video_id,
+                                                         page_token=next_page_token)
+
+        return None
+
+    def get_playlist_items(self, playlist_id, page_token='', max_results=None):
+        # prepare params
+        max_results = str(self._max_results) if max_results is None else str(max_results)
+        params = {'part': 'snippet',
+                  'maxResults': max_results,
+                  'playlistId': playlist_id}
+        if page_token:
+            params['pageToken'] = page_token
+
+        return self.perform_v3_request(method='GET', path='playlistItems', params=params)
+
+    def get_channel_by_username(self, username):
+        """
+        Returns a collection of zero or more channel resources that match the request criteria.
+        :param username: retrieve channel_id for username
+        :return:
+        """
+        params = {'part': 'id'}
+        if username == 'mine':
+            params.update({'mine': 'true'})
+        else:
+            params.update({'forUsername': username})
+
+        return self.perform_v3_request(method='GET', path='channels', params=params)
+
+    def get_channels(self, channel_id):
+        """
+        Returns a collection of zero or more channel resources that match the request criteria.
+        :param channel_id: list or comma-separated list of the YouTube channel ID(s)
+        :return:
+        """
         if isinstance(channel_id, list):
-            for chunk in _chunker(channel_id, 50):
-                id_input = ','.join(chunk)
-                http_endpoint = ("https://www.googleapis.com/youtube/v{}/channels"
-                                 "?part={}&id={}&key={}".format(
-                                     self.api_version, part, id_input, self.key))
-                for k,v in kwargs.items():
-                    http_endpoint += '&{}={}'.format(k, v)
-                response_json = self._http_request(http_endpoint)
-                if response_json.get('items'):
-                    for item in response_json['items']:
-                        yield parser(item)
-                else:
-                    yield parser(None)
+            channel_id = ','.join(channel_id)
 
+        params = {'part': 'snippet,contentDetails,brandingSettings'}
+        if channel_id != 'mine':
+            params['id'] = channel_id
         else:
-            http_endpoint = ("https://www.googleapis.com/youtube/v{}/channels"
-                             "?part={}&id={}&key={}".format(
-                                 self.api_version, part, channel_id, self.key))
-            for k,v in kwargs.items():
-                http_endpoint += '&{}={}'.format(k, v)
-            response = self.session.get(http_endpoint)
-            response_json = _load_response(response)
-            for item in response_json['items']:
-                yield parser(item)
+            params['mine'] = 'true'
+        return self.perform_v3_request(method='GET', path='channels', params=params)
 
+    def get_disliked_videos(self, page_token=''):
+        # prepare page token
+        if not page_token:
+            page_token = ''
 
-    def get_featured_channels(self, channel_id, parser=P.parse_featured_channels, **kwargs):
-        '''
-        Given a `channel_id` returns a dictionary {channel_id : [list, of, channel_ids]}
-        of featured channels.
+        # prepare params
+        params = {'part': 'snippet,status',
+                  'myRating': 'dislike',
+                  'maxResults': str(self._max_results)}
+        if page_token:
+            params['pageToken'] = page_token
 
-        Optionally, can take a list of channel IDs, and returns a list of dictionaries.
+        return self.perform_v3_request(method='GET', path='videos', params=params)
 
-        Read the docs: https://developers.google.com/youtube/v3/docs/channels/list
-
-
-        :param channel_id: channel_ids IE:['UCn8zNIfYAQNdrFRrr8oibKw']
-        :type channel_id: str or list of str
-        :param parser: the function to parse the json document
-        :type parser: :mod:`youtube_api.parsers module`
-        :param part: The part parameter specifies a comma-separated list of one or more resource properties that the API response will include. Different parameters cost different quota costs from the API.
-        :type part: list
-
-        :returns: metadata for featured channels from ``channel_id``.
-        :rtype: list of dict
-        '''
-        featured_channels = []
-        for channel in self.get_featured_channels_gen(channel_id, parser=parser, **kwargs):
-            featured_channels.append(channel)
-        return featured_channels
-
-
-    def get_video_comments(self, video_id, get_replies=True,
-                           max_results=None, next_page_token=False,
-                           parser=P.parse_comment_metadata, part = ['snippet'],
-                           **kwargs):
+    def get_videos(self, video_id, live_details=False):
         """
-        Returns comments and replies to comments for a given video.
-
-        Read the docs: https://developers.google.com/youtube/v3/docs/commentThreads/list
-
-
-        :param video_id: a video_id IE: "eqwPlwHSL_M"
-        :type video_id: str
-        :param get_replies: whether or not to get replies to comments
-        :type get_replies: bool
-        :param parser: the function to parse the json document
-        :type parser: :mod:`youtube_api.parsers module`
-        :param part: The part parameter specifies a comma-separated list of one or more resource properties that the API response will include. Different parameters cost different quota costs from the API.
-        :type part: list
-
-        :returns: comments and responses to comments of the given ``video_id``.
-        :rtype: list of dict
+        Returns a list of videos that match the API request parameters
+        :param video_id: list of video ids
+        :param live_details: also retrieve liveStreamingDetails
+        :return:
         """
-        parser=parser if parser else P.raw_json
-        part = ','.join(part)
-        comments = []
-        run = True
-        while run:
-            http_endpoint = ("https://www.googleapis.com/youtube/v{}/commentThreads?"
-                             "part={}&textFormat=plainText&maxResults=100&"
-                             "videoId={}&key={}".format(
-                                 self.api_version, part, video_id, self.key))
-            for k,v in kwargs.items():
-                http_endpoint += '&{}={}'.format(k, v)
-            if next_page_token:
-                http_endpoint += "&pageToken={}".format(next_page_token)
-            response = self.session.get(http_endpoint)
-            response_json = _load_response(response)
-            if response_json.get('items'):
-                items = response_json.get('items')
-                for item in items:
-                    if max_results:
-                        if len(comments) >= max_results:
-                            return comments
-                    comments.append(parser(item))
-            if response_json.get('nextPageToken'):
-                next_page_token = response_json['nextPageToken']
-            else:
-                run=False
-                break
+        if isinstance(video_id, list):
+            video_id = ','.join(video_id)
 
-        if get_replies:
-            for comment in comments:
-                if comment.get('reply_count') and comment.get('reply_count') > 0:
-                    comment_id = comment.get('comment_id')
-                    http_endpoint = ("https://www.googleapis.com/youtube/v{}/comments?"
-                                     "part={}&textFormat=plainText&maxResults=100&"
-                                     "parentId={}&key={}".format(
-                                         self.api_version, part, comment_id, self.key))
-                    for k,v in kwargs.items():
-                        http_endpoint += '&{}={}'.format(k, v)
-                    response_json = self._http_request(http_endpoint)
-                    if response_json.get('items'):
-                        for item in response_json.get('items'):
-                            if max_results:
-                                if len(comments) >= max_results:
-                                    return comments
-                            comments.append(parser(item))
-        return comments
+        parts = ['snippet,contentDetails,status']
+        if live_details:
+            parts.append(',liveStreamingDetails')
 
-    def search(self, q=None, channel_id=None,
-               max_results=100, order_by="relevance", next_page_token=None,
-               published_after=datetime.datetime.timestamp(datetime.datetime(2000,1,1)),
-               published_before=datetime.datetime.timestamp(
-                   datetime.datetime((3000 if sys.maxsize > 2**31 else 2038),1,1)),
-               location=None, location_radius='1km', region_code=None,
-               safe_search=None, relevance_language=None, event_type=None,
-               topic_id=None, video_duration=None, search_type="video",
-               parser=P.parse_rec_video_metadata, part=['snippet'],
-               **kwargs):
+        params = {'part': ''.join(parts),
+                  'id': video_id}
+        return self.perform_v3_request(method='GET', path='videos', params=params)
+
+    def get_playlists(self, playlist_id):
+        if isinstance(playlist_id, list):
+            playlist_id = ','.join(playlist_id)
+
+        params = {'part': 'snippet,contentDetails',
+                  'id': playlist_id}
+        return self.perform_v1_tv_request(method='GET', path='playlists', params=params)
+
+    def get_live_events(self, event_type='live', order='relevance', page_token='', location=False):
         """
-        Search YouTube for either videos, channels for keywords. Only returns up to 500 videos per search. For an exhaustive search, take advantage of the ``published_after`` and ``published_before`` params. Note the docstring needs to be updated to account for all the arguments this function takes.
 
-        Read the docs: https://developers.google.com/youtube/v3/docs/search/list
-
-        :param q: regex pattern to search using | for or, && for and, and - for not. IE boat|fishing is boat or fishing
-        :type q: list or str
-        :param max_results: max number of videos returned by a search query.
-        :type max_results: int
-        :param parser: the function to parse the json document
-        :type parser: :mod:`youtube_api.parsers module`
-        :param part: The part parameter specifies a comma-separated list of one or more resource properties that the API response will include. Different parameters cost different quota costs from the API.
-        :type part: list
-        :param order_by: Return search results ordered by either ``relevance``, ``date``, ``rating``, ``title``, ``videoCount``, ``viewCount``.
-        :type order_by: str
-        :param next_page_token: A token to continue from a preciously stopped query IE:CDIQAA
-        :type next_page_token: str
-        :param published_after: Only show videos uploaded after datetime
-        :type published_after: datetime
-        :param published_before: Only show videos uploaded before datetime
-        :type published_before: datetime
-        :param location: Coodinates of video uploaded in location.
-        :type location: tuple
-        :param location_radius: The radius from the ``location`` param to include in the search.
-        :type location_radius: str
-        :param region_code: search results for videos that can be viewed in the specified country. The parameter value is an ISO 3166-1 alpha-2 country code.
-        :type region_code: str
-        :param safe_search: whether or not to include restricted content, options are "moderate", "strict", None.
-        :type safe_search: str or None
-        :param relevance_language: Instructs the API to return search results that are most relevant to the specified language.
-        :type relevance_language: str
-        :param event_type: whether the video is "live", "completed", or "upcoming".
-        :type event_type: str
-        :param topic_id: only contain resources associated with the specified topic. The value identifies a Freebase topic ID.
-        :type topic_id: str
-        :param video_duration: filter on video durations "any", "long", "medium", "short".
-        :type video_duration: str
-        :param search_type: return results on a "video", "channel", or "playlist" search.
-
-        :returns: incomplete video metadata of videos returned by search query.
-        :rtype: list of dict
+        :param event_type: one of: 'live', 'completed', 'upcoming'
+        :param order: one of: 'date', 'rating', 'relevance', 'title', 'videoCount', 'viewCount'
+        :param page_token:
+        :param location: bool, use geolocation
+        :return:
         """
-        if search_type not in ["video", "channel", "playlist"]:
-            raise Exception("The value you have entered for `type` is not valid!")
+        # prepare page token
+        if not page_token:
+            page_token = ''
 
-        parser=parser if parser else P.raw_json
-        part = ','.join(part)
-        videos = []
-        while True:
-            http_endpoint = ("https://www.googleapis.com/youtube/v{}/search?"
-                             "part={}&type={}&maxResults=50"
-                             "&order={}&key={}".format(
-                                 self.api_version, part, search_type, order_by, self.key))
-            if q:
-                if isinstance(q, list):
-                    q = '|'.join(q)
-                http_endpoint += "&q={}".format(q)
+        # prepare params
+        params = {'part': 'snippet',
+                  'type': 'video',
+                  'order': order,
+                  'eventType': event_type,
+                  'regionCode': self._region,
+                  'hl': self._language,
+                  'relevanceLanguage': self._language,
+                  'maxResults': str(self._max_results)}
 
-            if published_after:
-                if not isinstance(published_after, float) and not isinstance(published_after, datetime.date):
-                    raise Exception("published_after must be a timestamp, not a {}".format(type(published_after)))
-                
-                if isinstance(published_after, float):
-                    published_after = datetime.datetime.utcfromtimestamp(published_after)
-                _published_after = datetime.datetime.strftime(published_after, "%Y-%m-%dT%H:%M:%SZ")
-                http_endpoint += "&publishedAfter={}".format(_published_after)
-
-            if published_before:
-                if not isinstance(published_before, float) and not isinstance(published_before, datetime.date):
-                    raise Exception("published_before must be a timestamp, not a {}".format(type(published_before)))
-                    
-                if isinstance(published_before, float):
-                    published_before = datetime.datetime.utcfromtimestamp(published_before)
-                _published_before = datetime.datetime.strftime(published_before, "%Y-%m-%dT%H:%M:%SZ")
-                http_endpoint += "&publishedBefore={}".format(_published_before)
-
-            if channel_id:
-                http_endpoint += "&channelId={}".format(channel_id)
-
+        if location:
+            location = AbstractSettings().get_location()
             if location:
-                if isinstance(location, tuple):
-                    location = urllib.parse.quote_plus(str(location).strip('()').replace(' ', ''))
-                http_endpoint += "&location={}&locationRadius={}".format(location,
-                                                                         location_radius)
-            if region_code:
-                http_endpoint += "&regionCode={}".format(region_code)
+                params['location'] = location
+                params['locationRadius'] = AbstractSettings().get_location_radius()
 
-            if safe_search:
-                if not safe_search in ['moderate', 'strict', 'none']:
-                    raise "Not proper safe_search."
-                http_endpoint += '&safeSearch={}'.format(safe_search)
+        if page_token:
+            params['pageToken'] = page_token
 
-            if relevance_language:
-                http_endpoint += '&relevanceLanguage={}'.format(relevance_language)
+        return self.perform_v3_request(method='GET', path='search', params=params)
 
-            if event_type:
-                if not event_type in ['completed', 'live', 'upcoming']:
-                    raise "Not proper event_type!"
-                http_endpoint += '&eventType={}'.format(event_type)
+    def get_related_videos(self, video_id, page_token='', max_results=0):
+        # prepare page token
+        if not page_token:
+            page_token = ''
 
-            if topic_id:
-                http_endpoint += '&topicId={}'.format(topic_id)
+        max_results = self._max_results if max_results <= 0 else max_results
 
-            if video_duration:
-                if not video_duration in ['short', 'long', 'medium', 'any']:
-                    raise "Not proper video_duration"
-                http_endpoint += '&videoDuration={}'.format(video_duration)
+        # prepare params
+        params = {'relatedToVideoId': video_id,
+                  'part': 'snippet',
+                  'type': 'video',
+                  'regionCode': self._region,
+                  'hl': self._language,
+                  'maxResults': str(max_results)}
+        if page_token:
+            params['pageToken'] = page_token
 
-            for k,v in kwargs.items():
-                http_endpoint += '&{}={}'.format(k, v)
+        return self.perform_v3_request(method='GET', path='search', params=params)
+        
+    def get_parent_comments(self, video_id, page_token='', max_results=0):
+        max_results = self._max_results if max_results <= 0 else max_results
 
-            if next_page_token:
-                http_endpoint += "&pageToken={}".format(next_page_token)
+        # prepare params
+        params = {'part': 'snippet',
+                  'videoId': video_id,
+                  'order': 'relevance',
+                  'textFormat': 'plainText',
+                  'maxResults': str(max_results)}
+        if page_token:
+            params['pageToken'] = page_token
+        
+        return self.perform_v3_request(method='GET', path='commentThreads', params=params, no_login=True)
+            
+    def get_child_comments(self, parent_id, page_token='', max_results=0):
+        max_results = self._max_results if max_results <= 0 else max_results
 
-            response_json = self._http_request(http_endpoint)
-            if response_json.get('items'):
-                for item in response_json.get('items'):
-                    videos.append(parser(item))
-                if max_results:
-                    if len(videos) >= max_results:
-                        videos = videos[:max_results]
-                        break
-                if response_json.get('nextPageToken'):
-                    next_page_token = response_json.get('nextPageToken')
-                    time.sleep(.1)
-                else:
-                    break
-            else:
+        # prepare params
+        params = {'part': 'snippet',
+                  'parentId': parent_id,
+                  'textFormat': 'plainText',
+                  'maxResults': str(max_results)}
+        if page_token:
+            params['pageToken'] = page_token
+        
+        return self.perform_v3_request(method='GET', path='comments', params=params, no_login=True)
+
+    def get_channel_videos(self, channel_id, page_token=''):
+        """
+        Returns a collection of video search results for the specified channel_id
+        """
+
+        params = {'part': 'snippet',
+                  'hl': self._language,
+                  'maxResults': str(self._max_results),
+                  'type': 'video',
+                  'safeSearch': 'none',
+                  'order': 'date'}
+
+        if channel_id == 'mine':
+            params['forMine'] = 'true'
+        else:
+            params['channelId'] = channel_id
+
+        if page_token:
+            params['pageToken'] = page_token
+
+        return self.perform_v3_request(method='GET', path='search', params=params)
+
+    def search(self, q, page_token='', search_type=None, event_type='', channel_id='',
+               order='relevance', safe_search='moderate', location=False):
+        """
+        Returns a collection of search results that match the query parameters specified in the API request. By default,
+        a search result set identifies matching video, channel, and playlist resources, but you can also configure
+        queries to only retrieve a specific type of resource.
+        :param q:
+        :param search_type: acceptable values are: 'video' | 'channel' | 'playlist'
+        :param event_type: 'live', 'completed', 'upcoming'
+        :param channel_id: limit search to channel id
+        :param order: one of: 'date', 'rating', 'relevance', 'title', 'videoCount', 'viewCount'
+        :param safe_search: one of: 'moderate', 'none', 'strict'
+        :param page_token: can be ''
+        :param location: bool, use geolocation
+        :return:
+        """
+        logger.info("location: %s" %location)
+        logger.info("channel_id: %s" %channel_id) 
+        logger.info("event_type: %s" %event_type) 
+        logger.info("search_type: %s" % search_type) 
+        logger.info("q: %s" % q) 
+        if search_type is None:
+            search_type = ['video', 'channel', 'playlist']
+
+        # prepare search type
+        if not search_type:
+            search_type = ''
+        if isinstance(search_type, list):
+            search_type = ','.join(search_type)
+
+        logger.info("page_token: %s" % page_token) 
+        if not page_token:
+            page_token = ''
+
+        # prepare params
+        params = {'q': q,
+                  'part': 'snippet',
+                  'regionCode': self._region,
+                  'hl': self._language,
+                  'relevanceLanguage': self._language,
+                  'maxResults': str(self._max_results)}
+
+        if event_type and event_type in ['live', 'upcoming', 'completed']:
+            params['eventType'] = event_type
+        if search_type:
+            params['type'] = search_type
+        if channel_id:
+            params['channelId'] = channel_id
+        if order:
+            params['order'] = order
+        if safe_search:
+            params['safeSearch'] = safe_search
+        if page_token:
+            params['pageToken'] = page_token
+
+        video_only_params = ['eventType', 'videoCaption', 'videoCategoryId', 'videoDefinition',
+                             'videoDimension', 'videoDuration', 'videoEmbeddable', 'videoLicense',
+                             'videoSyndicated', 'videoType', 'relatedToVideoId', 'forMine']
+        for key in video_only_params:
+            if params.get(key) is not None:
+                params['type'] = 'video'
                 break
 
-        return videos
+        if params['type'] == 'video' and location:
+            location = AbstractSettings().get_location()
+            if location:
+                params['location'] = location
+                params['locationRadius'] = AbstractSettings().get_location_radius()
 
-
-    def get_recommended_videos(self, video_id, max_results=50,
-                               parser=P.parse_rec_video_metadata,
-                               **kwargs):
+        return self.perform_v3_request(method='GET', path='search', params=params)
+    def search1(self, q, page_token='', search_type=None, event_type='', channel_id='',
+               order='relevance', safe_search='moderate', location=False):
         """
-        Get recommended videos given a video ID. This extends the search API.
-        Note that search history does not influence results.
+        Returns a collection of search results that match the query parameters specified in the API request. By default,
+        a search result set identifies matching video, channel, and playlist resources, but you can also configure
+        queries to only retrieve a specific type of resource.
+        :param q:
+        :param search_type: acceptable values are: 'video' | 'channel' | 'playlist'
+        :param event_type: 'live', 'completed', 'upcoming'
+        :param channel_id: limit search to channel id
+        :param order: one of: 'date', 'rating', 'relevance', 'title', 'videoCount', 'viewCount'
+        :param safe_search: one of: 'moderate', 'none', 'strict'
+        :param page_token: can be ''
+        :param location: bool, use geolocation
+        :return:
+        """
+        logger.info("location: %s" %location)
+        logger.info("channel_id: %s" %channel_id) 
+        logger.info("event_type: %s" %event_type) 
+        logger.info("search_type: %s" % search_type) 
+        logger.info("q: %s" % q) 
+        if search_type is None:
+            search_type = ['video', 'channel', 'playlist']
 
-        Read the docs: https://developers.google.com/youtube/v3/docs/search/list
+        # prepare search type
+        if not search_type:
+            search_type = ''
+        if isinstance(search_type, list):
+            search_type = ','.join(search_type)
 
-        :param video_id: (str) a video_id IE: "eqwPlwHSL_M"
-        :param max_results: (int) max number of recommended vids
-        :param parser: the function to parse the json document
-        :type parser: :mod:`youtube_api.parsers module`
-        :returns: incomplete video metadata from recommended videos of ``video_id``.
-        :rtype: list of dict
+        logger.info("page_token: %s" % page_token) 
+        if not page_token:
+            page_token = ''
+
+        # prepare params
+        params = {'q': q,
+                  'part': 'snippet',
+                  'regionCode': self._region,
+                  'hl': self._language,
+                  'relevanceLanguage': self._language,
+                  'maxResults': str(self._max_results)}
+
+        if event_type and event_type in ['live', 'upcoming', 'completed']:
+            params['eventType'] = event_type
+        if search_type:
+            params['type'] = search_type
+        if channel_id:
+            params['channelId'] = channel_id
+        if order:
+            params['order'] = order
+        if safe_search:
+            params['safeSearch'] = safe_search
+        if page_token:
+            params['pageToken'] = page_token
+
+        video_only_params = ['eventType', 'videoCaption', 'videoCategoryId', 'videoDefinition',
+                             'videoDimension', 'videoDuration', 'videoEmbeddable', 'videoLicense',
+                             'videoSyndicated', 'videoType', 'relatedToVideoId', 'forMine']
+        for key in video_only_params:
+            if params.get(key) is not None:
+                params['type'] = 'video'
+                break
+
+        if params['type'] == 'video' and location:
+            location = AbstractSettings().get_location()
+            if location:
+                params['location'] = location
+                params['locationRadius'] = AbstractSettings().get_location_radius()
+
+        return self.perform_v1_tv_request(method='GET', path='search', params=params)
+
+    def get_my_subscriptions(self, page_token=None, offset=0):
+        """
+        modified by PureHemp, using YouTube RSS for fetching latest videos
         """
 
-        return self.search(relatedToVideoId=video_id, order_by='relevance')
+        if not page_token:
+            page_token = ''
 
-    
-class YoutubeDataApi(YouTubeDataAPI):
-    """Variant case of the main YouTubeDataAPI class. This class will de depricated by version 0.0.21"""
-    def __init__(self, key, **kwargs):
-        super().__init__(key, **kwargs)
+        result = {
+            'items': [],
+            'next_page_token': page_token,
+            'offset': offset
+        }
+
+        def _perform(_page_token, _offset, _result):
+
+            if not _result:
+                _result = {
+                    'items': []
+                }
+
+            cache = AbstractSettings().get_data_cache()
+
+            # if new uploads is cached
+            cache_items_key = 'my-subscriptions-items'
+            cached = cache.get_item(cache.ONE_HOUR, cache_items_key)
+            if cache_items_key in cached:
+                _result['items'] = cached[cache_items_key]
+
+            """ no cache, get uploads data from web """
+            if len(_result['items']) == 0:
+                # get all subscriptions channel ids
+                sub_page_token = True
+                sub_channel_ids = []
+
+                while sub_page_token:
+                    if sub_page_token is True:
+                        sub_page_token = ''
+
+                    params = {
+                        'part': 'snippet',
+                        'maxResults': '50',
+                        'order': 'alphabetical',
+                        'mine': 'true'
+                    }
+
+                    if sub_page_token:
+                        params['pageToken'] = sub_page_token
+
+                    sub_json_data = self.perform_v3_request(method='GET', path='subscriptions', params=params)
+
+                    if not sub_json_data:
+                        sub_json_data = {}
+
+                    items = sub_json_data.get('items', [])
+
+                    for item in items:
+                        item = item.get('snippet', {}).get('resourceId', {}).get('channelId', '')
+                        sub_channel_ids.append(item)
+
+                    # get next token if exists
+                    sub_page_token = sub_json_data.get('nextPageToken', '')
+
+                    # terminate loop when last page
+                    if not sub_page_token:
+                        break
+
+                headers = {
+                    'Host': 'www.youtube.com',
+                    'Connection': 'keep-alive',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'DNT': '1',
+                    'Accept-Encoding': 'gzip, deflate',
+                    'Accept-Language': 'en-US,en;q=0.7,de;q=0.3'
+                }
+
+                responses = []
+
+                def fetch_xml(_url, _responses):
+                    try:
+                        _response = requests.get(_url, {}, headers=headers, verify=self._verify, allow_redirects=True)
+                    except:
+                        _response = None
+                        logger.error('Failed |%s|' % traceback.print_exc())
+
+                    _responses.append(_response)
+
+                threads = []
+                for channel_id in sub_channel_ids:
+                    thread = threading.Thread(
+                        target=fetch_xml,
+                        args=('https://www.youtube.com/feeds/videos.xml?channel_id=' + channel_id,
+                              responses)
+                    )
+                    threads.append(thread)
+                    thread.start()
+
+                for thread in threads:
+                    thread.join()
+
+                for response in responses:
+                    if response:
+                        response.encoding = 'utf-8'
+                        if PY3:
+                            xml_data = to_unicode(response.content).replace('\n', '')
+                        else:
+                            xml_data = response.content.replace('\n', '')
+
+                        root = ET.fromstring(xml_data)
+
+                        ns = '{http://www.w3.org/2005/Atom}'
+                        yt_ns = '{http://www.youtube.com/xml/schemas/2015}'
+                        media_ns = '{http://search.yahoo.com/mrss/}'
+
+                        for entry in root.findall(ns + "entry"):
+                            # empty news dictionary 
+                            entry_data = {
+                                'id': entry.find(yt_ns + 'videoId').text,
+                                'title': entry.find(media_ns + "group").find(media_ns + 'title').text,
+                                'channel': entry.find(ns + "author").find(ns + "name").text,
+                                'published': entry.find(ns + 'published').text,
+                            }
+                            # append items list 
+                            _result['items'].append(entry_data)
+
+                # sorting by publish date
+                def _sort_by_date_time(e):
+                    return datetime_parser.since_epoch(
+                        datetime_parser.strptime(e["published"][0:19], "%Y-%m-%dT%H:%M:%S")
+                    )
+
+                _result['items'].sort(reverse=True, key=_sort_by_date_time)
+
+                # Update cache
+                cache.set(cache_items_key, json.dumps(_result['items']))
+            """ no cache, get uploads data from web """
+
+            # trim result
+            if not _page_token:
+                _page_token = 0
+
+            _page_token = int(_page_token)
+
+            if len(_result['items']) > self._max_results:
+                _index_start = _page_token * self._max_results
+                _index_end = _index_start + self._max_results
+
+                _items = _result['items']
+                _items = _items[_index_start:_index_end]
+                _result['items'] = _items
+                _result['next_page_token'] = _page_token + 1
+
+            if len(_result['items']) < self._max_results:
+                if 'continue' in _result:
+                    del _result['continue']
+
+                if 'next_page_token' in _result:
+                    del _result['next_page_token']
+
+                if 'offset' in _result:
+                    del _result['offset']
+
+            return _result
+
+        return _perform(_page_token=page_token, _offset=offset, _result=result)
+
+    def perform_v3_request(self, method='GET', headers=None, path=None, post_data=None, params=None,
+                           allow_redirects=True, no_login=False):
+
+        # params
+        if not params:
+            params = {}
+        _params = {'key': API_KEY}
+        logger.info("_params : %s" % _params) 
+        _params.update(params)
+
+        # headers
+        if not headers:
+            headers = {}
+        _headers = {'Host': 'www.googleapis.com',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36',
+                    'Accept-Encoding': 'gzip, deflate'}
+        # a config can decide if a token is allowed
+        if self._access_token and yt_config.get('token-allowed', True) and not no_login:
+            _headers['Authorization'] = 'Bearer %s' % self._access_token
+        _headers.update(headers)
+
+        # url
+        _url = 'https://www.googleapis.com/youtube/v3/%s' % path.strip('/')
+
+        result = None
+        log_params = copy.deepcopy(params)
+        logger.info("log_params : %s" % log_params)
+        if 'location' in log_params:
+            log_params['location'] = 'xx.xxxx,xx.xxxx'
+        logger.debug('[data] v3 request: |{0}| path: |{1}| params: |{2}| post_data: |{3}|'.format(method, path, log_params, post_data))
+        if method == 'GET':
+            result = requests.get(_url, params=_params, headers=_headers, verify=self._verify, allow_redirects=allow_redirects)
+            logger.info("result : %s" % result)
+        elif method == 'POST':
+            _headers['content-type'] = 'application/json'
+            result = requests.post(_url, json=post_data, params=_params, headers=_headers, verify=self._verify,
+                                  allow_redirects=allow_redirects)
+            logger.info("result1 : %s" % result) 
+        elif method == 'PUT':
+            _headers['content-type'] = 'application/json'
+            result = requests.put(_url, json=post_data, params=_params, headers=_headers, verify=self._verify,
+                                  allow_redirects=allow_redirects)
+        elif method == 'DELETE':
+            result = requests.delete(_url, params=_params, headers=_headers, verify=self._verify,
+                                     allow_redirects=allow_redirects)
+
+        logger.debug('[data] v3 response: |{0}| headers: |{1}|'.format(result.status_code, result.headers))
+        logger.info("result.json()-- : %s" % result.json())
+        if result is None:
+            return {}
+
+        if result.headers.get('content-type', '').startswith('application/json'):
+            try:
+                return result.json()
+            except ValueError:
+                return {
+                    'status_code': result.status_code,
+                    'payload': result.text
+                }
+
+        return {}
+
+    def perform_v1_tv_request(self, method='GET', headers=None, path=None, post_data=None, params=None,
+                              allow_redirects=True):
+        # params
+        if not params:
+            params = {}
+        _params = {'key': API_KEY}
+        _params.update(params)
+
+        # headers
+        if not headers:
+            headers = {}
+        _headers = {
+            'User-Agent': ('Mozilla/5.0 (Linux; Android 7.0; SM-G892A Build/NRD90M;'
+                           ' wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0'
+                           ' Chrome/67.0.3396.87 Mobile Safari/537.36'),
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'DNT': '1',
+            'Accept-Encoding': 'gzip, deflate',
+            'Accept-Language': 'en-US,en;q=0.5',
+        }
+
+        if self._access_token_tv:
+            _headers['Authorization'] = 'Bearer %s' % self._access_token_tv
+        _headers.update(headers)
+
+        # url
+        _url = 'https://www.googleapis.com/youtubei/v1/%s' % path.strip('/')
+
+        result = None
+
+        logger.debug('[i] v1 request: |{0}| path: |{1}| params: |{2}| post_data: |{3}|'.format(method, path, params, post_data))
+        if method == 'GET':
+            result = requests.get(_url, params=_params, headers=_headers, verify=self._verify, allow_redirects=allow_redirects)
+        elif method == 'POST':
+            _headers['content-type'] = 'application/json'
+            result = requests.post(_url, json=post_data, params=_params, headers=_headers, verify=self._verify,
+                                   allow_redirects=allow_redirects)
+        elif method == 'PUT':
+            _headers['content-type'] = 'application/json'
+            result = requests.put(_url, json=post_data, params=_params, headers=_headers, verify=self._verify,
+                                  allow_redirects=allow_redirects)
+        elif method == 'DELETE':
+            result = requests.delete(_url, params=_params, headers=_headers, verify=self._verify,
+                                     allow_redirects=allow_redirects)
+
+        if result is None:
+            return {}
+
+        if result.headers.get('content-type', '').startswith('application/json'):
+            return result.json()

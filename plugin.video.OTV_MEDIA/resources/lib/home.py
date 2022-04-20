@@ -1,8 +1,8 @@
 #-*- coding: utf-8 -*-
 # https://github.com/Kodi-vStream/venom-xbmc-addons
 #Venom.
-from resources.lib.gui.gui import cGui
-from resources.lib.gui.guiElement import cGuiElement
+from resources.lib.gui.guui import cGui
+from resources.lib.gui.guuiElement import cGuiElement
 #from resources.lib.handler.pluginHandler import cPluginHandler
 #from resources.lib.handler.rechercheHandler import cRechercheHandler
 #from resources.lib.handler.siteHandler import cSiteHandler
@@ -13,7 +13,7 @@ from resources.lib.about import cAbout
 from resources.lib.comaddon import addon, window
 import xbmc, urllib, sys, xbmcplugin ,xbmcgui, xbmcaddon, xbmc, os, json, shutil, time, zipfile, re, stat, xbmcvfs, base64
 from resources.lib.handler.ParameterHandler import ParameterHandler
-
+from resources.lib.cconfig import cConfig
 from resources.lib.comaddon import progress, VSlog
 from resources.lib.handler.requestHandler import cRequestHandler
 SITE_IDENTIFIER = 'cHome'
@@ -73,14 +73,17 @@ class cHome:
 #        oOutputParameterHandler = cOutputParameterHandler()
 #        oOutputParameterHandler.addParameter('siteUrl', 'http://orhantv')
 #        oGui.addDir('xiptvozel', 'STB_EMUM_info', 'STB Emulator', 'stbemu.png', oOutputParameterHandler)
-
+        #{'q': 'ankara oyun havasi'}
         oOutputParameterHandler = cOutputParameterHandler()
-        oOutputParameterHandler.addParameter('siteUrl', 'http://orhantv')
+        oOutputParameterHandler.addParameter('kodion', 'http://orhantv')
         oGui.addDir('youtubecom_tr', 'YouTUBE', 'YouTUBE', 'youtube.png', oOutputParameterHandler)
         
         oOutputParameterHandler = cOutputParameterHandler()
         oOutputParameterHandler.addParameter('siteUrl', 'http://orhantv')
         oGui.addDir('filmon_com', 'FILMON', 'FILMON' , 'FilmOntv.jpg', oOutputParameterHandler)
+        oOutputParameterHandler = cOutputParameterHandler()
+        oOutputParameterHandler.addParameter('siteUrl', 'http://venom')
+        oGui.addDir(SITE_IDENTIFIER, 'Open_settings', 'Settings', 'search.png', oOutputParameterHandler)
 
         oOutputParameterHandler = cOutputParameterHandler()
         oOutputParameterHandler.addParameter('siteUrl', 'http://orhantv')
@@ -105,7 +108,11 @@ class cHome:
         oGui.setEndOfDirectory(view)
 
           
- 
+    def Open_settings(self):
+      oGui = cGui()
+      cConfig().showSettingsWindow()
+      return
+
     def showUpdate(self):
             from resources.lib.about import cAbout
             cAbout()

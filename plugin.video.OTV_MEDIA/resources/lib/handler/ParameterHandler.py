@@ -6,7 +6,7 @@ try:
 except ImportError:
     from urllib.parse import parse_qsl, urlsplit, unquote_plus, urlencode
 
-
+from resources.lib.util import urlEncode, Unquote
 class ParameterHandler:
     def __init__(self):
         params = dict()
@@ -18,13 +18,13 @@ class ParameterHandler:
         # returns all parameters as dictionary
         return self.__params
 
-    def getValue(self, paramName):
-        # returns value of one parameter as string, if parameter does not exists "False" is returned
-        if self.exist(paramName):
-            return self.__params[paramName]
-            # paramValue = self.__params[paramName]
-            # return unquote_plus(paramValue)
+    def getValue(self, sParamName):
+        if (self.exist(sParamName)):
+            sParamValue = self.__params[sParamName]
+            return Unquote(sParamValue)
+
         return False
+
 
     def exist(self, paramName):
         # checks if paramter with the name "paramName" exists

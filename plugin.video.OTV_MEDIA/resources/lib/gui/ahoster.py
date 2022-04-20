@@ -45,17 +45,17 @@ class HosterGui:
                     logger.info('resolve: hoster: %s - mediaID: %s' % (siteResult['host'], mediaId))
                     link = urlresolver.HostedMediaFile(host=siteResult['host'].lower(), media_id=mediaId).resolve()
                 else:
-                    oGui.showError('xStream', 'kein Hosterlink übergeben', 5)
+                    oGui.showError('OTV_MEDIA', 'kein Hosterlink übergeben', 5)
                     return False
             elif mediaUrl:
                 logger.info('resolve: ' + mediaUrl)
                 link = urlresolver.resolve(mediaUrl)
             else:
-                oGui.showError('xStream', 'kein Hosterlink übergeben', 5)
+                oGui.showError('OTV_MEDIA', 'kein Hosterlink übergeben', 5)
                 return False
         except urlresolver.resolver.ResolverError as e:
             logger.error('ResolverError: %s' % e)
-            oGui.showError('xStream', 'Stream nicht mehr verfügbar oder Link fehlerhaft', 7)
+            oGui.showError('OTV_MEDIA', 'Stream nicht mehr verfügbar oder Link fehlerhaft', 7)
             return False
         # resolver response
         if link is not False:
@@ -85,8 +85,12 @@ class HosterGui:
             info['TVShowTitle'] = data['showTitle']
         list_item.setInfo(type="Video", infoLabels=info)
         list_item.setProperty('IsPlayable', 'true')
-        xbmcplugin.setResolvedUrl(cGui().pluginHandle, True, list_item)
+        if cGui().pluginHandle > 0:
+            xbmcplugin.setResolvedUrl(cGui().pluginHandle, True, list_item)
+        else:
+            xbmc.Player().play(data['link'], list_item)
         return cPlayer().startPlayer()
+
 
 
 

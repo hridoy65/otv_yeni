@@ -7,8 +7,8 @@ import time
 from resources.sites.LIVETV2 import *
 from resources.lib.packer import cPacker
 from resources.lib.comaddon import addon, isMatrix
-from resources.lib.gui.gui import cGui
-from resources.lib.gui.guiElement import cGuiElement
+from resources.lib.gui.guui import cGui
+from resources.lib.gui.guuiElement import cGuiElement
 from resources.lib.handler.inputParameterHandler import cInputParameterHandler
 from resources.lib.handler.outputParameterHandler import cOutputParameterHandler
 from resources.lib.handler.requestHandler import cRequestHandler

@@ -3,7 +3,9 @@
 '''
     Tulip routine libraries, based on lambda's lamlib
     Author Twilight0
+
         License summary below, for more details please read license.txt file
+
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 2 of the License, or
@@ -40,13 +42,10 @@ sysaddon = argv[0]
 params = dict(parse_qsl(argv[2].replace('?', '')))
 
 integer = 1000
-AddonID = 'plugin.video.OTV_MEDIA'
-addon = xbmcaddon.Addon(AddonID)
-
 lang = xbmcaddon.Addon().getLocalizedString
 setting = xbmcaddon.Addon().getSetting
 setSetting = xbmcaddon.Addon().setSetting
-
+addon = xbmcaddon.Addon
 addonInfo = xbmcaddon.Addon().getAddonInfo
 
 addItem = xbmcplugin.addDirectoryItem
@@ -177,6 +176,7 @@ def addonmedia(icon, addonid=addonInfo('id'), theme=None, media_subfolder=True):
 def sortmethods(method='unsorted', mask='%D'):
     """
     Function to sort directory items
+
     :param method: acceptable values are: TODO
     :param mask: acceptable values are: TODO
     :type method: str

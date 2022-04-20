@@ -120,13 +120,13 @@ def startvcomtr():
     
     tarzlistesi = []                                  
     
-    tarzlistesi.append(("Star TV Canli", "https://lcgid8xu.rocketcdn.com/startvhd.stream_720p/chunklist.m3u8"))
+    tarzlistesi.append(("Star TV Canli", "_F3fvsRAFF0"))
 #    tarzlistesi.append(("Star TV YEDEK", "https://www.youtube.com/watch?v=jWP3ntl64I4&feature=youtu.be"))
-    tarzlistesi.append(("NTV", "https://nt4p9nef.rocketcdn.com/ntvhd.stream_720p/chunklist-u30i93dth.m3u8"))
+    tarzlistesi.append(("NTV", "XEJM4Hcgd3M"))
 #    tarzlistesi.append(("NTV SPOR", "http://dz4qxz19.rocketcdn.com/ntvsporhd.stream_720p/chunklist_b2328000_sltur.m3u8"))
-    tarzlistesi.append(("KRAL TV", "http://dz4qxz19.rocketcdn.com/kraltv_720/chunklist_b2328000_sltur.m3u8"))
-    tarzlistesi.append(("KRAL POP", "http://dz4qxz19.rocketcdn.com/kralpop_720/chunklist_b2328000_sltur.m3u8"))
-    tarzlistesi.append(("KRAL WORLD", "http://dz4qxz19.rocketcdn.com/kralworldtv_720/chunklist_b2328000_sltur.m3u8"))
+    tarzlistesi.append(("KRAL TV", "88tf0H1ycDU"))
+    tarzlistesi.append(("KRAL POP", "dEHMR7Qpthw"))
+#    tarzlistesi.append(("KRAL WORLD", "http://dz4qxz19.rocketcdn.com/kralworldtv_720/chunklist_b2328000_sltur.m3u8"))
     tarzlistesi.append(("TLC", "https://pa9agxjg.rocketcdn.com/tlctv.smil/chunklist_b2328000_sltur.m3u8"))
 
     tarzlistesi.append(("Diziler", "https://www.startv.com.tr/dizi"))
@@ -136,11 +136,11 @@ def startvcomtr():
         oOutputParameterHandler.addParameter('siteUrl', sUrl2)
         oOutputParameterHandler.addParameter('sMovieTitle',sTitle)
         if sTitle == 'Star TV Canli':
-             oGui.addDir(SITE_IDENTIFIER, 'showshowHosters',  sTitle, 'genres.png', oOutputParameterHandler)
+             oGui.addDir('youtubecom_tr', 'YouTubeplay',  sTitle, 'genres.png', oOutputParameterHandler)
         elif sTitle == 'NTV':
-             oGui.addDir(SITE_IDENTIFIER, 'showshowHosters', sTitle, 'genres.png', oOutputParameterHandler)
+             oGui.addDir('youtubecom_tr', 'YouTubeplay',  sTitle, 'genres.png', oOutputParameterHandler)
         elif sTitle == 'KRAL POP':
-             oGui.addDir(SITE_IDENTIFIER, 'showshowHosters', sTitle, 'genres.png', oOutputParameterHandler)
+             oGui.addDir('youtubecom_tr', 'YouTubeplay',  sTitle, 'genres.png', oOutputParameterHandler)
         elif sTitle == 'Diziler':
              oGui.addDir(SITE_IDENTIFIER, 'Diziler', sTitle, 'genres.png', oOutputParameterHandler)
         elif sTitle == 'Arsiv Diziler':
@@ -150,7 +150,7 @@ def startvcomtr():
         elif sTitle == 'Star TV':
              oGui.addDir(SITE_IDENTIFIER, 'StarTV', sTitle, 'genres.png', oOutputParameterHandler)
         elif sTitle == 'KRAL TV':
-             oGui.addDir(SITE_IDENTIFIER, 'showshowHosters', sTitle, 'genres.png', oOutputParameterHandler)
+             oGui.addDir('youtubecom_tr', 'YouTubeplay',  sTitle, 'genres.png', oOutputParameterHandler)
         elif sTitle == 'TLC':
              oGui.addDir(SITE_IDENTIFIER, 'showshowHosters', sTitle, 'genres.png', oOutputParameterHandler)
                    

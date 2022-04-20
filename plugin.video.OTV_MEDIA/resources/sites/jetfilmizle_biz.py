@@ -4,11 +4,12 @@ SITE_IDENTIFIER = 'jetfilmizle_biz'
 
 
  
-URL_MAIN = 'https://jetfilmizle.vip/'
+URL_MAIN = 'https://jetfilmizle.xyz/'
 
 
 TURK_SINEMA = (True, 'showGenre')
  
+UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
 
 HEADER_USER_AGENT = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'
 
@@ -21,15 +22,18 @@ def showSearch():
  
     sSearchText = oGui.showKeyBoard()
     if (sSearchText != False):
-        sUrl = 'https://jetfilmizle.vip/filmara.php'
-        postdata='s='+ sSearchText                                         
-        data =cRequestHandler(sUrl,postdata).postrequest()                         
-        sHtmlContent = re.findall('<article class="movie ">.*?<a href="(.*?)".*?<img src="(.*?)" alt="(.*?)"', data, re.S)
+        sUrl = 'https://jetfilmizle.xyz/filmara.php'
+        post_data = {"s": sSearchText}
+        r = s.post(sUrl , headers={"Cookie": "_ga=GA1.2.1944649352.1646917866; _gid=GA1.2.1884536816.1646917866; __asc=b1c795fd17f73f450d7c671f845; __auc=b1c795fd17f73f450d7c671f845; __cf_bm=N_LY9G4vENQZh8Xf3YZPtEW5SkTa6W9Yl5Swx9dmuD4-1646917866-0-AQMg1NzU2E5AkJzDTliIzR4l8YeMwHiSdUvPPAad8K8RXQWD9VAQxGiC+wdtOlW1PHQZDpkPNstmcdBEfepyW57h/4JaeDWCLr7AUS2GCqR7tr3bVKqvTbTaB5kU+flASw==; __atuvc=2%7C10; __atuvs=6229f8e971ca3466001; _gat=1","Origin": "https://jetfilmizle.xyz","Referer": "https://jetfilmizle.xyz/","Content-Type": "application/x-www-form-urlencoded","User-Agent": UA,}, data=post_data, timeout=10)
+        data = r.text                                                                                                   
+        data=to_utf8(data )
+        logger.info("data: %s" % data )                 
+        sHtmlContent = re.findall('<div class="col-md-4 col-xs-12 col-sm-24">.*?<a href="(.*?)".*?<img src="(.*?)" alt="(.*?)"', data, re.S)
          
         for sUrl,sPicture,sTitle in sHtmlContent:
             if not 'http' in sUrl: 
-                sUrl = 'https://jetfilmizle.live'+ sUrl      
-            sTitle = alfabekodla(sTitle)
+                sUrl = 'https://jetfilmizle.xyz'+ sUrl      
+           # sTitle = alfabekodla(sTitle)
             oOutputParameterHandler = cOutputParameterHandler()
             oOutputParameterHandler.addParameter('siteUrl', sUrl)
             oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))            
@@ -46,12 +50,12 @@ def jetfilmizle(): #affiche les genres
 
 	
     oOutputParameterHandler = cOutputParameterHandler()
-    oOutputParameterHandler.addParameter('siteUrl', 'https://jetfilmizle.live/')
+    oOutputParameterHandler.addParameter('siteUrl', 'https://jetfilmizle.xyz/')
     oGui.addDir(SITE_IDENTIFIER, 'showMovies', 'Yeni Filmler', 'genres.png', oOutputParameterHandler)
 
 
     oInputParameterHandler = cInputParameterHandler()
-    sUrl = 'https://jetfilmizle.live/'
+    sUrl = 'https://jetfilmizle.xyz/'
     sHtmlContent =getHtml(sUrl)     
    
     sPattern = '<li id="menu-item-.*?" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-.*?"><a title="(.*?)" href="(.*?)">'

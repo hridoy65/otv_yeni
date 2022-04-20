@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-import base64, sys, os, json, time, string, random, datetime, hashlib
+import base64, sys, os, json, time, string, random, datetime, hashlib, binascii
 import codecs, re, xbmcplugin, xbmcgui, xbmcaddon, xbmc, xbmcvfs, ssl
-
 isPy3 = False
 try:
     import http.cookiejar as cookielib
@@ -96,7 +95,7 @@ def fetch(url, data = None, head = None, redir = 0):
         if root2 in url and 'php' in url:
             u_id = settings.getSetting("user_id")
             passw = settings.getSetting("sifre")
-            e_mail = settings.getSetting("e_mail_1")
+            e_mail = settings.getSetting("e_mail")
             mac = settings.getSetting('mac_add')
             user_agent = 'Mozilla/5.0 seyirTURK__KODI'
             if '?' in url:
@@ -109,7 +108,6 @@ def fetch(url, data = None, head = None, redir = 0):
         if head is not None:
             headers = headers.copy()
             headers.update(head)
-####        url = url.replace(" ","%20")
         try:
             ssl._create_default_https_context = ssl._create_unverified_context
         except:
@@ -129,61 +127,37 @@ def fetch(url, data = None, head = None, redir = 0):
                 m3u_url = "-1"
                 if 'http' in settings.getSetting('m3u'):
                     m3u_url = settings.getSetting('m3u')
-               # if 'seyirTURK.py' not in url and'parsers.py' not in url and'cachekey.php' not in url and m3u_url not in url and 'updateMail.php?username=' not in url and 'hasMail.php?username=' not in url and 'user.php?type=add&email=' not in url and 'tvyayinakisi.com' not in url and 'mesaj.php' not in url:
-               #     showMessage('[COLOR orange][B]Veri Alınamıyor...[/B][/COLOR]', '[COLOR red]Hata tekrar ederse lütfen internet bağlantınızı kontrol ediniz.[/COLOR]')
+                if 'seyirTURK.py' not in url and'parsers.py' not in url and'cachekey.php' not in url and m3u_url not in url and 'updateMail.php?username=' not in url and 'hasMail.php?username=' not in url and 'user.php?type=add&email=' not in url and 'tvyayinakisi.com' not in url and 'mesaj.php' not in url:
+                    showMessage('[COLOR orange][B]Veri Alınamıyor...[/B][/COLOR]', '[COLOR red]Hata tekrar ederse lütfen internet bağlantınızı kontrol ediniz.[/COLOR]')
         if res is not None:
             if redir == 1:
-                
-                
                 return res.geturl()
             if 'mail.ru/+/video/meta/' in url:
                 cont = to_utf8(res.read()) + 'kuki :' + str(res.headers.get('Set-Cookie'))   
             else:
                 cont = to_utf8(res.read())
             res.close()
-            
             return cont
-        else:
+        else:                                       
             return ""
     except URLError as e:
         if  'ssl.c:510: error' in str(e.reason):
-            showMessage("[COLOR orange][B]seyirTURK[/B][/COLOR]","[COLOR red][B]Kodi Sürümünüz bu linki desteklemiyor![/B][/COLOR]",2000)
-def mfetch(url, mac = None):
-    sign = '?'
-    url = url.strip(' \t\n\r')
-    if url.find('?') > -1:
-        sign = '&'
-    if mac != None:
-        u_id = settings.getSetting("user_id")
-        passw = settings.getSetting("sifre")
-        e_mail = settings.getSetting("e_mail_1")
-            
-        mac = settings.getSetting('mac_add')
-        security_param = ""
-        url = url + '&u_id=' + str(u_id) + '&cmail=' + e_mail.strip() + '&pass=' + str(passw) + '&mac=' + mac
-    if url.find('|') > -1:
-        parts = url.split('|')
-        url = parts[0]
-        cookie = parts[1]
-        req = Request(url, None, {'User-agent': 'Mozilla/5.0 seyirTURK__KODI',
-        'Connection': 'Close',
-        'Cookie': cookie})
-    else:
-        req = Request(url, None, {'User-agent': 'Mozilla/5.0 seyirTURK__KODI',
-        'Connection': 'Close'})
-    xmlstream = urlopen(req).read()
-    if PY3:
-        xmlstream = to_utf8(xmlstream)    
-    return xmlstream
-            
-def cache(url):
+            showMessage("[COLOR orange][B]OTV_MEDIA[/B][/COLOR]","[COLOR red][B]Kodi Sürümünüz bu linki desteklemiyor![/B][/COLOR]",2000)
+
+def fixsub(sub):
     try:
-        cont = codecs.open(xbmc.translatePath(os.path.join(temp,'86519', hashlib.md5(url.encode('UTF-8')).hexdigest())), "r", "utf-8-sig").read()
+        showMessage("jhgjhgjhg")
+        ff = fetch(sub)
+        ff = re.sub('(\d+:\d+\.\d*) --> (\d+:\d+\.\d*)',r'00:\1 --> 00:\2',ff) 
+        vvv = open(xbmc.translatePath(os.path.join(__addonuserdata__,"okey.vtt")), "w+")
+        vvv.write(ff)
+        vvv.close()
+        return os.path.join(__addonuserdata__,"okey.vtt")
     except:
-        cont = fetch(url)
-       # if cont != None and  cont != '' and 'save.php' not in url and 'updateMail.php?username=' not in url and 'hasMail.php?username=' not in url and 'episodes.php' not in url and 'faviptv.php' not in url and 'cachekey.php' not in url and 'vipbilgi.php' not in url and 'show.php?type=user' not in url and 'show.php?type=history' not in url and 'search.php' not in url and "type=random" not in url and "watched" not in url:
-       #     with codecs.open(xbmc.translatePath(os.path.join(temp,'86519', hashlib.md5(url.encode('UTF-8')).hexdigest())), "w+", "utf-8-sig") as out:
-       #         out.write(to_utf8(cont))
+        return sub
+    
+def cache(url):
+    cont = fetch(url)
     return to_utf8(cont)
 
 def cache_clear():
@@ -195,7 +169,7 @@ def cache_clear():
     except:
         pass
             
-def showMessage(heading='seyirTURK',message='',times=2000,pics=''):
+def showMessage(heading='OTV_MEDIA',message='',times=2000,pics=''):
     try:
         xbmc.executebuiltin('Notification("%s", "%s", %s, "%s")' % (heading, message, times, pics))
     except:
@@ -213,8 +187,7 @@ def select(kaynaklar, linkler, tip = 2):
         return 'selection cancelled'
     
 def error(url):
-    showMessage("","[COLOR orange][B]Medya Bulunamadı!!![/B][/COLOR]")
-####    fetch(root + 'linkerrorskodi.php?link=' + url)
+    showMessage("[COLOR orange][B]OTV_MEDIA[/B][/COLOR]","[COLOR orange][B]Medya Bulunamadı!!![/B][/COLOR]")
 
 def decode_base64(data):
     missing_padding = len(data) % 4
@@ -326,7 +299,6 @@ def _filterargs(source):
             except ValueError:
                 raise UnpackingError("Corrupted p.a.c.k.e.r. data.")
 
-    # could not find a satisfying regex
     raise UnpackingError(
         "Could not make sense of p.a.c.k.e.r data (unexpected code structure)"
     )
@@ -364,17 +336,12 @@ class Unbaser(object):
     def __init__(self, base):
         self.base = base
 
-        # fill elements 37...61, if necessary
         if 36 < base < 62:
             if not hasattr(self.ALPHABET, self.ALPHABET[62][:base]):
                 self.ALPHABET[base] = self.ALPHABET[62][:base]
-        # attrs = self.ALPHABET
-        # print ', '.join("%s: %s" % item for item in attrs.items())
-        # If base can be handled by int() builtin, let it do it for us
         if 2 <= base <= 36:
             self.unbase = lambda string: int(string, base)
         else:
-            # Build conversion dictionary cache
             try:
                 self.dictionary = dict(
                     (cipher, index) for index, cipher in enumerate(self.ALPHABET[base])
@@ -414,11 +381,11 @@ def parse(url):
                "radyohome.com": radyohome,"onlineradiobox.com": onlineradiobox,"tv8.com.tr": tv8,"streamtape.com": streamtape,"7dak": dak7,"xnxx.com": dak7,
                "unlockxh1.com": xhamster, "xhamster.com": xhamster,"dizilla": dizilla, "dizipub": dizilla,"dizigom": dizigom, "voe.sx": voe,
                "koreanturk": koreanturk,"unutulmazfilmler": unutulmazfilmler,"filese.me": filese,"contentx.me": contentx,"evoload":evoload,
-               "ugurfilm": ugurfilm,"hdfilmcehennemi": hdfilmcehennemi,"webteizle": webteizle,"yilmaztv.com": yilmaztv,"k2s.cc": k2s,"vcdn.io": vcdn,
+               "ugurfilm": ugurfilm,"hdfilmcehennemisyrtrk": hdfilmcehennemisyrtrk, "hdfilmcehennemi": hdfilmcehennemi,"webteizle": webteizle,"yilmaztv.com": yilmaztv,"k2s.cc": k2s,"vcdn.io": vcdn,
                "720pizle": a720pizle,"cloudvideo": cloudvideo,"mixdrop": mixdrop,"jetfilmizle": jetfilmizle,"plus4.asp": plus4,"sezonlukdizi": sezonlukdizi,
                "upstream.to": upstream,"streamsb": upstream,"videoseyred": videoseyred,"tele1": tele1,"ulketv": ulketv,"tvnet": tvnet,"sinefy":sinefy,
                "freeomovie": pandamovie_freeomovie,"pandamovie": pandamovie_freeomovie,"diziroll":diziroll,"filmizlesene": filmizlesene,
-               "diziyo": diziyo,"yabanci-dizi":yabanci_dizi,"meteorolojitv":meteor}
+               "diziyo": diziyo,"yabanci-dizi":yabanci_dizi,"meteorolojitv":meteor,"onlinedizi":onlinedizi,"wfilmizle":wfilmizle,"sbembed":sbembed}
     if  url is not None:
         if 'selection cancelled' not in url:
             for key in options.keys():
@@ -429,7 +396,7 @@ def parse(url):
                         url = None
                     if url is not None:
                         if 'selection cancelled' not in url:
-                            if  ('protonvideo' in url and 'index.m3u8' not in url) or'mixdrop' in url or ('dood.la' in url and "Referer" not in url) or 'voe.sx' in url or 'evoload' in url or('streamtape' in url and 'get_video?id' not in url )or ('videoseyred' in url and 'Referer' not in url)  or 'fplay' in url or 'dutrag' in url or 'flmplayer' in url or 'plus4' in url or 'filese.me/iframe' in url or 'videobin.co/embed' in url or 'vcdn.io' in url or 'mixdrop' in url or 'cloudvideo' in url  or 'contentx.me/iframe' in url or 'dailymotion.com/embed' in url or 'youtube.com/embed' in url or 'youtube.com/watch' in url or ('gounlimited' in url and 'v.mp4' not in url) or ('upstream.to' in url and 'Referer' not in url) or ("vidmoly" in url and 'Referer' not in url) or ("closeload" in url and 'Referer' not in url) or ("odnoklassniki.ru" in url and 'Referer' not in url) or ("ok.ru" in url and 'Referer' not in url) or ("streamsb" in url and 'Referer' not in url) or ("mail.ru" in url and 'Referer' not in url) or ("fembed" in url and 'Referer' not in url):
+                            if  "sbembed" in url or ('protonvideo' in url and 'index.m3u8' not in url) or'mixdrop' in url or ('dood.la' in url and "Referer" not in url) or 'voe.sx' in url or 'evoload' in url or('streamtape' in url and 'get_video?id' not in url )or ('videoseyred' in url and 'Referer' not in url)  or 'fplay' in url or 'dutrag' in url or 'flmplayer' in url or 'plus4' in url or 'filese.me/iframe' in url or 'videobin.co/embed' in url or 'vcdn.io' in url or 'mixdrop' in url or 'cloudvideo' in url  or 'contentx.me/iframe' in url or 'dailymotion.com/embed' in url or 'youtube.com/embed' in url or 'youtube.com/watch' in url or ('gounlimited' in url and 'v.mp4' not in url) or ('upstream.to' in url and 'Referer' not in url) or ("vidmoly" in url and 'Referer' not in url) or ("closeload" in url and 'Referer' not in url) or ("odnoklassniki.ru" in url and 'Referer' not in url) or ("ok.ru" in url and 'Referer' not in url) or ("streamsb" in url and 'Referer' not in url) or ("mail.ru" in url and 'Referer' not in url) or ("fembed" in url and 'Referer' not in url):
                                  url = parse(url)
                     break
     return url
@@ -538,13 +505,15 @@ def vidmoly(url):
     videolist = re.findall('([^"]+\.mp4)',content)
     qualitylist = re.findall(',label:"(.*?)"',content)
     subtitle = re.findall('file\s*:\s*"(/srt.*?)"',content)
-   
-    if qualitylist :
-       for i in videolist:
-           videolist1.append(i + '#Referer=https://vidmoly.me/')
-    else:
-       videolist1.append(videolist[0] + '#Referer=https://vidmoly.me/')
-       qualitylist.append('mp4')
+    try:
+        if qualitylist :
+           for i in videolist:
+               videolist1.append(i + '#Referer=https://vidmoly.me/')
+        else:
+           videolist1.append(videolist[0] + '#Referer=https://vidmoly.me/')
+           qualitylist.append('mp4')
+    except:
+        pass
     try:
        videolist1.append(m3u8link[0] + '#Referer=https://vidmoly.me/')
        qualitylist.append('m3u8')
@@ -553,7 +522,11 @@ def vidmoly(url):
     if len(subtitle)>0:
         res = select(qualitylist,videolist1)
         if res is not None:
-            return [res, ['http://vidmoly.me' + subtitle[0]]]
+            for sub in subtitle:
+                su = subtitle[0]
+                if "Turkish" in sub:
+                    su = fixsub('http://vidmoly.me' +sub)
+            return [res, [su]]
     else:
         return select(qualitylist,videolist1)
 
@@ -839,7 +812,6 @@ def dha(url):
     return re.findall("video.src\s*=\s*'(.*?)'",page)[0].replace('\/','/')
     
 def tv8(url):
-    print ("tuhadir " + url)
     page = fetch(url)
     if "canli-yayin" in url:
         return re.findall('"hls"\s*,.*?file\s*:\s*"(.*?)"',page)[0]
@@ -858,11 +830,22 @@ def cnnteve2(url):
 
 def tlc(url):
     page = fetch(url)
-    link = re.findall('liveUrl\s*=\s*"(.*?)"',page)[0]
-    page = fetch(link)
-    link1 = re.findall(',RESOLUTION=1280x720\n(.*?m3u8)', page)[0]
-    if 'dmax'in url:
-        link = 'https://jviqfbc2.rocketcdn.com/dmax.smil/' + link1
+    if "canli-izle" in url:
+        link = re.findall('(?:daionUrl|liveUrl)\s*(?:=|\:)\s*(?:\'|")(.*?)(?:\'|")',page)[0]
+    else:
+        if "tlctv" in url :
+            site = "https://www.tlctv.com.tr"
+        else:
+            site = "https://www.dmax.com.tr"
+        ref_id = re.findall("referenceId\s*:\s*'(.*?)'", page)[0]
+        new_url = site + re.findall("metaUrl\s*:\s*'(.*?)'", page)[0]
+        page = fetch(new_url)
+        js = json.loads(page)
+        pub_id = js["video"]["data"]["main_publisher_id"]
+        url = "https://dygvideo.dygdigital.com/api/video_info?akamai=true&PublisherId=" + pub_id + "&ReferenceId=" +ref_id + "&SecretKey=NtvApiSecret2014*"
+        page = fetch(url)
+        js = json.loads(page)
+        link = js["data"]["flavors"]["hls"]
     return link
     
 def ntv(url):
@@ -996,7 +979,7 @@ def saruch(url):
     link = re.findall('"file":"(.*?)"', page)[0].replace('\/','/')
     de, en = re.findall('"de":"(.*?)","en":"(.*?)"', page)[0]
     link = link + '?de=' + de + '&en=' + en + '&.m3u8'
-    showMessage("[COLOR orange][B]seyirTURK[/B][/COLOR]","[COLOR red][B]Kodi bu linki desteklemiyor![/B][/COLOR]",4000)
+    showMessage("[COLOR orange][B]OTV_MEDIA[/B][/COLOR]","[COLOR red][B]Kodi bu linki desteklemiyor![/B][/COLOR]",4000)
     link = None
     return link
      
@@ -1148,7 +1131,7 @@ def dizilab(url):
                     return None
             except:
                 if 'u kaynak attaya' in embed_page:
-                    showMessage("[COLOR orange][B]seyirTURK[/B][/COLOR]","[COLOR orange][B]Medya kaynak sitede silinmiş!!![/B][/COLOR]")
+                    showMessage("[COLOR orange][B]OTV_MEDIA[/B][/COLOR]","[COLOR orange][B]Medya kaynak sitede silinmiş!!![/B][/COLOR]")
     else:
         return res
     
@@ -1213,15 +1196,8 @@ def diziplus(url):
         if '#l=1' in url:
             return m3u_link + '#Referer=' + m3u_link
         else:
-            try:
-                ff = fetch(sub_link)
-            except:
-                ff = ''
-            ff = re.sub('(\d+:\d+\.\d*) --> (\d+:\d+\.\d*)',r'00:\1 --> 00:\2',ff) 
-            vvv = open(xbmc.translatePath(os.path.join(__addonuserdata__,"okey.vtt")), "w+")
-            vvv.write(ff)
-            vvv.close()
-            return[m3u_link + '#Referer=' + m3u_link, [os.path.join(__addonuserdata__,"okey.vtt")]]
+            sub = fixsub(sub_link)
+            return[m3u_link + '#Referer=' + m3u_link, [sub]]
     else:
         page = fetch(embed_link, head={'Referer': embed_link})
         try:
@@ -1359,7 +1335,7 @@ def unutulmazfilmler(url):
     elif len(linkler) == 1:
         return linkler[0]
     elif len(linkler) < 1:
-        showMessage("[COLOR orange][B]seyirTURK[/B][/COLOR]","[COLOR red][B]Kodinin oynatabileceği link yok![/B][/COLOR]",5000)
+        showMessage("[COLOR orange][B]OTV_MEDIA[/B][/COLOR]","[COLOR red][B]Kodinin oynatabileceği link yok![/B][/COLOR]",5000)
         return None
 
 def dizilla(url):
@@ -1368,8 +1344,8 @@ def dizilla(url):
         partial = re.findall('Kaynak(.*?)toggleLight\(this\)',c,re.DOTALL)[0]
         kaynak_link = re.findall('<li class=".*?lightEscape">\s*<a href="(.*?)".*?>\s*(.*?)\s*<',partial)
     except:
-        partial = re.findall('Kaynak Se(.*?)END ALTERNATIVE PLAYER',c,re.DOTALL)[0]
-        kaynak_link = re.findall('<(?:span class=|a href=)"(.*?)".*?\n\s*(.*?)\s*<',partial)
+        partial = re.findall('series-alter-active(.*?) </ul>',c,re.DOTALL)[0]
+        kaynak_link = re.findall('<(?:span class=|a.*?href=)"(.*?)"\s*title="(.*?)"',partial)
     second = False
     for i,kl in enumerate(kaynak_link):
         link = kl[0].replace('button-hole-link selected',url)
@@ -1442,14 +1418,14 @@ def yabancidizi(url):
     values = {'lang' : lang,
               'episode' : episode1,
               'type' : 'langTab'}
-    page = fetch(kok + 'ajax/service', data=values, head={"content-type":"application/x-www-form-urlencoded; charset=UTF-8","Cookie":"udys"})
+    page = fetch(kok + 'ajax/service', data=values, head={"User-Agent": "Mozilla", "content-type":"application/x-www-form-urlencoded; charset=UTF-8","Cookie":"udys"})
     bolum_embedleri = re.findall('data-hash=\\\\"(.*?)\\\\"\s*data-link=\\\\"(.*?)\\\\"', page)
     for bolum_embed in bolum_embedleri:
         values = {'hash' : bolum_embed[0].replace('\\','') ,
                   'link' : bolum_embed[1].replace('\\','') ,
                   'querytype' : 'alternate',
                   'type' : 'videoGet'}
-        page1 = fetch(kok + 'ajax/service', data=values, head={"content-type":"application/x-www-form-urlencoded; charset=UTF-8","Cookie":"udys"})
+        page1 = fetch(kok + 'ajax/service', data=values, head={"User-Agent": "Mozilla", "content-type":"application/x-www-form-urlencoded; charset=UTF-8","Cookie":"udys"})
         link = re.findall('"api_iframe":\s*"(.*?)"', page1)[0].replace('\\','')
         provider = re.findall('/api/(.*?)/',link)[0].capitalize()
         if "Indi" not in provider:
@@ -1747,7 +1723,7 @@ def webteizle(url):
         values = {'id': embed["id"]}
         emb_content = fetch(kok  + ajax_dataEmb, data=values, head = {"Referer": url})
         if 'bir yerde bulamad' in emb_content:
-            showMessage("[COLOR orange][B]seyirTURK[/B][/COLOR]","[COLOR red][B]Bu link kaynak sitede silinmiş![/B][/COLOR]")
+            showMessage("[COLOR orange][B]OTV_MEDIA[/B][/COLOR]","[COLOR red][B]Bu link kaynak sitede silinmiş![/B][/COLOR]")
             return
         try:
             prov = re.findall("<script>(.*?)\('.*?',.*?\);</script>", emb_content, re.DOTALL)[0]
@@ -1857,7 +1833,7 @@ def jetfilmizle(url):
     alt_names = re.findall('<span>(.*?)</span>',partial)
     alt_links = re.findall('href="(.*?)"',partial)
     alt_links.insert(0,url)
-    remo = ["Zeus","JetPlay","Denver","Oslo","Tokyo","Vip","BinPlay","JPlay","Plat-1","Mail","FETube","Aparat","Vidmoly","CPlay","MixPlay","Jetv.xyz"]
+    remo = ["Zeus","JetPlay","Denver","Oslo","Tokyo","Vip","BinPlay","JPlay","Plat-1","Mail","FETube","Aparat","Vidmoly","CPlay","MixPlay","Jetv.xyz","Platin","Moly","OkRu","Okru"]
     for rem in remo:
         try:
             index = alt_names.index(rem)
@@ -1868,11 +1844,15 @@ def jetfilmizle(url):
     if len(kaynaklar)>0:
         url = select(kaynaklar, linkler, 1)
     else:
-        showMessage("[COLOR orange][B]seyirTURK[/B][/COLOR]","Oynatılabilecek kaynak bulunamadı!")
+        showMessage("[COLOR orange][B]OTV_MEDIA[/B][/COLOR]","Oynatılabilecek kaynak bulunamadı!")
         return None
     if url is not None and url != 'selection cancelled':
         page = fetch(url)
-        url = re.findall("iframe src='(.*?)'",page)[0]
+        try:
+            url = re.findall("iframe src='(.*?)'",page)[0]
+        except:
+            link = re.findall("src='([^\"]+)'\s*frameborder",page)[0]
+            return "https:" + link if link.startswith("//") else link
         referer = '/'.join(url.split('/')[:-2]) + '/'
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0',
                                 'Accept': 'application/json, text/javascript, */*; q=0.01',
@@ -1888,10 +1868,13 @@ def jetfilmizle(url):
             page = fetch(url, head=headers)
             link = re.findall('src: "(.*?)"',page)
             return link[0]
-        if 'Jetv.xyz' in url:
+        if 'jetv.xyz' in url:
             page = fetch(url, head=headers)
-            link = re.findall("\{file:\s*'(http.*?)',\s*type:.*?\}",page)
-            return link[0]
+            try:
+                link = re.findall("\{file:\s*'(http.*?)',\s*type:.*?\}",page)[0]
+            except:
+                link = re.findall('src="(.*?)"', page)[0]
+            return link
         if 'gp.jetcdn' in url or 'jetv.xyz' in url or 'yjco.xyz' in url or "jetfilmvid" in url:
             page = fetch(url, head=headers)
             page = page.replace("\\","")    
@@ -2011,13 +1994,13 @@ def dizidimi(url):
 
 def plus4(url):
     if url.startswith('/player/'):
-        url = 'https://sezonlukdizi.vip' + url
+        url = 'https://sezonlukdizi1.com' + url
     page = fetch(url, head={"Referer":url})
     videolist = re.findall('"file":"(.*?)"', page)
     qualitylist = re.findall('"label":"(.*?)"', page)
     res = select(qualitylist, videolist)
     if res is not None and res != 'selection cancelled':
-        return res + "#Referer=https://sezonlukdizi.vip"
+        return res + "#Referer=https://sezonlukdizi1.com"
     elif res == 'selection cancelled':
         return res
     
@@ -2051,7 +2034,7 @@ def videoseyred(url):
         return [link + sonek, [sub]]
 
 def sezonlukdizi(url):
-    kok = '/'.join(url.split('/')[:-2]) + '/'
+    kok = '/'.join(url.split('/')[:3]) + '/'
     alt_names = []
     alt_ids = []
     url_lang = url.split('?l=')
@@ -2063,7 +2046,7 @@ def sezonlukdizi(url):
         dil ="0"
     page = fetch(url)
     bid = re.findall('<div\s*bid="(\d*)"\s*did=', page)[0]
-    ajax_page = fetch(kok + '/ajax/dataAlternatif2.asp', data = {"bid": bid, "dil": dil}, head = {"Referer": url, "X-Requested-With": "XMLHttpRequest"})
+    ajax_page = fetch(kok + 'ajax/dataAlternatif2.asp', data = {"bid": bid, "dil": dil}, head = {"Referer": url, "X-Requested-With": "XMLHttpRequest"})
     if 'eklenmedi' not in ajax_page:
         if not isPy3:
             jso = json.loads(ajax_page.decode('UTF-8','ignore'))
@@ -2084,7 +2067,7 @@ def sezonlukdizi(url):
                 pass
         res = select(alt_names, alt_ids, 1)
         if res is not None and res != 'selection cancelled':
-            page = fetch('https://sezonlukdizi.vip/ajax/dataEmbed.asp', data={"id": res})
+            page = fetch(kok + 'ajax/dataEmbed.asp', data={"id": res})
             link = re.findall('(?:SRC|src)="(.*?)"', page)[0]
             if link.startswith('//'):
                 link = 'https:' + link
@@ -2115,9 +2098,16 @@ def protonvideo(url):
     data1 = {'idi': id, 'token':tok}
     data1 = json.dumps(data1)
     page = fetch('https://api.svh-api.ch/api/v4/player', data = data1, head = {"Referer": "https://protonvideo.to/"})
-    link = re.findall('"file":"(.*?)"', page)[0]
-    link = re.sub("\[\d*p\]","",link) 
-    return link
+    partial = re.findall('"file":"(.*?)"', page)[0]
+    links = re.findall('\[(\d*p)\](htt.*?)\s*or', partial)
+    for link in links:
+        qualitylist.append(link[0])
+        videolist.append(link[1])
+    if len(qualitylist)>0:
+        return select(qualitylist, videolist)
+    else:
+        link = re.findall('"file":"(.*?)"', page)[0]
+        return re.sub("\[\d*p\]","",link)
 
 def k4filmizlesene(url):
     page = fetch(url)
@@ -2135,10 +2125,10 @@ def dizitime(url):
     page = fetch(url)
     oids = re.findall('data-name="(.*?)"\s*data-oid="(.*?)"', page)
     for i,oid in enumerate(oids):
-        if 'Moly'in oid[0] or 'Odnok'in oid[0] or 'King'in oid[0]:
+        if 'DTime' in oid[0] or'Moly'in oid[0] or 'Odnok'in oid[0] or 'King'in oid[0]:
             kaynaklar.append(str(i) + "- " + oid[0])
             linkler.append(oid[1])
-    code = select(kaynaklar, linkler)
+    code = select(kaynaklar, linkler, 1)
     url = kok + "play/" + code
     page = fetch(url, head={"Referer": url})
     parts = re.findall('document\.write\(atob\(unescape\("(.*?)"\)\)\);', page)
@@ -2147,7 +2137,6 @@ def dizitime(url):
         text = decode_base64(part)
         page = page + text
     src = re.findall('src="(.*?)"', page)[1].replace(';','').replace('&#',' ').strip()
-    # decimal to string
     url2 = ""
     aa = src.split(" ")
     for a in aa:
@@ -2166,6 +2155,14 @@ def dizitime(url):
     else:
         if "odnok" in url2:
             return url2
+        elif "molystream" in url2:
+            link = url2.replace("dtm","dbx") + "/sheila"
+            page = fetch(link, head={'Referer': url2})
+            name = 'cont' + ''.join(random.choice(string.ascii_lowercase) for i in range(10))
+            r = fetch(root2 + "/kodi/contentx/online.php", data ={"url": page, "name": name}, head={'X-Requested-With': 'XMLHttpRequest'})
+            link2 = root2 + '/kodi/contentx/play.php?name=' + name
+            link2 = link2 + '#Referer='+link+'&User-Agent=' + UA
+            return link2
         else:
             return url2 + '#Referer=' + url2
 
@@ -2177,7 +2174,7 @@ def pandamovie_freeomovie(url):
     else:
         hosts_partial = re.findall('Video Sources(.*?)Download Sources', page)[0]
         hosts = re.findall('href="(.*?)".*?height="16">(.*?)<', hosts_partial)
-    res = ["videobin","streamtape","doodstream","evoload","voe","mixdrop"]
+    res = ["videobin","streamtape","doodstream","evoload","voe","mixdrop","streamsb"]
     for host in hosts:
         if host[1].strip().lower() in res:
             kaynaklar.append(host[1].strip())
@@ -2185,7 +2182,7 @@ def pandamovie_freeomovie(url):
     if len(kaynaklar) > 1:
         return select(kaynaklar, linkler, 1)
     else:
-        showMessage("[COLOR orange][B]seyirTURK[/B][/COLOR]","[COLOR yellow][B]Bu filmde desteklenen bir link maalesef yok.[/B][/COLOR]")        
+        showMessage("[COLOR orange][B]OTV_MEDIA[/B][/COLOR]","[COLOR yellow][B]Bu filmde desteklenen bir link maalesef yok.[/B][/COLOR]")        
 
 def evoload(url):
     page = fetch(url)
@@ -2208,7 +2205,7 @@ def dood(url):
         t = string.ascii_letters + string.digits
         return link + ''.join([random.choice(t) for _ in range(10)]) + match[0][1] + str(int(time.time() * 1000)) + "#Referer=https://dood.la/&User-Agent=" + UA
     else:
-        showMessage("[COLOR orange][B]seyirTURK[/B][/COLOR]","[COLOR yellow][B]Kodi sürümünüz bu linki desteklemiyor, Kodi 19 veya üzeri olması gerekir.[/B][/COLOR]")
+        showMessage("[COLOR orange][B]OTV_MEDIA[/B][/COLOR]","[COLOR yellow][B]Kodi sürümünüz bu linki desteklemiyor, Kodi 19 veya üzeri olması gerekir.[/B][/COLOR]")
 
 def mixdrop(url):
     headers = {'Origin': 'https://mixdrop.co/','Referer': 'https://mixdrop.co/', 'User-Agent': "Mozilla"}
@@ -2221,27 +2218,16 @@ def mixdrop(url):
     return link
 
 def diziroll(url):
-    sbttls = []
-    link = url.split("/")
-    s_name = link[3]
-    season = link[4]
-    episode = link[5].replace("-izle","")
-    page = fetch("https://api.diziroll.com/v1/episode?series_slug=" + s_name + "&season_slug=" +  season + "&episode_slug=" + episode)
-    js = json.loads(page)
-    id = js["data"]["id"]
-    page = fetch("https://api.diziroll.com/v1/episode/source?episode_id=" + str(id) )
-    jk = json.loads(page)
-    for j in jk["data"]["sources"]:
-        qualitylist.append(j["label"])
-        videolist.append(j["src"])
-    link = select(qualitylist, videolist)
-    try:
-        for jj in jk["data"]["subtitles"]:
-            if "tr.vtt" in jj["src"]:
-                sbttls.append(jj["src"])
-    except:
-        pass
-    return [link, sbttls]
+    page = fetch(url)
+    alts = re.findall('focus\:outline-none"\s*href="(.*?)"\s*title="(.*?)"\s*data-navigo', page)
+    for alt in alts:
+        kaynaklar.append(alt[1])
+        linkler.append(alt[0])
+    url = select(kaynaklar, linkler, 1)
+    page = fetch(url)
+    link = re.findall('iframe src="(.*?)"', page)[0]
+    link = link if link.startswith("http") else "https:" + link
+    return link
 
 def filmizlesene(url):
     page = fetch(url)
@@ -2293,14 +2279,14 @@ def filmizlesene(url):
     
 def sinefy(url):
     page = fetch(url)
+    page = "".join(page.split())
     kok = '/'.join(url.split('/')[:3])
     try:
-        alts = re.findall('data-hash="(.*?)"\s*data-querytype=".*?">(.*?)</div>', page, re.DOTALL)
+        alts = re.findall('data-querytype=".*?ahref="(.*?)"data-navigo>(.*?)<', page, re.DOTALL)
         dene = alts[0]
         for alt in alts:
             kaynaklar.append(alt[1].title())
-            halt = alt[1].lower().replace("+", "plus").replace("rapid","rapidrame").replace("moly","vidmoly")
-            linkler.append(kok + "/api/" + halt + "/" + alt[0])
+            linkler.append(alt[0])
         api_url = select(kaynaklar, linkler, 1)
     except:
         datams = re.findall('data-whatwehave="(.*?)"\s*data-lang="(.*?)"', page)[0]
@@ -2352,3 +2338,134 @@ def meteor(url):
     js = json.loads(page)
     link = js["streams"][0]["url"]
     return link
+
+def onlinedizi(url):
+    kok = "/".join(url.split("/")[:3])
+    page = fetch(url)
+    partial = re.findall('Alternatifler(.*?)episode-buttons', page)[0]
+    alts = re.findall('href="(.*?)".*?>(.*?)<', partial)
+    for alt in alts:
+        kaynaklar.append(to_utf8(alt[1]))
+        linkler.append(alt[0])
+    url = select(kaynaklar,linkler,1)
+    page = fetch(url)
+    iframe = re.findall('iframe\s*src="(.*?)"', page)[0]
+    iframe_link = "https:"+iframe if iframe.startswith("//") else iframe
+    page =fetch(iframe_link,head={"Referer":kok})
+    link = re.findall('ifsrc = "(.*?)"', page)[0]
+    link = "https:"+link if iframe.startswith("//") else link
+    embed_link = fetch(link,head={"Referer": kok},redir = 1)
+    if "gdplayer" in embed_link:
+        page = fetch(embed_link,head={"Referer":kok})
+        pre_link = re.findall('(//gdplayer.org/api/.*?)"', page)[0]
+        page = fetch("http:" + pre_link,head={"Referer":kok})
+        js = json.loads(page)
+        link = js["sources"][0]["file"]
+        return "http:" + link
+    elif "fcdn.xyz" in embed_link:
+        key = embed_link.split("/")[4]
+        embed_link = embed_link + "?do=getVideo"
+        data = {"hash": key, "r": kok, "s":""}
+        page = fetch(embed_link, data = data, head = {"Content-Type":"application/x-www-form-urlencoded; charset=UTF-8","X-Requested-With":"XMLHttpRequest"})
+        js = json.loads(page)
+        link = js["videoSources"][0]["file"]
+        if "fcdn" not in link:
+            return link   
+        elif "fcdn" in link:
+            page = fetch(link,head={"Accept":"*/*"})
+            links = re.findall('(https:.*?m3u8)', page)
+            for link in links:
+                videolist.append(link)
+                if "240p/playlist" in link:
+                    qualitylist.append("240p")
+                elif "360p/playlist" in link:
+                    qualitylist.append("360p")            
+                elif "480p/playlist" in link:
+                    qualitylist.append("480p")
+                elif "720p/playlist" in link:
+                    qualitylist.append("720p")
+                elif "1080p/playlist" in link:
+                    qualitylist.append("1080p")
+                else :
+                    qualitylist.append("Diger")
+            return select(qualitylist, videolist)
+    elif "ondembed.xyz" in embed_link:
+        return embed_link.replace('ondembed.xyz', 'fembed.com')
+    else:
+        return embed_link
+
+def wfilmizle(url):
+    page = fetch(url)
+    partial = re.findall('keremiya_part(.*?)wide-button', page)[0]
+    sources_links = re.findall('<a href="(.*?)" class="post-page-numbers"><span>(.*?)</span>', partial)
+    a = [(url, "WHDPlayer")]
+    sources_links = a + sources_links
+    for source_link in sources_links:
+        if "fragman" not in source_link[1].lower():
+            kaynaklar.append(source_link[1])
+            linkler.append(source_link[0])
+    link = select (kaynaklar, linkler,1)
+    page = fetch(link)
+    try:
+        embed_link = re.findall('<iframe loading="lazy".*?src="(.*?)"', page)[0]
+    except:
+        embed_link = re.findall('<iframe\s*src=(?:\'|")(.*?)(?:\'|")', page)[0] 
+    embed_link = "https:" + embed_link if embed_link.startswith("//") else embed_link
+    if "/v/" in embed_link:
+        parts = embed_link.split("/")
+        parts[2] = "fembed.com"
+        embed_link = "/".join(parts)
+    if "hdplayersystem.live/player" in embed_link:
+        page = fetch(embed_link, head = {"Referer": url})
+        embed_link = re.findall('videoUrl\s*=\s*"(.*?)"', page)[0]        
+    return embed_link
+
+def hdfilmcehennemisyrtrk(url):
+    url = url.replace("hdfilmcehennemisyrtrk", "hdfilmcehennemi")
+    page = fetch(url)
+    page = "".join(page.split())
+    alts_partial = re.findall('nav-slider(.*?)player-containermt-4', page)[0]
+    alts = re.findall('a.*?href\s*=\s*"(.*?)".*?(?:</i>|svg>)(.*?)</a', alts_partial)
+    for alt in alts:
+        if "Fragman" not in alt[1] and "SinemaModu" not in alt[1]:
+            kaynaklar.append(alt[1].replace("eD", "e D").replace("eA", "e A").replace("-", " - "))
+            linkler.append(alt[0])
+    url = select(kaynaklar, linkler, 1)
+    page = fetch(url)
+    link = re.findall('<iframe.*?data-src="(.*?)"', page)[0]
+    if "player" in link:
+        page = fetch(link)
+        link = re.findall('sources:\s*\[\{file:"(.*?)"', page)[0]
+        try:
+            tracks = re.findall('tracks:\s*(.*?\]),', page)[0]
+            subtitles = re.findall('"file":"(.*?)"', tracks)
+            for subtitle in subtitles:
+                if  "Turkish" in subtitle:
+                    sub = "https://www.hdfilmcehennemi.cc" + subtitle.replace("\\","")
+                    sub = fixsub(sub)
+            link = [link, [sub]]
+        except:
+            pass
+    return link
+
+def sbembed(url):      
+    def makeid(length):
+        t = string.ascii_letters + string.digits
+        return ''.join([random.choice(t) for _ in range(length)])
+    
+    host ="/".join(url.split("/")[2:3])
+    media_id = url.split("/")[4].replace(".html","")
+    x = '{0}||{1}||{2}||streamsb'.format(makeid(12), media_id, makeid(12))
+    c1 = binascii.hexlify(x.encode('utf8')).decode('utf8')
+    x = '{0}||{1}||{2}||streamsb'.format(makeid(12), makeid(12), makeid(12))
+    c2 = binascii.hexlify(x.encode('utf8')).decode('utf8')
+    x = '{0}||{1}||{2}||streamsb'.format(makeid(12), c2, makeid(12))
+    c3 = binascii.hexlify(x.encode('utf8')).decode('utf8')
+    nurl = 'https://{0}/sourcesx38/{1}/{2}'.format(host, c1, c3)
+    headers = {'User-Agent': "Mozilla",
+               'Referer': "https://sbembed2.com",
+               'watchsb': 'streamsb'}
+    page = fetch(nurl, head = headers)
+    data = json.loads(page)
+    return data["stream_data"]["file"] or data["stream_data"]["backup"]
+

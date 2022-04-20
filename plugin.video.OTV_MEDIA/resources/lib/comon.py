@@ -60,10 +60,30 @@ def OpenURL(url, headers={}, user_data={}, justCookie=False):
         xbmc.log(url + " <-- OpenURL fail connection!!")
         return ""
         pass
-
+def to_unicode(value):
+    if isinstance(value, unicode):
+        return value
+    elif isinstance(value, str):
+        try:
+            if value.startswith('\xff\xfe'):
+                return value.decode('utf-16-le')
+            elif value.startswith('\xfe\xff'):
+                return value.decode('utf-16-be')
+            else:
+                return value.decode('utf-8')
+        except UnicodeDecodeError:
+            return value.decode('latin-1')
+    else:
+        try:
+            return unicode(value)
+        except UnicodeError:
+            return to_unicode(str(value))
+        except TypeError:
+            if hasattr(value, '__unicode__'):
+                return value.__unicode__()
 def ReadFile(fileName):    
     try:
-        f = open(fileName,'r')
+        f = open(fileName,'r', encoding='utf-8')
         content = f.read().replace("\n\n", "\n")
         f.close()
     except:
@@ -73,7 +93,7 @@ def ReadFile(fileName):
 def ReadList2(fileName):
   
     try:
-        with open(fileName, 'r') as handle:
+        with open(fileName, 'r', encoding='utf-8') as handle:
             content = handle
     except:
         content=[]
@@ -81,10 +101,11 @@ def ReadList2(fileName):
     return content	
 
 def ReadList3(fileName):
+    fileName=to_unicode(fileName)
   
     try:
-        with open(fileName, 'r') as handle:
-            content = handle.read() 
+        with open(fileName, 'r', encoding='utf-8') as handle:
+            content = handle.read()
     except:
         content=[]
 
@@ -118,23 +139,23 @@ def SaveList2(filname, list):
     return success
 
 def SaveList(filname, list):
-    
-    if PY3:
-       import importlib
-       importlib.reload(sys)
-    else:
-       reload(sys)
-       sys.setdefaultencoding('utf8')
     try:
         with io.open(filname, 'w', encoding='utf-8') as handle:
-                handle.write(str(json.dumps(list, indent=4, ensure_ascii=False)))
+                handle.write(str(json.dumps(list, indent=4, ensure_ascii=False)[-1]))
         success = True
     except Exception as ex:
         print(ex)
         success = False
             
     return success
-
+def write_file(file_name, file_contents):
+    try:
+        with io.open(file_name, "w")  as handle:
+               handle.write(file_contents)
+        return True
+    except Exception as ex:
+        print(ex)
+        return False
 def OKmsg(title, line1, line2 = None, line3 = None):
     dlg = xbmcgui.Dialog()
     dlg.ok(title, line1, line2, line3)
@@ -651,17 +672,7 @@ def url_to_SOD(url,name,server,action='play'):
     xbmc.executebuiltin('Dialog.Close(all, true)')
     xbmc.executebuiltin("xbmc.RunPlugin("+urltos+")")
 
-def write_file(file_name, file_contents):
-    fh = None
-    try:
-        fh = open(file_name, "wb")
-        fh.write(file_contents)
-        return True
-    except:
-        return False
-    finally:
-	      if fh is not None:
-	       fh.close()
+
 def cachepage( url, s, headers={} ):
     
     import time

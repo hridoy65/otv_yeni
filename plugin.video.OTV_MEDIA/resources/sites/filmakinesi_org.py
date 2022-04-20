@@ -5,7 +5,7 @@ SITE_IDENTIFIER = 'filmakinesi_org'
 SITE_NAME = 'Filmakinesi.org'
 SITE_DESC = 'Films streaming'
 TURK_SINEMA = (True, 'showGenre')
-URL_MAIN = 'http://filmakinesi.net/'
+URL_MAIN = 'https://filmmakinesi.pro'
 MOVIE_COMMENTS = (True, 'showGenre')
 
 def encode_for_logging(c, encoding = 'ascii'):
@@ -25,12 +25,69 @@ def showSearch():
     oGui = cGui()
     sSearchText = oGui.showKeyBoard()
     if sSearchText != False:
-        sUrl = 'https://filmmakinesi.pw/?s=' + sSearchText
+        sUrl = sSearchText
         sUrl = sUrl.replace(' ', '+')
         sshowMovies(sUrl)
         oGui.setEndOfDirectory()
         return
 
+def sshowMovies(sUrl):
+        oGui = cGui()
+       # eferer=[('Cookie','PHPSESSID=ran8cfq8pmrt9nmlq38h44n0c9')]
+        Urluu='https://filmmakinesi.pro/'
+        post_data = {"s": sUrl}
+        r = s.post(Urluu , headers={"Cookie": "PHPSESSID=d01754eb36f7ce39ccca40f3c9fd663f65765862","Origin": "https://www.hdfilmcehennemi.mx","Referer": "https://www.hdfilmcehennemi.mx/yil/2020/","Content-Type": "application/x-www-form-urlencoded; charset=UTF-8","User-Agent": UA,"Connection": "Keep-Alive","x-requested-with": "XMLHttpRequest"}, data=post_data, timeout=10)
+        data = r.text                                                                                                   
+        
+        sHtmlContent=to_utf8(data )
+    
+
+        logger.info("sHtmlContent: %s" % sHtmlContent)
+        sPattern = '<article class="post-.*?".*?<a href=(.*?) rel=bookmark data-wpel-link=internal> <img src=.*? data-src=(.*?) class=lazyload alt="(.*?)"' 	
+        oParser = cParser()                  
+        aResult = oParser.parse(sHtmlContent, sPattern)
+   
+   
+        if not (aResult[0] == False):                              
+          total = len(aResult[1])
+       
+          for aEntry in aResult[1]:
+           
+            sTitle = aEntry[2]                                                                                             
+            sPicture = str(aEntry[1])
+            if not 'http' in sPicture:
+                sPicture = str(URL_MAIN) + sPicture
+                
+            sUrl = str(aEntry[0])
+            if not 'http' in sUrl:
+                sUrl = str(URL_MAIN) + sUrl
+           
+            dec = aEntry[1]
+            sTitle = malfabekodla(sTitle)
+            #sTitle = sTitle.encode('ascii', 'ignore').decode('ascii')
+                         
+            oOutputParameterHandler = cOutputParameterHandler()
+            oOutputParameterHandler.addParameter('siteUrl', sUrl)
+            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
+            oOutputParameterHandler.addParameter('sThumbnail', sPicture) #sortis du poster
+
+            if 'hdfilmcehennemi.net/dizi/' in sUrl:
+                oGui.addMovie(SITE_IDENTIFIER, 'showDIZI2', sTitle, sPicture, sPicture, dec, oOutputParameterHandler)
+            else:
+                oGui.addMovie(SITE_IDENTIFIER, 'Hosters', sTitle, sPicture, sPicture, dec, oOutputParameterHandler)
+ 
+           
+
+        sNextPage = __checkForNextPage(sHtmlContent)#cherche la page suivante
+        if (sNextPage != False):
+                oOutputParameterHandler = cOutputParameterHandler()
+                oOutputParameterHandler.addParameter('siteUrl', sNextPage)
+                oGui.addDir(SITE_IDENTIFIER, 'showMovies', '[COLOR teal]Next_Page >>>[/COLOR]', 'next.png', oOutputParameterHandler)
+                #Ajoute une entrer pour le lien Next | pas de addMisc pas de poster et de description inutile donc
+ 
+
+        oGui.setEndOfDirectory()
+ 
 
 HEADER_USER_AGENT = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'
 
@@ -49,7 +106,7 @@ def filmmakinesi(): #affiche les genres
     oGui.addDir(SITE_IDENTIFIER, 'showSearch', 'ARA', 'search.png', oOutputParameterHandler)
     
 
-    sUrl = 'https://filmmakinesi.pw/'
+    sUrl = 'https://filmmakinesi.pro/'
 
     sHtmlContent=getHtml(sUrl) 
     oParser = cParser()
@@ -224,56 +281,7 @@ def searchowMovies(sUrl):
             oGui.addMovie(SITE_IDENTIFIER, 'Hosters', sTitle, sPicture, sPicture, '', oOutputParameterHandler)
          
     oGui.setEndOfDirectory()   
-
-def sshowMovies(sUrl):
-        oGui = cGui()
-        sHtmlContent=cRequestHandler(sUrl).request() 
-        logger.info("sHtmlContent: %s" % sHtmlContent)
-        sPattern = '<article class="post-.*?".*?<a href=(.*?) rel=bookmark title="(.*?)" data-wpel-link=internal>.*?data-src=(.*?)' 	
-        oParser = cParser()                  
-        aResult = oParser.parse(sHtmlContent, sPattern)
-   
-   
-        if not (aResult[0] == False):                              
-          total = len(aResult[1])
-       
-          for aEntry in aResult[1]:
-           
-            sTitle = aEntry[1]                                                                                             
-            sPicture = str(aEntry[2])
-            if not 'http' in sPicture:
-                sPicture = str(URL_MAIN) + sPicture
-                
-            sUrl = str(aEntry[0])
-            if not 'http' in sUrl:
-                sUrl = str(URL_MAIN) + sUrl
-           
-            dec = aEntry[1]
-            sTitle = malfabekodla(sTitle)
-            #sTitle = sTitle.encode('ascii', 'ignore').decode('ascii')
-                         
-            oOutputParameterHandler = cOutputParameterHandler()
-            oOutputParameterHandler.addParameter('siteUrl', sUrl)
-            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
-            oOutputParameterHandler.addParameter('sThumbnail', sPicture) #sortis du poster
-
-            if 'hdfilmcehennemi.net/dizi/' in sUrl:
-                oGui.addMovie(SITE_IDENTIFIER, 'showDIZI2', sTitle, sPicture, sPicture, dec, oOutputParameterHandler)
-            else:
-                oGui.addMovie(SITE_IDENTIFIER, 'Hosters', sTitle, sPicture, sPicture, dec, oOutputParameterHandler)
- 
-           
-
-        sNextPage = __checkForNextPage(sHtmlContent)#cherche la page suivante
-        if (sNextPage != False):
-                oOutputParameterHandler = cOutputParameterHandler()
-                oOutputParameterHandler.addParameter('siteUrl', sNextPage)
-                oGui.addDir(SITE_IDENTIFIER, 'showMovies', '[COLOR teal]Next_Page >>>[/COLOR]', 'next.png', oOutputParameterHandler)
-                #Ajoute une entrer pour le lien Next | pas de addMisc pas de poster et de description inutile donc
- 
-
-        oGui.setEndOfDirectory()
- 
+                       
 
 
 def showMovies(sSearch = ''):
@@ -284,8 +292,10 @@ def showMovies(sSearch = ''):
         oInputParameterHandler = cInputParameterHandler()
         sUrl = oInputParameterHandler.getValue('siteUrl')
     logger.info("sUrl: %s" % sUrl)
+   
     sHtmlContent=getHtml(sUrl) 
-    sPattern = '<article class="post-.*?".*?<a href=(.*?) rel=bookmark title="(.*?)" data-wpel-link=internal>.*?data-src=(.*?)' 	
+    logger.info("sHtmlContent: %s" % sHtmlContent)
+    sPattern = '<article class="post-.*?".*?<a href=(.*?) rel=bookmark data-wpel-link=internal> <img src=.*? data-src=(.*?) class=lazyload alt="(.*?)"' 	
     oParser = cParser()                  
     aResult = oParser.parse(sHtmlContent, sPattern)
    
@@ -295,8 +305,8 @@ def showMovies(sSearch = ''):
        
         for aEntry in aResult[1]:
            
-            sTitle = aEntry[1]                                                                                             
-            sPicture = str(aEntry[2])
+            sTitle = aEntry[2]                                                                                             
+            sPicture = str(aEntry[1])
             if not 'http' in sPicture:
                 sPicture = str(URL_MAIN) + sPicture
                 
@@ -307,7 +317,7 @@ def showMovies(sSearch = ''):
             dec = aEntry[1]
             sTitle = malfabekodla(sTitle)
             #sTitle = sTitle.encode('ascii', 'ignore').decode('ascii')
-                         
+            logger.info("sPicture: %s" % sPicture)             
             oOutputParameterHandler = cOutputParameterHandler()
             oOutputParameterHandler.addParameter('siteUrl', sUrl)
             oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
@@ -357,7 +367,7 @@ def aaddLink(name,url,iconimage):
         xbmc.Player().play(url,liz)
         sys.exit()
         return ok  
-
+               
 def Hosters():
     oGui = cGui()                           
     oInputParameterHandler = cInputParameterHandler()
@@ -366,7 +376,7 @@ def Hosters():
     sUrl = oInputParameterHandler.getValue('siteUrl')
     link=getHtml(sUrl) 
     link= link.replace(' frameborder','frameborder')                 
-    Url2 =re.findall('<iframe width=640 height=360 src data-src=https://www.youtube.com/embed/(.*?)frameborder',link,re.DOTALL)[0]
+    Url2 =re.findall('data-src=https://www.youtube.com/embed/(.*?)frameborder',link,re.DOTALL)[0]
     logger.info("Url2: %s" % Url2)
     UrlL =re.findall('"embedUrl":"(.*?)"',link,re.DOTALL)[0]
     liste = []
@@ -427,7 +437,7 @@ def streams():
     link =  getHtml(url)
     logger.info("body : %s" % link)
     link= link.replace('\\','')
-    Url =re.findall('<source src="(.*?)"',link,re.DOTALL)[0]
+    Url =re.findall('"contentUrl": "(.*?)"',link,re.DOTALL)[0]
     Url =Url+ '|Referer=https://closeload.com/&User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36' 
     addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]'+name,Url,'')   
 

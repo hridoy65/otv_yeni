@@ -8,22 +8,36 @@
 # Created:     29.04.2021
 # Copyright:   (c) orhan 2021
 # Licence:     <your licence>
+from resources.lib.youtube_api.youtube.provider import Provider
+provider = Provider()
+from resources.lib.youtube_api.kodion.impl import Context
+context = Context(plugin_id='plugin.video.OTV_MEDIA')
+def get_params():
+	param = []
+	paramstring = sys.argv[2]
+	if len(paramstring)>= 2:
+		params = sys.argv[2]
+		cleanedparams = params.replace('?', '')
+		if (params[len(params)-1] == '/'):
+			params = params[0:len(params)-2]
+		pairsofparams = cleanedparams.split('&')
+		param = {}
+		for i in range(len(pairsofparams)):
+			splitparams = {}
+			splitparams = pairsofparams[i].split('=')
+			if (len(splitparams)) == 2:
+				param[splitparams[0]] = splitparams[1]
+	return param
 
-#Host: www.youtube.com
-#User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0
-#Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
-#Accept-Language: de-DE,tr-TR;q=0.8,tr;q=0.6,en-US;q=0.4,en;q=0.2
-#Connection: keep-alive
-#Cookie: VISITOR_INFO1_LIVE=ZRDxplgH874; CONSENT=YES+DE.de+V14+BX+768; PREF=f4=4000000&tz=Europe.Berlin; GPS=1
-#Upgrade-Insecure-Requests: 1
-#Accept-Encoding: gzip, deflate
+from resources.lib.youtube_api.functions import build_url, delete_database, get_folders, add_folder, remove_folder, get_channels, get_channel_id_from_uploads_id, add_channel, remove_channel, search_channel, search_channel_by_username, get_latest_from_channel, get_playlists, add_sort_db, init_sort, move_up, move_down, check_sort_db, change_folder, set_folder_thumbnail, get_folder_thumbnail, check_thumb_db, add_thumb_db, get_livestreams
+
 from resources.sites.LIVETV2 import *
-
+from resources.lib.youtube_api.youtube_api import YouTube  
 SITE_IDENTIFIER = 'youtubecom_tr'
 SITE_NAME = 'YouTube'
 SITE_DESC = 'YouTube'
 
-       
+uqp = urllib.parse.unquote_plus       
 YUPA = 'https://www.y2mate.com/mates/analyze/ajax'
 URL_MAIN = 'http://www.youtube.com/embed/'
 URL_PIC = 'http://s.dogannet.tv/'
@@ -31,7 +45,7 @@ URL_LIVE = 'https://www.youtube.com/watch?v='
 MOVIE_MOVIE = ('http://', 'showAlpha')
 MOVIE_GENRES = (True, 'showGenre')
 
-api_key=''
+api_key='AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8'
 URL_SEARCH = ('', 'showMovies')
 def uni(string, encoding = 'utf-8'):
     if isinstance(string, basestring):
@@ -47,18 +61,42 @@ playlistsFile2 = os.path.join(USER_DATA_DIR, "playLists.txt")
 playlistsFile3 = os.path.join(USER_DATA_DIR, "FolderListe3.txt")
 
 playlistsFile4 = os.path.join(USER_DATA_DIR, "FolderLists.txt")
+nextlists = os.path.join(USER_DATA_DIR, "nextlists.txt")
 
+from resources.lib.peewee import (
+    SqliteDatabase,
+    Model,
+    IntegerField,
+    TextField,
+    ForeignKeyField,
+    FloatField,
+    chunked,
+)
+
+from requests.utils import requote_uri
+def read_url(url):
+	url = requote_uri(url)
+	req = urllib.request.Request(url)
+	req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; rv:33.0) Gecko/20100101 Firefox/33.0')
+	response = urllib.request.urlopen(req)
+	link=response.read()
+	response.close()
+	return link.decode('utf-8')
 
 def removeNonAscii(s): return "".join(filter(lambda x: ord(x)<128, s))
-
-#  ,"Referer": sUrl
+from resources.lib.youtube_api.yardim import datetime_parser
+from resources.lib.youtube_api.yardim.OAuth import OAuth, API_KEY
 
 from collections import OrderedDict				
 if not os.path.exists(USER_DATA_DIR):
     os.makedirs(USER_DATA_DIR)
 from resources.lib.comaddon import dialog
 from resources.lib.util import Unquote, Quote
-def yvideos(v_id,itag):
+
+
+                  #  'title': 'ANKARA PAVYON HAVALARI'
+
+def yyvideos(v_id,itag):
          #sourcestr = 'https://raw.githubusercontent.com/iptv-org/iptv/master/scripts/data/countries.json'
          #sHtmlContent = getHtml(sourcestr) 
         # logger.info("metin-%s " %metin)
@@ -72,36 +110,6 @@ def yvideos(v_id,itag):
          aResult = oParser.parse(video, sPattern)
          if (aResult[0] == True):
               return  aResult[1][0] 
-class Search:
-	
-	def __init__(self,video_id):
-		
-		        #"itag":18,"url":"
-		html = urllib.request.urlopen("https://www.youtube.com/watch?v=" + video_id)
-		
-		self.source = html.read().decode('utf8')
-		
-		
-	def videos(self):                                                                                                                                                 
-		limit = self.limit
-		source = self.source
-		data  = re.findall('{\"videoRenderer\":{\"videoId\":\"(\S{11})\",\"thumbnail\":{\"thumbnails\":\[{\"url\":\"(\S+)\",\"width\":.+?,\"height\":.+?}\]},\"title\":{\"runs\":\[{\"text\":\"(.+?)\"}\],\"accessibility\":{\"accessibilityData\":{\"label\":\"(.+?)\"}}},\"longBylineText\"',source)
-		data_ = []
-		for i in data:
-				js_data = {"video_id":"",
-		            "video_title":"", 
-		             "video_thumbnail" : "" ,
-		              "video_description":""}
-				js_data['video_id'] = i[0]
-				js_data['video_title'] = i[2]
-				js_data['video_thumbnail'] = i[1]
-				js_data['video_description'] = i[3]
-				data_.append(js_data)
-		value =  json.dumps(data_ )
-		return json.loads(value)
-
-
-
 
 
 
@@ -122,35 +130,46 @@ def youtubeHtml(sUrl):  # S'occupe des requetes
         return to_utf8(data )
         logger.info("data : %s" % str(data))
         logger.info("sUrl : %s" % str(head))
-        
-def myoutubeHtml(sUrl):  # S'occupe des requetes
-
-          
-        #cookie_string = SetCookie(sUrl)
-        #logger.info("sUrl : %s" % str(cookie_string))
-        oRequestHandler = cRequestHandler(sUrl)
-        oRequestHandler.addHeaderEntry('x-goog-visitor-id' ,'CgszMGVXU0tiMmZCayjukduOBg%3D%3D')
-        oRequestHandler.addHeaderEntry('authorization' ,'SAPISIDHASH 1641466135_3e4b2ccb4f9945d23b06e27ceeba54a9800ded90')
-        oRequestHandler.addHeaderEntry('User-Agent','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36')
-        oRequestHandler.addHeaderEntry('Cookie','LOGIN_INFO=AFmmF2swRgIhAL7N_yOAYI9PB8CG5_cb5uPwqwdAPb50nL6Z2-fxUIbOAiEAr0ww73kuJRoC95NUysdInW6yGsQ5Xp5cB7zAlVSU-Qs:QUQ3MjNmeXFMY1hETDlPSmphTFBnYXVvdDI2cTZiM1N0S3ltZXNZSlJCN2djS3Exa0hCbXRLaXY3OXl2eFNOOFdCQ05hdTNSQ0NLT2Y3LWxnYUdMeWk4a3k5RnQxYmZsbkI3Q3NWMTE5VElOYWg3V1NTS0NFWmh1ZDE0TGVmNEQyUDFHdG9pZjBvNFhTbEZHMTVkTFVmVDNMemo3OTVwUl9n; PREF=f4=4000000&tz=Europe.Berlin; HSID=AKUnhe-ZlOfoqqgia; SSID=ADFkrrq3kH3zNWHJX; APISID=Jb69vpE8vMhmVodM/AGkP3Ufhk6NPhCzDY; SAPISID=nhtCujqQpHOmLSMv/AOtBo5bOZX9smEY1D; __Secure-1PAPISID=nhtCujqQpHOmLSMv/AOtBo5bOZX9smEY1D; __Secure-3PAPISID=nhtCujqQpHOmLSMv/AOtBo5bOZX9smEY1D; SID=FQhgtwYaH5lG3lmYxc1WZXY4DlVfcwhvxH-o8aHiLtmJ17fgA5j1vInaJb6qt0Mpnqurug.; __Secure-1PSID=FQhgtwYaH5lG3lmYxc1WZXY4DlVfcwhvxH-o8aHiLtmJ17fgEkimUXvQjlRhpFiDX1FkEA.; __Secure-3PSID=FQhgtwYaH5lG3lmYxc1WZXY4DlVfcwhvxH-o8aHiLtmJ17fg-XVKhieotrywuaXC2K7VVQ.; VISITOR_INFO1_LIVE=30eWSKb2fBk; YSC=vXcBOM4sCO0; SIDCC=AJi4QfGc3xQZRYwttOPG8rUbhNbuaIpisv8tDLjJJ0ttZDYUDK1bNpBns1TQPEP1_lp-bXxVa4Y; __Secure-3PSIDCC=AJi4QfGsI9esg2nMe5iCwaaPdGK43suO8b1RAY-3I1DbDnYfKAgGVIBdanuKeBa22Oh904s8GJI')
-       
-#        oRequestHandler.addHeaderEntry('accept','text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9')
-        oRequestHandler.addHeaderEntry('Referer','https://www.youtube.com/embed/De0TY3j3_5s?rel=0&enablejsapi=1&autoplay=0')
-        oRequestHandler.addHeaderEntry('x-client-data',' CIm2yQEIorbJAQjEtskBCKmdygEIibnKAQjDw8oBCPjHygEIy+XKAQiymssBCNWcywEI5JzLAQipncsBGOGaywE=Decoded:message ClientVariations {  // Active client experiment variation IDs. repeated int32 variation_id = [3300105, 3300130, 3300164, 3313321, 3316873, 3318211, 3318776, 3322571, 3329330, 3329621, 3329636, 3329705];// Active client experiment variation IDs that trigger server-side behavior.  repeated int32 trigger_variation_id = [3329377];}')
-       # oRequestHandler.addHeaderEntry('Cookie', LOGIN_INFO=AFmmF2swRgIhAL7N_yOAYI9PB8CG5_cb5uPwqwdAPb50nL6Z2-fxUIbOAiEAr0ww73kuJRoC95NUysdInW6yGsQ5Xp5cB7zAlVSU-Qs:QUQ3MjNmeXFMY1hETDlPSmphTFBnYXVvdDI2cTZiM1N0S3ltZXNZSlJCN2djS3Exa0hCbXRLaXY3OXl2eFNOOFdCQ05hdTNSQ0NLT2Y3LWxnYUdMeWk4a3k5RnQxYmZsbkI3Q3NWMTE5VElOYWg3V1NTS0NFWmh1ZDE0TGVmNEQyUDFHdG9pZjBvNFhTbEZHMTVkTFVmVDNMemo3OTVwUl9n; PREF=f4=4000000&tz=Europe.Berlin; HSID=AKUnhe-ZlOfoqqgia; SSID=ADFkrrq3kH3zNWHJX; APISID=Jb69vpE8vMhmVodM/AGkP3Ufhk6NPhCzDY; SAPISID=nhtCujqQpHOmLSMv/AOtBo5bOZX9smEY1D; __Secure-1PAPISID=nhtCujqQpHOmLSMv/AOtBo5bOZX9smEY1D; __Secure-3PAPISID=nhtCujqQpHOmLSMv/AOtBo5bOZX9smEY1D; SID=FQhgtwYaH5lG3lmYxc1WZXY4DlVfcwhvxH-o8aHiLtmJ17fgA5j1vInaJb6qt0Mpnqurug.; __Secure-1PSID=FQhgtwYaH5lG3lmYxc1WZXY4DlVfcwhvxH-o8aHiLtmJ17fgEkimUXvQjlRhpFiDX1FkEA.; __Secure-3PSID=FQhgtwYaH5lG3lmYxc1WZXY4DlVfcwhvxH-o8aHiLtmJ17fg-XVKhieotrywuaXC2K7VVQ.; VISITOR_INFO1_LIVE=30eWSKb2fBk; YSC=vXcBOM4sCO0; SIDCC=AJi4QfGc3xQZRYwttOPG8rUbhNbuaIpisv8tDLjJJ0ttZDYUDK1bNpBns1TQPEP1_lp-bXxVa4Y; __Secure-3PSIDCC=AJi4QfGsI9esg2nMe5iCwaaPdGK43suO8b1RAY-3I1DbDnYfKAgGVIBdanuKeBa22Oh904s8GJI)
-        data = oRequestHandler.request()
-        logger.info("data : %s" % str(data))
-        
-
-        return to_utf8(data )
+addon = xbmcaddon.Addon()
+def get_unix_timestamp():
+    """ User defined function for SQLite """
+    return int(time.time())
 
 
 
 
 
-def YouTUBE():
+
+def kkYouTUBE():   
     oGui = cGui()
+    from resources.lib.youtube_api import default
+    tarzlistesi = []
+    tarzlistesi.append(("Search videos", "showSearch1"))
     
+#    tarzlistesi.append(("Search channels", "Searchchannel"))
+    tarzlistesi.append(("Search playlists", "Searchplaylist"))                                     
+    tarzlistesi.append(("live broadcasts on youtube", "showSearch3")) 
+    tarzlistesi.append(("canli yayin", "showSearch3")) 
+    tarzlistesi.append(("canli radyo", "showSearch3")) 
+    for sTitle,sUrl2 in tarzlistesi:
+           
+        oOutputParameterHandler = cOutputParameterHandler()
+        oOutputParameterHandler.addParameter('siteUrl', sUrl2)
+        oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
+        oGui.addDir(SITE_IDENTIFIER, sUrl2, sTitle, 'genres.png', oOutputParameterHandler)
+                   
+                    
+    oGui.setEndOfDirectory()
+#from resources.lib.youtube_api import default
+
+#from resources.lib.youtube_api.kodion.impl import Context
+#context = Context(plugin_id='plugin.video.OTV_MEDIA')
+#plugin_handle = context.get_params()
+def YouTUBE():   
+    from resources.lib.youtube_api import default
+
+
+
 
     tarzlistesi = []
     tarzlistesi.append(("Search videos", "showSearch1"))
@@ -211,13 +230,13 @@ def Searchchannel2():
        from resources.lib import comon
        list=[]
        list = comon.ReadList(playlistsFile3)
-       listUrl = 'https://youtube.otvmedia'
+       listUrl = '1'
        if exists == "": 
           list.append({"name": sSearchText, "url": listUrl})
           if comon.SaveList(playlistsFile3, list):
 
-            from resources.lib.youtube_api import YouTubeDataAPI
-            yt = YouTubeDataAPI(api_key)
+            #from resources.lib.youtube_api import YouTubeDataAPI
+            yt = YouTube()
             
             data =yt.search(sSearchText)                   
             logger.info("video_id : %s" % data) 
@@ -240,9 +259,9 @@ def Searchchannel5():
         oGui = cGui()
         oInputParameterHandler = cInputParameterHandler()
         sSearchText = oInputParameterHandler.getValue('sMovieTitle')
-
-        from resources.lib.youtube_api import YouTubeDataAPI
-        yt = YouTubeDataAPI(api_key)
+        from resources.lib.youtube_api.youtube_api import YouTube 
+       
+        yt = YouTube()
             
         data =yt.search(sSearchText)                   
         logger.info("video_id : %s" % data) 
@@ -317,135 +336,7 @@ def Searchchannel4():
                 oGui.addMovie(SITE_IDENTIFIER, 'msshowBox3', sTitle+"-Video- %s" % str(s_num+0),'','', sTitle, oOutputParameterHandler)
             oGui.setEndOfDirectory()   
 
-def msshowBox3():                       
-    oGui = cGui()                                                                        
-    oInputParameterHandler = cInputParameterHandler()
-    v_id = oInputParameterHandler.getValue('siteUrl')
-    logger.info("v_id : %s" % v_id )
-    name = oInputParameterHandler.getValue('sMovieTitle')
-    sHtmlContent = y2mate(v_id).replace('<span class="label label-primary"><small>', '-').replace('</small></span>', '')
-    logger.info("sHtmlContent : %s" % sHtmlContent )
-    if '.m3u8' in sHtmlContent:
-      addLink('[COLOR lightblue][B]OTV MEDIA YOUTUBE Player>>  [/B][/COLOR]'+name,sHtmlContent,'')
-    else:   
-      
-      oOutputParameterHandler = cOutputParameterHandler()
-      oOutputParameterHandler.addParameter('siteUrl', v_id)
-      oOutputParameterHandler.addParameter('sMovieTitle', str(name))
-      oGui.addDir(SITE_IDENTIFIER, 'myeniplay', 'EXTRA_PLAY', 'genres.png', oOutputParameterHandler)
-      sHtmlContent =sHtmlContent
-      _id = re.search('k__id = "(.+?)"', sHtmlContent).group(1)
-      oParser = cParser()         
-      sPattern = '<a href=".*?" rel="nofollow">(.*?)</a>.*?<a href=".*?" rel="nofollow" type="button" class="btn btn-success" data-toggle=".*?" data-target=".*?" data-ftype="(.*?)" data-fquality="(.*?)">'
-      aResult = oParser.parse(sHtmlContent, sPattern)
-      if not (aResult[0] == False):
-         total = len(aResult[1])
-         for aEntry in aResult[1]:
-           
-            sTitle = aEntry[0]                                                                  
-            
-            ftype = aEntry[1]
-            fquality= aEntry[2]
-            sTitle = malfabekodla(sTitle)
-            oOutputParameterHandler = cOutputParameterHandler()
-#            oOutputParameterHandler.addParameter('sThumbnail', str(sPicture))
-            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
-            oOutputParameterHandler.addParameter('v_id', v_id)
-            oOutputParameterHandler.addParameter('_id', _id)
-            oOutputParameterHandler.addParameter('ftype', ftype)
-            oOutputParameterHandler.addParameter('fquality', fquality)
-            oGui.addMovie(SITE_IDENTIFIER, 'y2mateplay', sTitle,'', '','', oOutputParameterHandler)
 
-    oGui.setEndOfDirectory()
-
-name=None
-mode=None
-desc=None
-resim=None
-m_id=None
-konu=None
-isTv = '0'
-timestamp = 0
-def mmsshowBox2():                       
-    oGui = cGui()                                                                        
-    oInputParameterHandler = cInputParameterHandler()
-    v_id = oInputParameterHandler.getValue('siteUrl')
-    sPicture = oInputParameterHandler.getValue('sThumbnail')
-    name = oInputParameterHandler.getValue('sMovieTitle')
-    url = 'https://www.youtube.com/watch?v=' + v_id
-    oynat(url,name,resim,desc,m_id,timestamp,isTv)
-def msshowBox2():                       
-    oGui = cGui()                                                                        
-    oInputParameterHandler = cInputParameterHandler()
-    v_id = oInputParameterHandler.getValue('siteUrl')
-    sPicture = oInputParameterHandler.getValue('sThumbnail')
-    name = oInputParameterHandler.getValue('sMovieTitle')
-    url = 'https://www.youtube.com/watch?v=' + v_id
-    html =youtubeHtml(url)
-    html = html.replace('\\','')
-    logger.info("html : %s" % url )
-    if '.m3u8' in html:
-        link = re.findall('"(http[^"]+m3u8)"', html, re.IGNORECASE)[0]
-        page =youtubeHtml(link)
-        url_main = '/'.join(link.split('/')[:-1]) + '/'
-        page1 = youtubeHtml(url_main)
-        qualitylist = re.findall(',RESOLUTION=.*?x([0-9]+)', page1)
-        videolist= re.findall('(https.*?m3u8)', page1)
-        sHtmlContent=videolist[-1:][0]
-        addLink('[COLOR lightblue][B]OTV MEDIA YOUTUBE Player>>  [/B][/COLOR]'+name,sHtmlContent,sPicture)
-    else:   
-        #from youtubesearchpython.extras import Video
-        #from youtubesearchpython.streamurlfetcher import StreamURLFetcher    
-        #fetcher = StreamURLFetcher()                   
-        video = v_id
-        url = yvideos(video, '22')
-        logger.info("22url: %s" % url)
-        if url == None:
-           url = yvideos(video, '18')
-          
-           logger.info("18url: %s" % url)
-#        logger.info("data : %s" % data)   
-        #url =url+'&alr=yes&cpn=skj1Expb38VhETbH&cver=2.20220121.01.00&range=163759-332602&rn=13&rbuf=9255'
-        nextplay('[COLOR lightblue][B]OTV MEDIA YOUTUBE Player>>  [/B][/COLOR]'+name,url)
-               
-def y2mate( __sUrl):
-    from resources.lib.gui import parsers
-    url = 'https://www.youtube.com/watch?v=' + __sUrl 
-    html =youtubeHtml(url)
-    html = html.replace('\\','')
-    logger.info("html : %s" % url )
-    if '.m3u8' in html:
-        link = re.findall('"(http[^"]+m3u8)"', html, re.IGNORECASE)[0]
-        page =youtubeHtml(link)
-        url_main = '/'.join(link.split('/')[:-1]) + '/'
-        page1 = youtubeHtml(url_main)
-        qualitylist = re.findall(',RESOLUTION=.*?x([0-9]+)', page1)
-        videolist= re.findall('(https.*?m3u8)', page1)
-        return videolist[-1:][0]
-           
-def y2mateplay():
-        oInputParameterHandler = cInputParameterHandler()
-        name = oInputParameterHandler.getValue('sMovieTitle')
-        v_id = oInputParameterHandler.getValue('v_id')
-        _id = oInputParameterHandler.getValue('_id')
-        ftype = oInputParameterHandler.getValue('ftype')
-        fquality = oInputParameterHandler.getValue('fquality')
-        sPicture = oInputParameterHandler.getValue('sThumbnail')   
-        
-        s = requests.Session()
-        cookie_string = "; ".join([str(x) + "=" + str(y) for x, y in s.cookies.items()])
-        token = 'https://y2mate.tv/mates/convert'
-        post_data = {'type': 'youtube','_id':_id,'v_id':v_id,'ajax':'1','token':'','ftype':ftype,'fquality':fquality}
-        r = s.post(token, headers={'Referer': 'https://y2mate.tv/youtube/'+v_id,
-             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-             'Host': 'y2mate.tv',
-             'Connection': 'Keep-Alive',
-             'Accept-Encoding': 'gzip'}, data=post_data, timeout=10)
-        urll = to_utf8(r.text).replace("\\n", '').replace("\\r", '').replace("\\", '')
-        #urll = r.text.replace("\n", '').replace("\t", '')
-        url = re.search('<a href="(.+?)"', urll).group(1)
-        logger.info("urllurll  : %s" % urll )
-        nextplay('[COLOR lightblue][B]OTV MEDIA YOUTUBE Player>>  [/B][/COLOR]'+name,url)
 def Searchplaylist():
     oGui = cGui()
     oOutputParameterHandler = cOutputParameterHandler()
@@ -514,7 +405,7 @@ def Searchplaylist2():
        from resources.lib import comon
        list=[]
        list = comon.ReadList(playlistsFile4)
-       listUrl = 'https://youtube.otvmedia'
+       listUrl = '1'
        if exists == "": 
           list.append({"name": sSearchText, "url": listUrl})
           if comon.SaveList(playlistsFile4, list):
@@ -544,8 +435,7 @@ def Searchplaylist3():
             oInputParameterHandler = cInputParameterHandler()
             playlist_id = oInputParameterHandler.getValue('siteUrll')
             sPicture= oInputParameterHandler.getValue('sThumbnail')
-            from resources.lib.youtube_api import YouTubeDataAPI
-            yt = YouTubeDataAPI(api_key)
+            yt = YouTube()
             
             data =yt.get_playlists(playlist_id)                   
             logger.info("video_id : %s" % data) 
@@ -599,17 +489,16 @@ def showSearch():
     exists = ""
     sSearchText = oGui.showKeyBoard()
     if (sSearchText != False):
-       sSearchText
+      # sSearchText
        from resources.lib import comon
        list=[]
        list = comon.ReadList(playlistsFile2)
-       listUrl = 'https://youtube.otvmedia'
+       listUrl = '1'
        if exists == "": 
           list.append({"name": sSearchText, "url": listUrl})
           if comon.SaveList(playlistsFile2, list):
 
-            from resources.lib.youtube_api import YouTubeDataAPI
-            yt = YouTubeDataAPI(api_key)
+            yt = YouTube()
             
             data =yt.search(sSearchText)                   
             logger.info("showSearch-video_id : %s" % data) 
@@ -652,7 +541,7 @@ def showSearch1():
         oOutputParameterHandler = cOutputParameterHandler()
         oOutputParameterHandler.addParameter('siteUrl', sUrl2)
         oOutputParameterHandler.addParameter('sMovieTitle', sTitle)
-        oGui.addDir(SITE_IDENTIFIER,'showSearch3', sTitle, 'genres.png', oOutputParameterHandler)         
+        oGui.addDir(SITE_IDENTIFIER,'myeniplay', sTitle, 'genres.png', oOutputParameterHandler)         
     oOutputParameterHandler = cOutputParameterHandler()
     oOutputParameterHandler.addParameter('siteUrl', 'http://')
     oGui.addDir(SITE_IDENTIFIER, 'listeyisil', '[COLOR blue][B]Delete search list--Arama listesini sil[/B][/COLOR]' , 'icondelete.jpg', oOutputParameterHandler)
@@ -675,8 +564,7 @@ def showSearch3():
         oInputParameterHandler = cInputParameterHandler()
         sSearchText = oInputParameterHandler.getValue('sMovieTitle')
 
-        from resources.lib.youtube_api import YouTubeDataAPI
-        yt = YouTubeDataAPI(api_key)
+        yt = YouTube()
             
         data =yt.search(sSearchText)                   
         logger.info("video_id : %s" % data) 
@@ -701,7 +589,7 @@ def showSearch3():
 
 def myfeeds():
     oGui = cGui()
-    from .YouTubeUi import YouTubeSetup
+  #  from .YouTubeUi import YouTubeSetup
     tarzlistesi = []
     tarzlistesi.append(("My Subscriptions", "my_subscriptions"))
     
@@ -729,60 +617,15 @@ def myfeeds():
                    
                     
     oGui.setEndOfDirectory()
-       
-def playlit():
-
-        from youtube_api import YouTubeDataAPI
-        yt = YouTubeDataAPI(api_key)
-        video_id = 'DdnALiv-z8g'
-        video_container = 'Takiyeli Siyaset'
-        video_title='Takiyeli Siyaset" nereye kadar'
-        aResult =yt.get_video_streams(video_title, video_container, video_id)[0]
-        for data in aResult['meta']:
-            url=data['video']['title']              
-            logger.info("get_video_streams : %s" % url)    
-                #Py3 a besoin de la deuxieme version, je laisse le 1er replace au cas où pour Py2
-                #sUrl=aEntry[0].replace("\u0026","&").replace("\\u0026","&")
-                #sTitle =aEntry[1]
-           
-                #oOutputParameterHandler = cOutputParameterHandler()
-                #oOutputParameterHandler.addParameter('siteUrl', sUrl)
-                #oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
-               # oGui.addDir(SITE_IDENTIFIER,'yeniplay', sTitle, 'search.png', oOutputParameterHandler)
-
-
           
-          
-def nextplay(name, url):
-	        sUrl =(url)
-	        sUrl1 =(url)
-	        sUrl2 =(url)
-	        sUrl3 =(url)
-	        sUrl4 =(url)
-	        sUrl5 =(url)
-	        sUrl6 =(url)
-	        sUrl7 =(url)
+def nextplay(name,sUrl):
 	     
    
 	        playlist=xbmc.PlayList(xbmc.PLAYLIST_VIDEO); 
     
 	        playlist.clear();
-	        listitem1 = xbmcgui.ListItem(''+name)
-	        playlist.add(sUrl,listitem1);
-	        listitem2 = xbmcgui.ListItem(''+name)
-	        playlist.add(sUrl1,listitem2);
-	        listitem3 = xbmcgui.ListItem(''+name)
-	        playlist.add(sUrl2,listitem3);
-	        listitem4 = xbmcgui.ListItem(''+name)
-	        playlist.add(sUrl3,listitem4);
-	        listitem5 = xbmcgui.ListItem(''+name)
-	        playlist.add(sUrl4,listitem5);                                                                         
-	        listitem6 = xbmcgui.ListItem(''+name)
-	        playlist.add(sUrl5,listitem6);
-	        listitem7 = xbmcgui.ListItem(''+name)
-	        playlist.add(sUrl6,listitem7);                                                                         
-	        listitem8 = xbmcgui.ListItem(''+name)
-	        playlist.add(sUrl7,listitem8);
+	        listitem = xbmcgui.ListItem(''+name)
+	        playlist.add(sUrl,listitem);
 	        player_type = sPlayerType()
 	        xbmcPlayer = xbmc.Player (); 
 	        xbmcPlayer.play (playlist)  
@@ -814,7 +657,7 @@ def mconvert(n):
           
 import time 
   
-def convert(n): 
+def kconvert(n): 
     return str(time.strftime("%H:%M:%S", time.gmtime(n))) 
 
 
@@ -858,7 +701,7 @@ def mvideoDetails():
        from resources.lib import comon
        list=[]
        list = comon.ReadList(playlistsFile3)
-       listUrl = 'https://youtube.otvmedia'
+       listUrl = '1'
        if exists == "": 
           list.append({"name": sSearchText, "url": listUrl})
           if comon.SaveList(playlistsFile3, list):
@@ -876,7 +719,7 @@ def mvideoDetails():
                 desc=cat['video_description']
                 #channel_id=cat['channel_id']
                 logger.info("sTitle : %s" % sTitle) 
-                oOutputParameterHandler = cOutputParameterHandler()
+                
                # oOutputParameterHandler.addParameter('siteUrl', channel_id)
                 oOutputParameterHandler.addParameter('siteUrll', video_id)
                 oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))            
@@ -885,171 +728,349 @@ def mvideoDetails():
     oGui.setEndOfDirectory()   
 
 
-#videoDetails()              
-   # oGui.setEndOfDirectory()
 
-def fileru(name,video_id):
-             tarzlistesi = []
-             tarzlistesi.append((name, video_id))
-             for sTitle,sUrl2 in tarzlistesi:
-                qualitylist.append(sTitle)
-                videolist.append(sUrl2)
-                videoid=select(qualitylist,videolist)
-                from youtube_api import YouTubeDataAPI
-                yt = YouTubeDataAPI(api_key)
-                data =yt.get_video_streams(sTitle,'', videoid)
-                sUrl =(data[0]['url'])
-                sUrl1 =(data[0]['url'])
-                sUrl2 =(data[0]['url'])
-                sUrl3 =(data[0]['url'])
-                sUrl4 =(data[0]['url'])
-                sUrl5 =(data[0]['url'])
-                sUrl6 =(data[0]['url'])
-                sUrl7 =(data[0]['url'])
-                playlist=xbmc.PlayList(xbmc.PLAYLIST_VIDEO);
-                playlist.clear();
-                listitem1 = xbmcgui.ListItem(data[1]['title'])
-                playlist.add(sUrl,listitem1);
-                listitem2 = xbmcgui.ListItem(data[1]['title'])
-                playlist.add(sUrl1,listitem2);
-                listitem3 = xbmcgui.ListItem(data[1]['title'])
-                playlist.add(sUrl2,listitem3);
-                listitem4 = xbmcgui.ListItem(data[1]['title'])
-                playlist.add(sUrl3,listitem4);
-                listitem5 = xbmcgui.ListItem(data[1]['title'])
-                playlist.add(sUrl4,listitem5);
-                listitem6 = xbmcgui.ListItem(data[1]['title'])
-                playlist.add(sUrl5,listitem6);
-                listitem7 = xbmcgui.ListItem(data[1]['title'])
-                playlist.add(sUrl6,listitem7);
-                listitem8 = xbmcgui.ListItem(data[1]['title'])
-                playlist.add(sUrl7,listitem8);
-                player_type = sPlayerType()
-                xbmcPlayer = xbmc.Player ();
-                xbmcPlayer.play (playlist)
-                sys.exit()
-                return ok
+  
 
 
-def bold(value):
-        return ''.join(['[B]', value, '[/B]'])
+def get_playlists(json_data):
+    oGui = cGui()
+    oInputParameterHandler = cInputParameterHandler()
+    token= oInputParameterHandler.getValue('sMovieTitle')
+	#logger.info("json_data: %s" % str(json_data))
+#	playlists = json_data.get('items', [])
+    NextPage = json_data.get('nextPageToken')
+
+    videoids = []
+    from resources.lib import comon
+    listDir = comon.ReadList(nextlists)
+    token = listDir["name"]
+    for i in range(0, len(json_data['items'])):
+	    video_id = json_data['items'][i]['id']['videoId']
+	    videoids.append(video_id)
+	    video_req_url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=%s&key=%s' % (','.join(videoids), API_KEY)
+	    video_read = read_url(video_req_url)
+	    video_decoded = json.loads(video_read)
+	    sorted_data = sorted((video_decoded['items']), key=(lambda i: i['snippet']['publishedAt']), reverse=True)
+	    for i in range(0, len(sorted_data)):
+  	        title = sorted_data[i]['snippet']['title']
+  	        video_id = sorted_data[i]['id']
+  	        thumb = sorted_data[i]['snippet']['thumbnails']['high']['url']
+  	        desc = sorted_data[i]['snippet']['description']
+            #title =snippet.get('title', '').replace('#', '').replace('amp;', '').replace('39;', '')
+           # title ="[COLOR blue]%s:[/COLOR]" % str(m)+ ''+title
+
+  	        oOutputParameterHandler = cOutputParameterHandler()
+  	        oOutputParameterHandler.addParameter('siteUrl',video_id )
+  	        oOutputParameterHandler.addParameter('sMovieTitle', str(title))
+  	        #oOutputParameterHandler.addParameter('playlist', str(token))
+  	        oOutputParameterHandler.addParameter('sThumbnail',  thumb)
+  	        #oGui.addLink(SITE_IDENTIFIER, 'kmsshowBox2', title, sPicture,  desc, oOutputParameterHandler)
+  	        #oGui.addEpisode(SITE_IDENTIFIER, 'msshowBox2', title,  sPicture, desc, oOutputParameterHandler)
+  	        oGui.addEpisode(SITE_IDENTIFIER, 'msshowBox2', title, '', thumb, desc, oOutputParameterHandler)
+    sNextPage = ''
+    if (sNextPage != False):
+  	        oOutputParameterHandler = cOutputParameterHandler()
+  	        oOutputParameterHandler.addParameter('siteUrll',NextPage)
+  	        oOutputParameterHandler.addParameter('sMovieTitle', str(token))
+  	        oGui.addDir(SITE_IDENTIFIER, 'nextlist', '[COLOR blue]Next >>>[/COLOR]'  , 'next.png', oOutputParameterHandler)
 
 
+    oGui.setEndOfDirectory()
+def mvidbox(v_id):                       
+  #  logger.info("Param-v_id: %s" % str(Param))
+    logger.info("v_id---: %s" % str(v_id)) 
+def yvideos(v_id,itag,tag):
+                                
+         yt = YouTube()
+         ita='itag='+itag  
+         tita='/itag/'+tag                     
+         video =yt.get_video_streams(v_id)                     
+         title =video[0]['meta']['video']['title']
+         logger.info("video : %s" % str(title))
+         sPattern = "'url': '(.+?)'"
+         oParser = cParser()
+         aResult = oParser.parse(video, sPattern)
+         if (aResult[0] == True):
+                for aEntry in aResult[1]:
+                  if  ita in aEntry :
+                     return aEntry +'|User-Agent=Mozilla/5.0%20%28Linux%3B%20Android%207.0%3B%20SM-G892A%20Build/NRD90M%3B%20wv%29%20AppleWebKit/537.36%20%28KHTML%2C%20like%20Gecko%29%20Version/4.0%20Chrome/67.0.3396.87%20Mobile%20Safari/537.36&Accept=%2A/%2A&DNT=1&Accept-Encoding=gzip%2C%20deflate&Accept-Language=en-US%2Cen%3Bq%3D0.5'
 
-def getvideostreams(  video_id):
-        context=''
-        from resources.lib.youtube_api.yardim.video_info import VideoInfo
-        video_info = VideoInfo(context, access_token='', language='en-US')
-        video_streams = video_info.load_stream_infos(video_id)
-
-        for video_stream in video_streams:
-            title = '%s (%s)' % (bold(video_stream['title']), video_stream['container'])
-
-            if 'audio' in video_stream and 'video' in video_stream:
-                if video_stream['audio']['bitrate'] > 0 and video_stream['video']['encoding'] and \
-                        video_stream['audio']['encoding']:
-                    title = '%s (%s; %s / %s@%d)' % (bold(video_stream['title']),
-                                                     video_stream['container'],
-                                                     video_stream['video']['encoding'],
-                                                     video_stream['audio']['encoding'],
-                                                     video_stream['audio']['bitrate'])
-
-                elif video_stream['video']['encoding'] and video_stream['audio']['encoding']:
-                    title = '%s (%s; %s / %s)' % (bold(video_stream['title']),
-                                                  video_stream['container'],
-                                                  video_stream['video']['encoding'],
-                                                  video_stream['audio']['encoding'])
-            elif 'audio' in video_stream and 'video' not in video_stream:
-                if video_stream['audio']['encoding'] and video_stream['audio']['bitrate'] > 0:
-                    title = '%s (%s; %s@%d)' % (bold(video_stream['title']),
-                                                video_stream['container'],
-                                                video_stream['audio']['encoding'],
-                                                video_stream['audio']['bitrate'])
-
-            elif 'audio' in video_stream or 'video' in video_stream:
-                encoding = video_stream.get('audio', dict()).get('encoding')
-                if not encoding:
-                    encoding = video_stream.get('video', dict()).get('encoding')
-                if encoding:
-                    title = '%s (%s; %s)' % (bold(video_stream['title']),
-                                             video_stream['container'],
-                                             encoding)
-
-            video_stream['title'] = title
-
-        return video_streams
-
-
-def myeniplay():
-        from resources.lib.youtube_api.yardim.video_info import VideoInfo
-        name = 'sMovieTitle'
-        from youtubesearchpython.extras import Video
-        #from youtubesearchpython.streamurlfetcher import StreamURLFetcher    
-        #fetcher = StreamURLFetcher()                   
-        video = Video.get("https://www.youtube.com/watch?v=Zv11L-ZfrSg" )
-        logger.info("videom : %s" % video )
-       # url = fetcher.get(video, 22)
-        video_id='Zv11L-ZfrSg'
-        context=''
-        video_info = VideoInfo(context, access_token='', language='en-US')
-        #url= video_info.load_stream_infos(video_id)   
-        url= video_info.load_stream_infos(video_id)
-        logger.info("18url: %s" % url)
-        itag='271' 
-        v_id='Zv11L-ZfrSg'   
-        url= getvideostreams(v_id)
-        logger.info("18url: %s" % url)
-        #url =yvideos(v_id,itag)
-       # nextplay('[COLOR lightblue][B]OTV MEDIA YOUTUBE Player>>  [/B][/COLOR]'+name,url)
-       #get_video_streams(  video_id)
-
-
-
-
-def veyeniplay(name,url):
-        v_id = url.replace('https://www.youtube.com/watch?v=', '')
-        v_id = url.replace('https://www.youtube.com/embed/', '')
-        v_id = v_id.replace('?', '')
-#        v_id = re.search('https://www.youtube.com/embed/(.+?)?', url).group(1)
-        logger.info("v_id: %s" % v_id)
-        from youtubesearchpython.extras import Video
-        video = Video.get("https://www.youtube.com/watch?v=%s"%v_id )
-        #from youtubesearchpython.streamurlfetcher import StreamURLFetcher    
-        #fetcher = StreamURLFetcher()                   
-        video = Video.get("https://www.youtube.com/watch?v=%s"%v_id )
-        logger.info("22url: %s" % url)
-        url = fetcher.get(video, 22)
-        logger.info("22url: %s" % url)
-        if url == None:
-           url = fetcher.get(video, 18)
-          
-           logger.info("18url: %s" % url)
-#        logger.info("data : %s" % data)   
-        
-        nextplay('[COLOR lightblue][B]OTV MEDIA YOUTUBE Player>>  [/B][/COLOR]'+name,url)
-
-                
-def vyeniplay():
+                  if  tita in aEntry:
+                     return aEntry+'|User-Agent=Mozilla/5.0%20%28Linux%3B%20Android%207.0%3B%20SM-G892A%20Build/NRD90M%3B%20wv%29%20AppleWebKit/537.36%20%28KHTML%2C%20like%20Gecko%29%20Version/4.0%20Chrome/67.0.3396.87%20Mobile%20Safari/537.36&Accept=%2A/%2A&DNT=1&Accept-Encoding=gzip%2C%20deflate&Accept-Language=en-US%2Cen%3Bq%3D0.5'
+def Searchchannell():
+        oGui = cGui()
         oInputParameterHandler = cInputParameterHandler()
-        name = oInputParameterHandler.getValue('sMovieTitle')
+        sSearchText = oInputParameterHandler.getValue('sMovieTitle')
+        sSearchText =sSearchText.replace('([COLOR red]', '').replace('[/COLOR]) [B]', '').replace('[/B]', '').replace('–', '-')
+        logger.info("sSearchText: %s" % str(sSearchText))
+        from resources.lib.youtube_api.youtube_api import YouTube 
+       
+        yt = YouTube()                                                               
+            
+        data =yt.search(sSearchText)                   
+        logger.info("data: %s" % str(data))
+        playlists = data.get('items', [])
+        for playlist in playlists:
+            snippet = playlist.get('snippet', {})
+            
+            desc = snippet.get('description', '')
+            sPicture = snippet.get('thumbnails', {}).get('high', {}).get('url', context.create_resource_path('media', 'playlist.png'))
+             
+            pid = playlist.get('id', '')
+            
+            #playlist_id = pid.get('playlistId', '')
+            
+            sTitle =snippet.get('title', '').replace('#', '').replace('amp;', '').replace('39;', '')
+            video_id  = pid.get('videoId', '')
+            if not 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' in video_id:
+                
+                video_id = re.findall('https://i.ytimg.com/vi/(.+?)/.+?.jpg', sPicture, re.S)[0]
+                                                      
+            logger.info("video_id: %s" % str(video_id))
+            
+            oOutputParameterHandler = cOutputParameterHandler()
+            oOutputParameterHandler.addParameter('siteUrl', video_id)
+            #oOutputParameterHandler.addParameter('siteUrll', channel_id)
+            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))            
+            oOutputParameterHandler.addParameter('sThumbnail', sPicture)
+            oGui.addMovie(SITE_IDENTIFIER, 'YouTubeplay', sTitle, sPicture, sPicture, desc, oOutputParameterHandler)
+        oGui.setEndOfDirectory()   
+
+def YouTubeplay():                       
+        oInputParameterHandler = cInputParameterHandler()
         v_id = oInputParameterHandler.getValue('siteUrl')
-                               
-        logger.info("sUrl : %s" % url)
-        s = requests.Session()
-        cookie_string = "; ".join([str(x) + "=" + str(y) for x, y in s.cookies.items()])
-        token = 'https://redirectdetective.com/ld.px'
-        post_data = {'w':v_id,'f':'false'}
-        r = s.post(token, headers={'Cookie': '__utma=132634637.1201225376.1617003196.1617003196.1617003196.1; __utmc=132634637; __utmz=132634637.1617003196.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); __utmt=1; __utmb=132634637.3.10.1617003196',
-             'Referer': 'https://redirectdetective.com/',
-             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36',
-             'Origin': 'https://redirectdetective.com',
-             #'Connection': 'Keep-Alive',
-             'Accept-Encoding': 'gzip'}, data=post_data, timeout=10)
-        urll = r.text#.replace("\\", '')
-        logger.info("sUrl : %s" % urll)
-        url = re.search('.+?title="(.+?)">https://.+?....</a></button>', urll).group(1)
+        logger.info("v_id: %s" % str(v_id))
+        yt = YouTube()
+        video =yt.get_video_streams(v_id)  
+        name =video[0]['meta']['video']['title']
+        url=yvideos(v_id, '22','96')                  
+        if url == None:
+          url=yvideos(v_id, '18','95')
+          if url == None:
+            url=yvideos(v_id, '84','300')
+            if url == None:
+               url=yvideos(v_id, '37','94')
         
-        addLink('[COLOR lightblue][B]OTV MEDIA YOUTUBE Player>>  [/B][/COLOR]'+name,url,'')
+        adLink('[COLOR lightblue][B]OTV MEDIA YOUTUBE Player>>  [/B][/COLOR]'+name,url,'')
+        #sys.exit()
+        #return oPlayer.run(oGuiElement, v_id)
+
+def YouTubeplay2(v_id):                       
+        yt = YouTube()
+        video =yt.get_video_streams(v_id)  
+        name =video[0]['meta']['video']['title']
+        url=yvideos(v_id, '22','96')                  
+        if url == None:
+          url=yvideos(v_id, '18','95')
+          if url == None:
+            url=yvideos(v_id, '84','300')
+            if url == None:
+               url=yvideos(v_id, '37','94')
+        
+        adLink('[COLOR lightblue][B]OTV MEDIA YOUTUBE Player>>  [/B][/COLOR]'+name,url,'')
+    
+def adLink(name, url, iconimage):
+    ok = True
+    
+    liz = xbmcgui.ListItem(name)
+    liz.setInfo(type='video', infoLabels={'Title': name})
+    liz.setArt({'thumb': iconimage, 'icon': iconimage, 'fanart': iconimage})
+    liz.setProperty('Fanart_Image', iconimage)
+#    ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=str(url),listitem=liz)
+    xbmc.Player().play(url,liz)
+    sys.exit()
+    return ok 
+
+def sPlayerType():
 
 
- 
+        try:
+            if (sPlayerType == '0'):
+
+                return xbmc.PLAYER_CORE_AUTO
+
+            if (sPlayerType == '1'):
+
+                return xbmc.PLAYER_CORE_MPLAYER
+
+            if (sPlayerType == '2'):
+
+                return xbmc.PLAYER_CORE_DVDPLAYER
+        except: return False	      
+def myeniplay():
+   oGui = cGui()
+   list=[]
+   oInputParameterHandler = cInputParameterHandler()
+   page= oInputParameterHandler.getValue('siteUrl').replace('https://youtube.otvmedia', '')
+  # sNextPage= page
+   sSearchText= oInputParameterHandler.getValue('sMovieTitle')
+   from resources.lib import comon
+  # dicti=urllib.parse.parse_qs(sys.argv[2][1:])
+  # page=dicti['page'][0]
+   comon.SaveList(nextlists, {"name": sSearchText, "url": "url"})
+   livestreams= search_channel(sSearchText,page)#(sSearchText,'',search_type)
+   logger.info("items: %s" % str(livestreams))
+   for i in range(1,len(livestreams)):
+  	        title=livestreams[i][0]
+  	        video_id=livestreams[i][1]
+  	        thumb=livestreams[i][2]
+  	        desc=livestreams[i][3]
+  	        dur=livestreams[i][4]
+  	        tar=livestreams[i][5]
+  	        sNextPage=livestreams[i][6]
+  	        m=datetime_parser.parse(dur)
+            #title =snippet.get('title', '').replace('#', '').replace('amp;', '').replace('39;', '')
+  	        title ="[COLOR blue]%s:[/COLOR]" % str(m)+ ''+title
+
+  	        oOutputParameterHandler = cOutputParameterHandler()
+  	        oOutputParameterHandler.addParameter('siteUrl',video_id )
+  	        oOutputParameterHandler.addParameter('sMovieTitle', str(title))
+  	        #oOutputParameterHandler.addParameter('playlist', str(token))
+  	        oOutputParameterHandler.addParameter('sThumbnail',  thumb)
+  	        #oGui.addLink(SITE_IDENTIFIER, 'kmsshowBox2', title, sPicture,  desc, oOutputParameterHandler)
+  	        #oGui.addEpisode(SITE_IDENTIFIER, 'msshowBox2', title,  sPicture, desc, oOutputParameterHandler)
+  	        oGui.addEpisode(SITE_IDENTIFIER, 'smsshowBox2', title, '', thumb, desc, oOutputParameterHandler)
+   sNextPage=sNextPage
+   if (sNextPage != False):
+  	        listDir = comon.ReadList(nextlists)
+  	        token = listDir["name"]
+  	        oOutputParameterHandler = cOutputParameterHandler()
+  	        oOutputParameterHandler.addParameter('siteUrl',sNextPage)
+  	        oOutputParameterHandler.addParameter('sMovieTitle', str(token))
+  	        oGui.addDir(SITE_IDENTIFIER, 'myeniplay', '[COLOR blue]Next >>>[/COLOR]'  , 'next.png', oOutputParameterHandler)
+
+
+   oGui.setEndOfDirectory()
+
+
+    
+def vmyeniplay():           
+   oGui = cGui()
+   list=[]
+   oInputParameterHandler = cInputParameterHandler()
+   sSearchText= oInputParameterHandler.getValue('sMovieTitle')
+   logger.info("sSearchText: %s" %sSearchText)
+   from resources.lib import comon
+   search_type='video'
+   #import scrapetube
+
+#videos = scrapetube.get_search("python")
+   comon.SaveList(nextlists, {"name": sSearchText, "url": "url"})
+   items= get_search(sSearchText)
+   for video in items:
+    #print(video['videoId'])  
+  	       # logger.info("items: %s" %str(video))
+#     logger.info("items: %s" %video['videoId'])
+#     logger.info("thumbnail: %s" %video['thumbnail']['thumbnails'][0]['url'])
+#     logger.info("text: %s" %video['title']['runs'][0]['text'])
+#     logger.info("text: %s" %video['lengthText']['accessibility']['accessibilityData']['label'])
+#     logger.info("text: %s" %video['accessibility']['accessibilityData']['label'])
+    	      title=video['title']['runs'][0]['text']
+    	      video_id=video['videoId']
+    	      thumb=video['thumbnail']['thumbnails'][0]['url']
+  	      
+    	      dur=video['lengthText']['accessibility']['accessibilityData']['label']
+    	      desc=''#title['accessibility']['accessibilityData']['label']
+    	        
+    	      sNextPage=''
+  	       # m=datetime_parser.parse(dur)
+            #title =snippet.get('title', '').replace('#', '').replace('amp;', '').replace('39;', '')
+    	      title ="[COLOR blue]%s:[/COLOR]" % str(dur)+ ''+title
+
+    	      oOutputParameterHandler = cOutputParameterHandler()
+    	      oOutputParameterHandler.addParameter('siteUrl',video_id )
+    	      oOutputParameterHandler.addParameter('sMovieTitle', str(title))
+  	        #oOutputParameterHandler.addParameter('playlist', str(token))
+    	      oOutputParameterHandler.addParameter('sThumbnail',  thumb)
+  	        #oGui.addLink(SITE_IDENTIFIER, 'kmsshowBox2', title, sPicture,  desc, oOutputParameterHandler)
+  	        #oGui.addEpisode(SITE_IDENTIFIER, 'msshowBox2', title,  sPicture, desc, oOutputParameterHandler)
+    	      oGui.addEpisode(SITE_IDENTIFIER, 'smsshowBox2', title, '', thumb, desc, oOutputParameterHandler)
+   sNextPage=sNextPage
+   if (sNextPage != False):
+    	      listDir = comon.ReadList(nextlists)
+    	      token = listDir["name"]
+    	      #data = get_ajax_data(session, api_endpoint, api_key, next_data, client)
+           # next_data = get_next_data(data)
+            
+    	      oOutputParameterHandler = cOutputParameterHandler()
+  	       # oOutputParameterHandler.addParameter('siteUrl',sNextPage)
+    	      oOutputParameterHandler.addParameter('sMovieTitle', str(token))
+    	      oGui.addDir(SITE_IDENTIFIER, 'myeniplay', '[COLOR blue]Next >>>[/COLOR]'  , 'next.png', oOutputParameterHandler)
+
+
+   oGui.setEndOfDirectory()
+
+
+   
+
+def nextlist():
+   oGui = cGui()
+   oInputParameterHandler = cInputParameterHandler()
+   page_token= oInputParameterHandler.getValue('siteUrll')
+   token= oInputParameterHandler.getValue('sMovieTitle')
+   logger.info("page_token: %s" % str(page_token))
+   logger.info("token: %s" % str(token))
+   items= YouTube().search(token,page_token )
+   get_playlists(items)
+
+
+  
+    
+class youtub(object):
+    def __init__(self, key=''):
+        self.list = [] ; self.data = []
+        self.content_link = 'https://www.googleapis.com/youtube/v3/videos?id=%s&part=snippet,contentDetails,statistics,status&'
+        #self.content_link = 'https://www.googleapis.com/youtube/v3/search?id=%s&part=contentDetails&'
+        self.link ='https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=20&q=ankara+pavyon&type=video&key=' + API_KEY
+    def playlit(self,vid):                                         
+        
+             
+            session = requests.Session()
+            session.headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.101 Safari/537.36"
+            video_ids = [] 
+            append = {'url': vid}
+            self.list.append(append)
+            u = [range(0, len(self.list))[i:i+50] for i in range(len(range(0, len(self.list))))[::50]]
+            u = [','.join([self.list[x]['url'] for x in i]) for i in u]
+            u = [self.content_link % i +'key='+ API_KEY for i in u]
+            u = u[0]
+            logger.info("uu_i: %s" % str(u))
+            r =  get_initial_data(session, self.link)
+            data = json.loads(r)
+            logger.info("data_: %s" % str(data)) 
+            j = data['items'][0]
+            k = j['contentDetails']['duration']
+
+            video_ids.append(k)
+            video_ids = video_ids[0]
+            duration=datetime_parser.parse(video_ids)
+            return  str(duration)
+            
+           # return duration
+    
+    
+    def youtubeHtml(self,sUrl):  # S'occupe des requetes
+       # Host ='www.youtube.com'
+        UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36'
+        headers = {"User-Agent": UA}
+        req = urllib2.Request(sUrl, None, headers)
+        try:
+            response = urllib2.urlopen(req)
+        except UrlError as e:
+            print(e.read())
+            print(e.reason)
+
+        data = response.read()
+        head = response.headers
+        response.close()
+        return to_utf8(data )
+
+    def thread(self, url):
+        try:
+            logger.info("url_: %s" % str(url)) 
+            result = self.youtubeHtml(url)
+            logger.info("result_: %s" % str(result)) 
+           
+        except:
+            return result 
+          

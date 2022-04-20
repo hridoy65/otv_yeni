@@ -3,7 +3,9 @@
 '''
     Tulip routine libraries, based on lambda's lamlib
     Author Twilight0
+
         License summary below, for more details please read license.txt file
+
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 2 of the License, or
@@ -144,3 +146,5 @@ def clear(table=None):
         dialog.notification(heading=xbmcaddon.Addon().getAddonInfo('name'), message=xbmcaddon.Addon().getLocalizedString(30402).encode('utf-8'), time=2000, sound=False)
     except:
         pass
+
+

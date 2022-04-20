@@ -1,15 +1,14 @@
 import xbmc, xbmcaddon, xbmcgui, xbmcplugin,sys
 import os
-
+from resources.lib.comaddon import addon, dialog, xbmc, isKrypton, VSlog, addonManager, isMatrix
 liste = []	
-class sstreamer():
-        
+class sstreamer(xbmc.Player):
+    ADDON = addon()    
     def __init__(self,name ,url):
+                sPlayerType = self.__getPlayerType()
+                xbmc.Player.__init__(self,sPlayerType)
                 self.url=url
-               
                 self.name=name		
-                
-		
                 self.layoutFinished()
               
     def layoutFinished(self):                                                                     
@@ -239,27 +238,28 @@ class sstreamer():
 	        playlist.add(sUrl6,listitem7);                                                                         
 	        listitem8 = xbmcgui.ListItem(''+name)
 	        playlist.add(sUrl7,listitem8);
-	        player_type = sPlayerType()
+	        
 	        xbmcPlayer = xbmc.Player (); 
 	        xbmcPlayer.play (playlist)  
 	        sys.exit()
 	        return ok 
-def sPlayerType():
-       
-        
+    def __getPlayerType(self):
+        sPlayerType = self.ADDON.getSetting('playerType')
+
         try:
             if (sPlayerType == '0'):
-               
+                #VSlog('playertype from config: auto')
                 return xbmc.PLAYER_CORE_AUTO
 
             if (sPlayerType == '1'):
-                
+                #VSlog('playertype from config: mplayer')
                 return xbmc.PLAYER_CORE_MPLAYER
 
             if (sPlayerType == '2'):
-                
+                #VSlog('playertype from config: dvdplayer')
                 return xbmc.PLAYER_CORE_DVDPLAYER
-        except: return False
-          
+        except:
+            return False
+
           
             

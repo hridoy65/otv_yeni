@@ -12,7 +12,7 @@ from resources.lib.handler.pluginHandler import cPluginHandler
 #from resources.lib.backtothefuture import PY2
 
 
-import urllib as urllib2
+
 import requests
 def fix_auth_date(auth):
     now = datetime.datetime.utcnow()
@@ -27,10 +27,10 @@ def fix_auth_date(auth):
 ddatam_url='http://app.liveplanettv.com/beta/api.php?device_id=354630080742220'   
 AddonID = 'plugin.video.OTV_MEDIA'
 addon = xbmcaddon.Addon(AddonID)
-USER_DATA_DIR = xbmc.translatePath(addon.getAddonInfo('profile'))
-ADDON_DATA_DIR = xbmc.translatePath(addon.getAddonInfo('path'))
+USER_DATA_DIR = translatePath(addon.getAddonInfo('profile'))
+ADDON_DATA_DIR = translatePath(addon.getAddonInfo('path'))
 RESOURCES_DIR = os.path.join(ADDON_DATA_DIR, 'resources')
-data_file = os.path.join(RESOURCES_DIR, 'data.txt')
+
 AddonID = 'plugin.video.OTV_MEDIA'
 Addon = xbmcaddon.Addon(AddonID)
 icon = Addon.getAddonInfo('icon')
@@ -39,8 +39,11 @@ addonDir = Addon.getAddonInfo('path')
 
 SITE_IDENTIFIER = 'adult_eu'
 #from resources.lib.config import cConfig
+AddonID = 'plugin.video.OTV_MEDIA'
+addon = xbmcaddon.Addon(AddonID)
 
-
+userdatadir = translatePath(addon.getAddonInfo("profile"))
+data_file = os.path.join(RESOURCES_DIR, 'datam.json')
 import sys
 
 
@@ -144,6 +147,23 @@ def sEcho(s):
        s=s.replace('/page/3/','/page/4/')
        return s 
 
+def youtubeHtml(sUrl):  # S'occupe des requetes
+       # Host ='www.youtube.com'
+        UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36'
+        headers = {"User-Agent": UA}
+        req = urllib2.Request(sUrl, None, headers)
+        try:
+            response = urllib2.urlopen(req)
+        except UrlError as e:
+            print(e.read())
+            print(e.reason)
+
+        data = response.read()
+        head = response.headers
+        response.close()
+        return to_utf8(data )
+        logger.info("data : %s" % str(data))
+        logger.info("sUrl : %s" % str(head))
 
 def getyoutubepage( url):
     headers = {'Host': 'www.youtube.com',
@@ -226,6 +246,13 @@ def orhantvalman():
     oOutputParameterHandler = cOutputParameterHandler()
     oOutputParameterHandler.addParameter('siteUrl', '28')
     oGui.addDir(SITE_IDENTIFIER, 'livestreamtv', 'TV SENDER', 'worldiptv.jpg', oOutputParameterHandler)
+    oOutputParameterHandler = cOutputParameterHandler()
+    oOutputParameterHandler.addParameter('siteUrl', 'https://www.weltderwunder.de/sendungen')
+    oGui.addDir(SITE_IDENTIFIER, 'ardmed', 'ARD Mediathek', 'weltderw.png', oOutputParameterHandler)
+
+#    oOutputParameterHandler = cOutputParameterHandler()
+#    oOutputParameterHandler.addParameter('siteUrl', 'https://www.weltderwunder.de/sendungen')
+#    oGui.addDir(SITE_IDENTIFIER, 'weltderwunder', 'Welt der Wunder + Live TV', 'weltderw.png', oOutputParameterHandler)
 
     oOutputParameterHandler = cOutputParameterHandler()
     oOutputParameterHandler.addParameter('siteUrl', 'http://')
@@ -236,9 +263,477 @@ def orhantvalman():
     oOutputParameterHandler.addParameter('siteUrl', 'http://')
     oGui.addDir('adult_eu', 'pincode', 'ADULT', 'sexyfrau.jpg', oOutputParameterHandler)
 
+    oOutputParameterHandler = cOutputParameterHandler()
+    oOutputParameterHandler.addParameter('siteUrl', 'https://')
+    oGui.addDir(SITE_IDENTIFIER, 'updateAlmanKINO', 'UPDATE(Güncelle) KINO FILME', 'weltderw.png', oOutputParameterHandler)
    
     oGui.setEndOfDirectory()
-#ADDON_DATA_DIR = xbmc.translatePath(addon.getAddonInfo('path'))
+                                    # [COLOR teal]Next >>>[/COLOR]
+def ardmed():
+    oGui = cGui()
+                                                                
+    oOutputParameterHandler = cOutputParameterHandler()
+    oOutputParameterHandler.addParameter('siteUrl', 'https://api.ardmediathek.de/page-gateway/pages/ard/item/Y3JpZDovL2RldXRzY2hld2VsbGUuZGUvTGl2ZXN0cmVhbS1EZXV0c2NoZVdlbGxl?devicetype=pc')
+    oGui.addDir(SITE_IDENTIFIER, 'ardmediathek2', 'LIVE', 'tv.png', oOutputParameterHandler)
+   # fun ='https://api.ardmediathek.de/page-gateway/pages/daserste/editorial/experiment-a-z?embedded=false'
+    oOutputParameterHandler = cOutputParameterHandler()
+    oOutputParameterHandler.addParameter('siteUrl', 'https://api.ardmediathek.de/page-gateway/pages/daserste/editorial/experiment-a-z?embedded=false')
+    oGui.addDir(SITE_IDENTIFIER, 'ardmediathek1', 'Sendungen A-Z', 'tv.png', oOutputParameterHandler)
+#            https://api.ardmediathek.de/page-gateway/pages/ard/editorial/mainstreamer-webpwa-nichtaendern?embedded=false
+    sUrl = "https://api.ardmediathek.de/page-gateway/pages/ard/editorial/mainstreamer-webpwa-nichtaendern?embedded=false"
+    sHtmlContent =youtubeHtml(sUrl)
+    logger.info("YouTUBE(-sHtmlContent---- : %s" %sHtmlContent)                     # "showid": "a0f50d0e"
+    oParser = cParser()
+    #sStart = 'Premium_Alle Filme'
+   # sEnd = '"}]}'
+   # sHtmlContent = oParser.abParse(sHtmlContent, sStart, sEnd)
+    channel="https://images.ardmediathek.de/vrwifdtrtsys/1dsjokrxRTXfFwlgiHlBub/be170d5d3d6bdc2a3ad33634803550cd/premiumteaser-16-7.jpg?w=1920&imwidth=1920"            
+    sPattern = '"title":"([^"]+)","href":"([^"]+)"'
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    if aResult[0] is True:    
+        oOutputParameterHandler = cOutputParameterHandler()
+        for aEntry in aResult[1]:
+            sUrl = aEntry[1].replace('=false', '=true')# + 'devicetype=pc&embedded=true'
+            logger.info("YouTUBE---- : %s" %sUrl) 
+            sTitle = aEntry[0]
+            oOutputParameterHandler.addParameter('siteUrl', sUrl)
+            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
+            oGui.addDir(SITE_IDENTIFIER, 'ardmediathek2', sTitle, channel, oOutputParameterHandler)
+    oGui.setEndOfDirectory()
+def ardmediathek1():
+    oGui = cGui()
+
+    oInputParameterHandler = cInputParameterHandler()
+    sUrl = oInputParameterHandler.getValue('siteUrl')
+    Title = oInputParameterHandler.getValue('sMovieTitle')
+                          
+    sHtmlContent =youtubeHtml(sUrl)
+
+    logger.info("YouTUBE(-sHtmlContent---- : %s" %sHtmlContent)                     # "showid": "a0f50d0e"
+    oParser = cParser()
+    #sStart = 'Premium_Alle Filme'
+   # sEnd = '"}]}'
+   # sHtmlContent = oParser.abParse(sHtmlContent, sStart, sEnd)
+    channel="https://images.ardmediathek.de/vrwifdtrtsys/1dsjokrxRTXfFwlgiHlBub/be170d5d3d6bdc2a3ad33634803550cd/premiumteaser-16-7.jpg?w=1920&imwidth=1920"            
+    sPattern = '"title":"([^"]+)","href":"([^"]+)"'
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    if aResult[0] is True:    
+        oOutputParameterHandler = cOutputParameterHandler()
+        for aEntry in aResult[1]:
+            sUrl = aEntry[1].replace('=false', '=true')# + 'devicetype=pc&embedded=true'
+            logger.info("YouTUBE---- : %s" %sUrl) 
+            sTitle = aEntry[0]
+            oOutputParameterHandler.addParameter('siteUrl', sUrl)
+            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
+            oGui.addDir(SITE_IDENTIFIER, 'ardmediathek6', sTitle, channel, oOutputParameterHandler)
+    oGui.setEndOfDirectory()
+def ardmediathek6():
+    oGui = cGui()
+
+    oInputParameterHandler = cInputParameterHandler()
+    sUrl = oInputParameterHandler.getValue('siteUrl')
+    Title = oInputParameterHandler.getValue('sMovieTitle')
+                          
+    sHtmlContent =youtubeHtml(sUrl)
+
+    logger.info("YouTUBE(-sHtmlContent---- : %s" %sHtmlContent)                     # "showid": "a0f50d0e"
+    oParser = cParser()
+    #sStart = 'Premium_Alle Filme'
+   # sEnd = '"}]}'
+   # sHtmlContent = oParser.abParse(sHtmlContent, sStart, sEnd)
+    channel="https://images.ardmediathek.de/vrwifdtrtsys/1dsjokrxRTXfFwlgiHlBub/be170d5d3d6bdc2a3ad33634803550cd/premiumteaser-16-7.jpg?w=1920&imwidth=1920"            
+    sPattern = '"title":"([^"]+)","href":"(https://api.ardmediathek.de/page-gateway/pages/daserste/grouping/[^"]+)"'
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    if aResult[0] is True:    
+        oOutputParameterHandler = cOutputParameterHandler()
+        for aEntry in aResult[1]:
+            sUrl = aEntry[1].replace('=false', '=true')# + 'devicetype=pc&embedded=true'
+            logger.info("YouTUBE---- : %s" %sUrl) 
+            sTitle = aEntry[0]
+            oOutputParameterHandler.addParameter('siteUrl', sUrl)
+            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
+            oGui.addDir(SITE_IDENTIFIER, 'ardmediathek4', sTitle, channel, oOutputParameterHandler)
+    oGui.setEndOfDirectory()
+
+def ardmediathek2():
+    oGui = cGui()
+
+    oInputParameterHandler = cInputParameterHandler()
+    sUrl = oInputParameterHandler.getValue('siteUrl')
+    Title = oInputParameterHandler.getValue('sMovieTitle')
+
+    logger.info("ardmediathek2---- : %s" %sUrl)                      
+    sHtmlContent =youtubeHtml(sUrl)
+#    logger.info("ardmediathek2---- : %s" %sHtmlContent)                     # "showid": "a0f50d0e"
+    oParser = cParser()
+    #sStart = 'Premium_Alle Filme'
+   # if '/grouping/' in sHtmlContent:
+                                                                                                                                    #  grouping
+  #  sPattern = '"alt":"([^"]+)","producerName":".+?","src":"([^"]+)","aspectRatio":".+?"},"publisherType":".+?","partner":".+?","id":".+?"},"links":{"self":{"id":".+?","urlId":".+?","title":".+?","href":".+?","type":"application/vnd.ard.teaser+json","partner":".+?"},"target":{"id":".+?","urlId":".+?","title":"([^"]+)","href":"([^"]+)"'
+                                                                                  
+    channel="https://images.ardmediathek.de/vrwifdtrtsys/1dsjokrxRTXfFwlgiHlBub/be170d5d3d6bdc2a3ad33634803550cd/premiumteaser-16-7.jpg?w=1920&imwidth=1920"            
+    sPattern = '"alt":"([^"]+)".+?"src":"([^"]+)".+?"title":"([^"]+)","href":"(https://api.ardmediathek.de/page-gateway/pages/ard/[^"]+)"'
+    
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    if aResult[0] is True:    
+        oOutputParameterHandler = cOutputParameterHandler()
+        for aEntry in aResult[1]:                                                                     
+            #Url = aEntry[3]#.replace('=true', '=false')                                                                  
+            Url = aEntry[3].replace('=true', '=false') 
+            sTitle = aEntry[2]
+            desc = aEntry[0]
+             
+            sPicture = aEntry[1].replace('w={width}', 'w=368')
+            oOutputParameterHandler.addParameter('siteUrl', Url)
+            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
+            if '/item/' in Url:
+                oGui.addEpisode(SITE_IDENTIFIER, 'ardmediathek4videos', sTitle, channel, sPicture, desc, oOutputParameterHandler)
+            else:
+                oGui.addEpisode(SITE_IDENTIFIER, 'ardmediathek3', sTitle, channel, sPicture, desc, oOutputParameterHandler)
+
+
+
+    oGui.setEndOfDirectory()
+def ardmediathek3():
+    oGui = cGui()
+
+    oInputParameterHandler = cInputParameterHandler()
+    sUrl = oInputParameterHandler.getValue('siteUrl')
+    Title = oInputParameterHandler.getValue('sMovieTitle')
+
+    logger.info("sUrlsUrl---- : %s" %sUrl)        
+    sHtmlContent =youtubeHtml(sUrl)
+    logger.info("ardmediathek3---- : %s" %sHtmlContent)                      # "showid": "a0f50d0e"
+    oParser = cParser()
+               
+   # sEnd = '"}]}'  "alt":"([^"]+) ","producerName":"Colourbox ","src":"([^"]+)"
+   # sHtmlContent = oParser.abParse(sHtmlContent, sStart, sEnd)
+    channel="https://images.ardmediathek.de/vrwifdtrtsys/1dsjokrxRTXfFwlgiHlBub/be170d5d3d6bdc2a3ad33634803550cd/premiumteaser-16-7.jpg?w=1920&imwidth=1920"            
+    if '/grouping/' in sHtmlContent:
+        sPattern = '"title":"([^"]+)","href":"(https://api.ardmediathek.de/page-gateway/pages/.+?/grouping/[^"]+)"'
+                                               #https://api.ardmediathek.de/page-gateway/pages/daserste/grouping/
+    else:   
+        sPattern = '"title":"([^"]+)","href":"(https://api.ardmediathek.de/page-gateway/widgets/ard/editorials/[^"]+)"'
+
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    if aResult[0] is True:    
+        oOutputParameterHandler = cOutputParameterHandler()
+        for aEntry in aResult[1]:                                                                     
+            sUrl = aEntry[1].replace('=false', '=true')                                                                
+            sTitle = aEntry[0]  
+            #desc = aEntry[0]
+            logger.info("ardmediathek3--- : %s" %sUrl)
+            oOutputParameterHandler.addParameter('siteUrl', sUrl)
+            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
+            if '/item/' in sUrl:
+                oGui.addDir(SITE_IDENTIFIER, 'ardmediathek4videos', sTitle, channel, oOutputParameterHandler)
+            else:
+                oGui.addDir(SITE_IDENTIFIER, 'ardmediathek4', sTitle, channel, oOutputParameterHandler)
+
+
+    oGui.setEndOfDirectory()
+
+import datetime
+
+import datetime 
+  
+
+def convert(seconds, days=False):
+	if seconds == '' or seconds == 0  or seconds == 'null':
+		return ''
+	if int(seconds) < 60:
+		return "%s sec" % seconds
+	seconds = float(seconds)
+	day = seconds / (24 * 3600)	
+	time = seconds % (24 * 3600)
+	hour = time / 3600
+	time %= 3600
+	minutes = time / 60
+	time %= 60
+	seconds = time
+	if days:
+		return "%dd, %dh, %dm, %ds" % (day,hour,minutes,seconds)
+	else:
+		return  "%d:%02d:%02d" % (hour, minutes, seconds)		
+def daserstevid(sUrl):
+         #sourcestr = 'https://raw.githubusercontent.com/iptv-org/iptv/master/scripts/data/countries.json'
+         #sHtmlContent = getHtml(sourcestr) 
+        # logger.info("metin-%s " %metin)
+         video=youtubeHtml(sUrl)
+		
+                      
+        
+         sPattern = '"href":"(https://api.ardmediathek.de/page-gateway/pages/daserste/item/.+?)"'
+         oParser = cParser()
+         aResult = oParser.parse(video, sPattern)
+         if (aResult[0] == True):
+              return  aResult[1][0] 
+
+def ardmediathek4videos():
+  oInputParameterHandler = cInputParameterHandler()
+  sUrl = oInputParameterHandler.getValue('siteUrl')#.replace('embedded=true', 'embedded=false') 
+  Title = oInputParameterHandler.getValue('sMovieTitle')
+  if 'items' in sUrl:
+     sUrl=daserstevid(sUrl)
+  else:   
+     logger.info("ardmediathek4videossUrl---- : %s" %sUrl)  
+     video=youtubeHtml(sUrl).replace('"_quality":"auto"', '"_height":auto,"_quality":"auto"')        
+     logger.info("ardmediathek4video---- : %s" %video)  
+     sPattern = '"_height":(.+?),".+?"_stream":"(.+?)"'
+     oParser = cParser()
+     aResult = oParser.parse(video, sPattern)
+     if aResult[0] is True:  
+        for aEntry in aResult[1]: 
+            sTitle = aEntry[0] 
+            sUrl = aEntry[1] 
+            qualitylist.append(sTitle)
+            videolist.append(sUrl)
+        url=select(qualitylist,videolist)
+        oGuiElement = cGuiElement()
+        oGuiElement.setSiteName(SITE_IDENTIFIER)
+        oGuiElement.setTitle(Title)
+        #sUrl = sUrl.replace(' ', '%20')
+        oGuiElement.setMediaUrl(url)
+
+        from resources.lib.player import cPlayer
+        oPlayer = cPlayer()
+        oPlayer.clearPlayList()
+        oPlayer.addItemToPlaylist(oGuiElement)
+        oPlayer.startPlayer()
+
+
+def ardmediathek4():
+    oGui = cGui()
+
+    oInputParameterHandler = cInputParameterHandler()
+    Url = oInputParameterHandler.getValue('siteUrl')#.replace('embedded=true', 'embedded=false') 
+    Title = oInputParameterHandler.getValue('sMovieTitle')
+
+    logger.info("sUrlsUrl-kkk---kkk-- : %s" %Url)        
+    sHtmlContent =youtubeHtml(Url)
+    logger.info("sHtmlContent- : %s" %sHtmlContent)                      # "showid": "a0f50d0e"
+    oParser = cParser()
+    #sStart = 'Premium_Alle Filme'
+   # sEnd = '"}]}'  "alt":"([^"]+) ","producerName":"Colourbox ","src":"([^"]+)"
+   # sHtmlContent = oParser.abParse(sHtmlContent, sStart, sEnd)
+    channel="https://images.ardmediathek.de/vrwifdtrtsys/1dsjokrxRTXfFwlgiHlBub/be170d5d3d6bdc2a3ad33634803550cd/premiumteaser-16-7.jpg?w=1920&imwidth=1920"            
+    if '/item/' in sHtmlContent:
+        sPattern = '"duration":(.+?),".+?"alt":"([^"]+)".+?"src":"([^"]+)w=.+?".+?"title":"([^"]+)","href":"(https://api.ardmediathek.de/page-gateway/pages/.+?/item/.+?)"'
+        
+    else:   
+        sPattern = '"duration":(.+?),".+?"alt":"([^"]+)".+?"src":"([^"]+)".+?"title":"([^"]+)","href":"(https://api.ardmediathek.de/page-gateway/pages/.+?/grouping/.+?)"'
+    
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    if aResult[0] is True:    
+        oOutputParameterHandler = cOutputParameterHandler()
+        for aEntry in aResult[1]:                                                                     
+
+            sUrl = aEntry[4]                                                                  
+           # if not  'pageNumber' in sUrl: 
+            #      sUrl =sUrl + 'pageNumber=%s&pageSize=%s' %(aEntry[0],aEntry[1].replace('&', '') ) 
+            dur = aEntry[0]
+            logger.info("dur------------- : %s" %dur) 
+            dura=convert(dur)
+            sTitle = aEntry[3]+ ' -' +dura
+            desc = aEntry[1]
+            
+           
+           
+            sPicture = aEntry[2].replace('w={width}', 'w=368')
+            oOutputParameterHandler.addParameter('siteUrl', sUrl)
+            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
+            if '/item/' in sUrl:
+                oGui.addEpisode(SITE_IDENTIFIER, 'ardmediathek4videos', sTitle, channel, sPicture, desc, oOutputParameterHandler)
+            else:
+                oGui.addEpisode(SITE_IDENTIFIER, 'ardmediathek5', sTitle, channel, sPicture, desc, oOutputParameterHandler)
+    oGui.setEndOfDirectory()
+def ardmediathek5():
+    oGui = cGui()
+
+    oInputParameterHandler = cInputParameterHandler()
+    Url = oInputParameterHandler.getValue('siteUrl')#.replace('embedded=true', 'embedded=false') 
+    logger.info("sUrlsUrl-kkk------------- : %s" %Url)        
+    sHtmlContent =youtubeHtml(Url)
+    logger.info("ssUrlsUrl-kkk------------- : %s" %sHtmlContent)                      # "showid": "a0f50d0e"
+    oParser = cParser()
+    #sStart = 'Premium_Alle Filme'
+    channel="https://images.ardmediathek.de/vrwifdtrtsys/1dsjokrxRTXfFwlgiHlBub/be170d5d3d6bdc2a3ad33634803550cd/premiumteaser-16-7.jpg?w=1920&imwidth=1920"            
+   # sHtmlContent = oParser.abParse(sHtmlContent, sStart, sEnd)
+    sPattern = '"alt":"([^"]+)".+?"src":"([^"]+)w=.+?".+?"title":"([^"]+)","href":"(https://api.ardmediathek.de/page-gateway/pages/ard/item/.+?)"'
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    if aResult[0] is True:    
+        oOutputParameterHandler = cOutputParameterHandler()
+        for aEntry in aResult[1]:                                                                     
+            sUrl = aEntry[3]                                                                  
+            sTitle = aEntry[2]                                       
+            desc = aEntry[0]
+            sPicture = aEntry[1]+ 'w=368&imwidth=368'
+            oOutputParameterHandler.addParameter('siteUrl', sUrl)
+            oGui.addEpisode(SITE_IDENTIFIER, 'ardmediathek4videos', sTitle, channel, sPicture, desc, oOutputParameterHandler)
+    oGui.setEndOfDirectory()
+
+def weltderwunder(): #affiche les genres
+    oGui = cGui()
+    oOutputParameterHandler = cOutputParameterHandler()
+    oOutputParameterHandler.addParameter('siteUrl', 'https://www.weltderwunder.de/livetv/')
+    oOutputParameterHandler.addParameter('sMovieTitle', 'Live TV')
+    oGui.addDir(SITE_IDENTIFIER, 'weltderwunderplayer', 'Live TV', 'weltderw.png', oOutputParameterHandler)
+    oOutputParameterHandler = cOutputParameterHandler()
+    oOutputParameterHandler.addParameter('siteUrl', 'https://www.weltderwunder.de/videos/mensch-und-natur/genre_load?page=1')
+    oOutputParameterHandler.addParameter('sMovieTitle', 'Live TV')
+    oGui.addDir(SITE_IDENTIFIER, 'weltderwunder3', '[COLOR red]MENSCH & NATUR[/COLOR]', 'weltderw.png', oOutputParameterHandler)
+
+    oInputParameterHandler = cInputParameterHandler()
+    Url = oInputParameterHandler.getValue('siteUrl')
+    sTitle = oInputParameterHandler.getValue('sMovieTitle')
+   
+      
+    sHtmlContent= getHtml(Url)
+                                                  
+    sPattern = '<div class="col-md-3 col-sm-3 col-xs-6 program-thumbnail">.*?<a href="/sendungen/(.*?)">.*?<img src="(.*?)">'
+    oParser = cParser()
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    if (aResult[0] == True):
+        for aEntry in aResult[1]:
+            sPicture = aEntry[1]
+            
+            Link = 'https://www.weltderwunder.de/sendungen/'+ aEntry[0]
+            sTitle = aEntry[0].replace('-',' ')
+            sTitle = sTitle.upper()
+            oOutputParameterHandler = cOutputParameterHandler()
+            oOutputParameterHandler.addParameter('siteUrl', Link)
+            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
+            oGui.addTV(SITE_IDENTIFIER, 'weltderwunder2', sTitle, sPicture, sPicture, '', oOutputParameterHandler)
+    oGui.setEndOfDirectory() 
+def wundermodal(liste):
+         oGui = cGui()
+         #video =getHtml(liste)    
+         #logger.info('sHtmlContent>%s' % video) 
+         sPattern = '<div class="modal-body">(.*?)</div>'
+         oParser = cParser()
+         aResult = oParser.parse(liste, sPattern)
+         if (aResult[0] == True):
+           for url in aResult[1]:                             
+             return url
+ 
+
+def wunderStaffel(liste):
+         oGui = cGui()
+         #video =getHtml(liste)    
+         #logger.info('sHtmlContent>%s' % video) 
+         sPattern = '<option  value="(.*?)">(.*?)</option>'
+         oParser = cParser()
+         aResult = oParser.parse(liste, sPattern)
+         if (aResult[0] == True):
+           for url in aResult[1]:                             
+             return url
+def weltderwunder3(): #affiche les genres
+    oGui = cGui()
+    oInputParameterHandler = cInputParameterHandler()
+    Url = oInputParameterHandler.getValue('siteUrl')
+    Title = oInputParameterHandler.getValue('sMovieTitle')
+     
+      
+    sHtmlContent= getHtml(Url)
+ 
+
+      
+
+    sPattern = '<div class="col-md-3 col-sm-6 item-video item-video-global">.*?<a href="(.*?)"><img src="(.*?)">.*?<h4>(.*?)</h4>.*?<p>(.*?)</p>.*?class="item-video-duration-global">(.*?) <span>'
+    oParser = cParser()
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    if (aResult[0] == True):
+        total = len(aResult[1])
+        
+        
+       
+        for aEntry in aResult[1]:
+            sPicture = aEntry[1]
+            desc = aEntry[3]+ ' :'+  aEntry[4]
+            sTitle = aEntry[2]+ ' :'+  aEntry[4]
+            Link = 'https://www.weltderwunder.de'+ aEntry[0]
+            
+            
+            oOutputParameterHandler = cOutputParameterHandler()
+            oOutputParameterHandler.addParameter('siteUrl', Link)
+            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
+            oGui.addTV(SITE_IDENTIFIER, 'weltderwunderplayer', sTitle, sPicture, sPicture, desc, oOutputParameterHandler)
+ 
+
+
+
+        sNextPage =hubEcho(str(Url))
+        if (sNextPage != False):
+             oOutputParameterHandler = cOutputParameterHandler()
+             oOutputParameterHandler.addParameter('siteUrl', sNextPage)
+             oGui.addDir(SITE_IDENTIFIER, 'weltderwunder3', '[COLOR teal]Next >>>[/COLOR]', 'next.png', oOutputParameterHandler)
+
+    oGui.setEndOfDirectory() 
+  
+def weltderwunder2(): #affiche les genres
+    oGui = cGui()
+    oInputParameterHandler = cInputParameterHandler()
+    Url = oInputParameterHandler.getValue('siteUrl')
+    Title = oInputParameterHandler.getValue('sMovieTitle')
+     
+      
+    sHtmlContent= getHtml(Url)
+    desc =wundermodal(sHtmlContent)
+    sPattern = '<option  value="(.*?)">(.*?)</option>'
+    oParser = cParser()
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    if (aResult[0] == True):
+      for Title in aResult[1]:       
+          oOutputParameterHandler = cOutputParameterHandler()
+          oOutputParameterHandler.addParameter('siteUrl', Url+'?staffel='+Title[0])
+          oOutputParameterHandler.addParameter('sMovieTitle', Title[1])
+          oGui.addDir(SITE_IDENTIFIER, 'weltderwunder2', Title[1], 'weltderw.png', oOutputParameterHandler)
+
+
+
+
+    sPattern = '<div class="col-md-3 col-sm-6 item-video item-video-global">.*?<a href="(.+?)"><img src="(.+?)">.+?<h4>(.+?)</h4>'
+    oParser = cParser()
+    aResult = oParser.parse(sHtmlContent, sPattern)
+    if (aResult[0] == True):
+        total = len(aResult[1])
+        
+        
+       
+        for aEntry in aResult[1]:
+            sPicture = aEntry[1]
+            sTitle = aEntry[2]
+            Link = 'https://www.weltderwunder.de'+ aEntry[0]
+            
+            
+            oOutputParameterHandler = cOutputParameterHandler()
+            oOutputParameterHandler.addParameter('siteUrl', Link)
+            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
+            oGui.addTV(SITE_IDENTIFIER, 'weltderwunderplayer', sTitle, sPicture, sPicture, desc, oOutputParameterHandler)
+    oGui.setEndOfDirectory() 
+
+def wunderplayer(liste):
+         oGui = cGui()
+         video =getHtml(liste)    
+         logger.info('sHtmlContent>%s' % video) 
+         sPattern = '<video id="live-video".*?<source src="([^"]+?)"'
+         oParser = cParser()
+         aResult = oParser.parse(video, sPattern)
+         if (aResult[0] == True):
+           for url in aResult[1]:                             
+             return url
+def weltderwunderplayer():
+         oGui = cGui()
+         oInputParameterHandler = cInputParameterHandler()
+         liste = oInputParameterHandler.getValue('siteUrl')
+         name = oInputParameterHandler.getValue('sMovieTitle')
+         url =wunderplayer(liste)    
+                              
+         addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, url, '')
+
+
+
+
 RESOURCES_ = os.path.join(ADDON_DATA_DIR, 'resources','sites')
 RESOURCES = os.path.join(ADDON_DATA_DIR, 'resources','sites')
 def turkupdate(): 
@@ -256,7 +751,7 @@ def turkupdate():
         url = 'https://raw.githubusercontent.com/orhantv/otv_yeni/master/plugin.video.OTV_MEDIA/resources/sites/' +  aEntry[1] 
         modsource = getHtml(url) 
         #obj = compile(modsource, sourcestr, 'exec')
-        logger.info("obj: %s" %modsource)
+       # logger.info("obj: %s" %modsource)
         module = imp.new_module(aEntry[0])
         list=[]
         modul =os.path.join(RESOURCES_ ,aEntry[1])
@@ -264,7 +759,7 @@ def turkupdate():
        
         comon.SaveList2(modul, modsource)
         #exec(obj, module.__dict__)
-        logger.info("plugin: %s" %module)
+       # logger.info("plugin: %s" %module)
         sTitle ='OTV_MEDIA GüNCELENDI-UPDATED'
         #png = module.SITE_ICON
 #        module=module.SITE_IDENTIFIER
@@ -275,16 +770,36 @@ def turkupdate():
 
 
 sites_file = os.path.join(RESOURCES_DIR, 'sites.json')
+
 def AlmanKINO(): 
     oGui = cGui()
     oOutputParameterHandler = cOutputParameterHandler()
     oOutputParameterHandler.addParameter('siteUrl', 'http://')
     oGui.addDir(SITE_IDENTIFIER, 'load', 'Global Search', 'filmkino.png', oOutputParameterHandler)
 
+    from resources.lib import comon
+    listDir = comon.ReadList(data_file)
+    for fold in listDir:
+        sSiteName =fold["url"]
+        oInputParameterHandler = cInputParameterHandler()
+        exec("from resources.sites import {}".format(sSiteName))
+        sTitle = eval(sSiteName+".SITE_NAME")
+        png = eval(sSiteName+".SITE_ICON")
+        module = eval(sSiteName+".SITE_IDENTIFIER")
+        oOutputParameterHandler = cOutputParameterHandler()
+        oOutputParameterHandler.addParameter('sMovieTitle', sTitle)
+        oGui.addDir(module, 'load', sTitle, png, oOutputParameterHandler)
+    oGui.setEndOfDirectory()  
+
+
+
+def updateAlmanKINO(): 
+    oGui = cGui()
+
     SITES = 'sites'
     ACTIVE = 'active'
     LABEL = 'label'
-
+    from resources.lib import comon
     Urrl = 'https://github.com/streamxstream/plugin.video.xstream/tree/nightly/sites'
     sHtmlContent = getHtml(Urrl)       
     sPattern = '<a class="js-navigation-open Link--primary" title="(.*?).py" data-pjax="#repo-content-pjax-container" href="/streamxstream/plugin.video.xstream/blob/nightly/sites/(.*?)">'
@@ -297,27 +812,27 @@ def AlmanKINO():
         url = 'https://raw.githubusercontent.com/streamxstream/plugin.video.xstream/nightly/sites/' +  aEntry[1] 
         modsource = getHtml(url) 
         obj = compile(modsource, sourcestr, 'exec')
-        logger.info("obj: %s" %modsource)
+        #logger.info("obj: %s" %modsource)
         module = imp.new_module(aEntry[0])
         list=[]
-        modul =os.path.join(RESOURCES,aEntry[1])
-        from resources.lib import comon
-                
-        comon.SaveList2(modul, modsource)
+        list = comon.ReadList(data_file)
+        list.append({"name":aEntry[0], "url": aEntry[0]})
+        comon.SaveList(data_file, list)
         exec(obj, module.__dict__)
-        logger.info("plugin: %s" %module)
-        sTitle =module.SITE_NAME
-        png = module.SITE_ICON
-        module=module.SITE_IDENTIFIER
-        #comon.SaveList(sites_file, SITES)
-        #list=[]
-        #list.append({module,"label": sTitle, "active": "True"})
-       # list.append({module,"label":  sTitle, "active": "True"})
-        #comon.SaveList(sites_file, list)
+        modul =os.path.join(RESOURCES,aEntry[1])
+       
+                                             
+        comon.SaveList2(modul, modsource)
+        name = module.SITE_NAME
+        #logger.info("plugin: %s" %module)
+        sTitle ='[COLOR orange]%s [/COLOR]'% name+'-GüNCELENDI-UPDATED'
+        #png = module.SITE_ICON
+#        module=module.SITE_IDENTIFIER
         oOutputParameterHandler = cOutputParameterHandler()
         oOutputParameterHandler.addParameter('sMovieTitle', sTitle)
-        oGui.addDir(module, 'load', sTitle, png, oOutputParameterHandler)
+        oGui.addDir('', '', sTitle, '', oOutputParameterHandler)
     oGui.setEndOfDirectory()  
+
 
 
 
@@ -327,6 +842,65 @@ def load():
         if params.exist('searchterm'):
             searchterm = params.getValue('searchterm')
         searchGlobal(searchterm)
+def Plugins():
+    from resources.lib import comon
+    listDir = comon.ReadList(data_file)
+    for fold in listDir:
+       # name = fold["name"]
+        sSiteName =fold["url"]
+    return sSiteName
+def msearchGlobal(sSearchText=False):
+    count= 0
+    import threading
+    oGui = cGui()
+    oGui.globalSearch = True
+    oGui._collectMode = True
+    if not sSearchText:
+        sSearchText = oGui.showKeyBoard()
+    if not sSearchText: return True
+    aPlugins = []
+    #aPlugins = Plugins()
+    dialog = xbmcgui.DialogProgress()
+    dialog.create('xStream', 'Searching...')
+    numPlugins = Plugins()
+    threads = []
+    from resources.lib import comon
+    listDir = comon.ReadList(data_file)
+    for fold in listDir:
+       # name = fold["name"]
+        pluginEntry =fold["url"]
+
+        if not pluginEntry['globalsearch']:
+            continue
+        dialog.update((count + 1) * 50 // numPlugins, 'Searching: ' + str(pluginEntry['name']) + '...')
+        if dialog.iscanceled(): return
+        if sys.version_info[0] == 2:
+            logger.info('Searching for %s at %s' % (sSearchText.decode('utf-8'), pluginEntry['id']))
+        else:
+            logger.info('Searching for %s at %s' % (sSearchText, pluginEntry['id']))
+
+        t = threading.Thread(target=_pluginSearch, args=(pluginEntry, sSearchText, oGui), name=pluginEntry['name'])
+        threads += [t]
+        t.start()
+    for count, t in enumerate(threads):
+        if dialog.iscanceled(): return
+        t.join()
+        dialog.update((count + 1) * 50 // numPlugins + 50, t.getName() + ' returned')
+    dialog.close()
+    # deactivate collectMode attribute because now we want the elements really added
+    oGui._collectMode = False
+    total = len(oGui.searchResults)
+    dialog = xbmcgui.DialogProgress()
+    dialog.create('xStream', 'Gathering info...')
+    for count, result in enumerate(sorted(oGui.searchResults, key=lambda k: k['guiElement'].getSiteName()), 1):
+        if dialog.iscanceled(): return
+        oGui.addFolder(result['guiElement'], result['params'], bIsFolder=result['isFolder'], iTotal=total)
+        dialog.update(count * 100 // total, str(count) + ' of ' + str(total) + ': ' + result['guiElement'].getTitle())
+    dialog.close()
+    oGui.setView()
+    oGui.setEndOfDirectory()
+    return True
+
       
       
 def searchGlobal(sSearchText=False):
@@ -370,7 +944,6 @@ def searchGlobal(sSearchText=False):
         numPlugins = len(pluginEntry)
         logger.info('globalsearch-'+pluginEntry)
         dialog.update((count + 1) * 50 // numPlugins, 'Searching: ' +str(name) + '...')
-       # logger.info('Searching for %s at %s' % (sSearchText.decode('utf-8')), pluginEntry)
         t = threading.Thread(target=_pluginSearch, args=(pluginEntry, sSearchText, oGui), name=name)
         threads += [t]
         t.start()
@@ -378,7 +951,6 @@ def searchGlobal(sSearchText=False):
         t.join()
         dialog.update((count + 1) * 50 // numPlugins + 50, t.getName() + ' returned')
       dialog.close()
-    # deactivate collectMode attribute because now we want the elements really added
       oGui._collectMode = False
       total = len(oGui.searchResults)
       
@@ -413,18 +985,18 @@ def livestreamtv():
     sUrl = 'https://www.harryshomepage.de/webtv.html'
   
     data=  getHtml(sUrl)
-      
-     
+    data=data.replace('target="_blank">','target="_blank">Channel name: ').replace('<br />Channel name: <a href=','<br /> <a href=').replace('</div><!-- END Top Links -->','').replace('</a>','').replace('</ul>','').replace('Kontakt</li>','Das Erste HD')          
+    logger.info("obj: %s" %data) 
 
        
     tarzlistesi = re.findall('Channel name: (.*?)\n<br />URL: (.*?)\n', data , re.S)
     # 1 seul resultat et sur leur propre hebergeur
     for sTitle,sUrl in tarzlistesi:
 
-            
-                                               
-            sPicture = 'https://www.harryshomepage.de/hahop_banner2.jpg'
-            
+                                                       
+                                                                                                                                                                                                                              
+            sPicture = 'https://www.harryshomepage.de/hahop_banner2.jpg'                                                                                                                 
+            sTitle=sTitle.replace('&uuml;','ü').replace('&ouml;','ö')  
             sUrl=sUrl.replace('index_1_av-p.m3u8','master.m3u8')                        
             oOutputParameterHandler = cOutputParameterHandler()
             oOutputParameterHandler.addParameter('siteUrl', sUrl)
@@ -437,6 +1009,45 @@ def livestreamtv():
         
          
     oGui.setEndOfDirectory()
+
+def mlivestreamtv():
+     oGui = cGui()
+
+     oInputParameterHandler = cInputParameterHandler()
+     sUrl = 'https://www.harryshomepage.de/webtv.html'
+  
+     data=  getHtml(sUrl)
+     data=data.replace('</div><!-- END Top Links -->','').replace('</div><!-- END Top Links -->','')
+     logger.info("obj: %s" %data)                                      
+     
+                                                                         # </a>
+      
+#    tarzlistesi = re.findall('<br />Channel name: <a href=".*?" target="_blank">(.*?)</a>\n<br />URL: (http.*?).m3u8', data , re.S)
+    # 1 seul resultat et sur leur propre hebergeur
+     sPattern = 'Channel name: (.*?).*?<br />URL: (.*?)\n'
+     oParser = cParser()
+     aResult = oParser.parse(data, sPattern)
+     if aResult[0] is True:  
+        for aEntry in aResult[1]: 
+            sTitle = aEntry[0] 
+            sUrl = aEntry[1] 
+
+            
+                                               
+            sPicture = 'https://www.harryshomepage.de/hahop_banner2.jpg'
+            
+            sUrl=sUrl.replace('index_1_av-p.m3u8','master.m3u8')+'.m3u8'                        
+            oOutputParameterHandler = cOutputParameterHandler()
+            oOutputParameterHandler.addParameter('siteUrl', sUrl)
+            oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
+            oOutputParameterHandler.addParameter('sThumbnail', sPicture) #sortis du poster
+ 
+            oGui.addMovie(SITE_IDENTIFIER, 'otvplay__', sTitle, sPicture, sPicture, '', oOutputParameterHandler)
+ 
+        
+        
+         
+     oGui.setEndOfDirectory()
    
 def aAlmanKINO():
         oGui = cGui()
@@ -653,7 +1264,8 @@ def oklivecams(): #affiche les genres
    
       
     sHtmlContent= getHtml(Url)
-    sPattern = '<div id="hashtag_ticker">(.+?)<div id="hashtag_ticker">'
+    logger.info('oklive>%s' % sHtmlContent) 
+    sPattern = '<div id="hashtag_ticker"(.+?)</div>'
     oParser = cParser()
     aResult = oParser.parse(sHtmlContent, sPattern)
     sHtmlContent = aResult
@@ -794,6 +1406,13 @@ def oklidecode( data):
 from resources.lib.comaddon import VSlog#, dialog
 import binascii
    
+def lOTVDecode(string):
+    for a,b,c in string:
+        txt =(b,c)
+        txt =codecs.decode(txt, 'hex').decode('ascii')
+        logger.info('c>%s' %txt)
+ 
+        return txt
 
 
 def okliDecode(txt):
@@ -806,7 +1425,7 @@ def madulto():
        refUrl = oInputParameterHandler.getValue('refsiteUrl')
        name = oInputParameterHandler.getValue('sMovieTitle')
        logger.info('Url>%s' %Url)
-       data3= getHtml(Url)
+       data3= gegetHtml(Url)
        Url2 ='http:'+re.search("""<iframe.+?src=["'](.+?)["']""",  data3).group(1)
        logger.info('Url2>%s' %Url2)
        
@@ -814,129 +1433,46 @@ def madulto():
       # Url3 ='http://oklivetv.com/'+re.search('id="tabOKLiveTV1" href="(.+?)" ', data2).group(1)
        #cookie =SetCookie(Url2 )
        #logger.info("cookie:" +cookie) 
-                                                                                              # , timeout=10
-       data1 = requests.session().get(Url2, headers={"Referer": Url ,"Content-Type": "application/x-www-form-urlencoded","User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36',"sec-ch-ua": '"Google Chrome";v="89", "Chromium";v="89", ";Not A Brand";v="99"',"x-requested-with": "XMLHttpRequest"}).text        
+       # </script><script>custom                                                                                      # , timeout=10
+       cookie =SetCookie(Url )
+       data1 = requests.session().get(Url2, headers={"Cookie": cookie,"Referer": Url ,"Content-Type": "application/x-www-form-urlencoded","User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36',"sec-ch-ua": '"Google Chrome";v="89", "Chromium";v="89", ";Not A Brand";v="99"',"x-requested-with": "XMLHttpRequest"}).text        
        data1=to_utf8( data1)
+      # data1=gegetHtml(Url)
        data1 = data1.replace("\r", "").replace("\n", "")
        logger.info("cookie data1: %s" %data1)
        oParser = cParser()
-       sPattern = '"></div><script>(.+?)</script>'
+       sPattern = '</script><script>(.+?)</script>'
        aResult = oParser.parse(data1, sPattern)
 
        if (aResult[0] == True):
                   data2= cPacker().unpack(aResult[1][0])                    
                  
-                  
+                       
                   data2=data2.replace('\\',"").replace("#", "")
                   logger.info("cookie data1: %s" %data2)
                   aut =re.search("Clappr.Player..source:'(.+?)'", data2).group(1)
                   auti=oklidecode(aut)
                   autim =okliDecode(auti)
-                  logger.info("cookie data1: %s" %autim)
-                  TIK='|Referer='+autim+'&User-Agent=User-Agent='+ generate_user_agent()
+                #  auti=lOTVDecode(aut)
+                  logger.info("cookie data2: %s" %auti)
+                  
+                  TIK='|Referer='+Url2 +'&User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36' 
+                 # TIK='|Referer=http://oklivetv.com/wp-admin/admin-ajax.php&User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36' 
+                 
                   baddLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, autim+TIK,Url2 , '')
 
-def mmmadulto():
-
-      
-       oInputParameterHandler = cInputParameterHandler()
-       Url = oInputParameterHandler.getValue('siteUrl')
-       refUrl = oInputParameterHandler.getValue('refsiteUrl')
-       name = oInputParameterHandler.getValue('sMovieTitle')
-       hosters = []
-       Urll = "http://oklivetv.com/" 
-#       cookie = getUrl(Url, output='cookie').result 
-#       headers = 'User-Agent=Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36'
-       data3 = requests.session().get(Url,headers={"Cookie": "","User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36","Host": "oklivetv.com","Connection": "Keep-Alive","Accept-Encoding": "gzip"}).text
-
-       Url2 ='http:'+re.search("""<iframe.+?src=["'](.+?)["']""",  data3).group(1)
-                    
+                                                               
+#       logger.info('data1>%s' %data1)
        
-       oRequest = cRequestHandler(Url2)
-
-                        
-       oRequest.addHeaderEntry('Host', 'oklivetv.com')
-       oRequest.addHeaderEntry('Connection', 'keep-alive')
-       oRequest.addHeaderEntry('Upgrade-Insecure-Requests', '1')
-       oRequest.addHeaderEntry('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36')
-       oRequest.addHeaderEntry('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9')
-#       oRequest.addHeaderEntry('Sec-Fetch-Site', 'cross-site')
-#       oRequest.addHeaderEntry('Sec-Fetch-Mode', 'navigate')
-#       oRequest.addHeaderEntry('Sec-Fetch-Dest', 'iframe')
-       oRequest.addHeaderEntry('Referer', Url )
-       oRequest.addHeaderEntry('Accept-Language', 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7')
-#       oRequest.addHeaderEntry('Cookie', cookie)
-       oRequest.addHeaderEntry('Accept-Encoding', 'gzip, deflate')
-      
+#       data1=oklidecode(data1)
+                 
        
-       
-       data1= oRequest.request()
-          
+#       auti =re.search('(687474703a.+?6d337538)', data1).group(1)
+#       auti =okliDecode(auti)
+#      logger.info('oklive>%s' % auti)
+                 
      
-       #aut = re.compile('(custom.function.+?)</script>').findall(data1)
-       logger.info("player_auth: %s" % data1 ) 
-       #auth =unpack(aut)
-       #data1 =data1.replace('|',"Host")
-#       autti =re.search("p2pchannelid='(.+?)'", auth).group(1)
-       auti =re.findall('0680740740(.+?)33075038', data1)
-       auti =re.search("0680740740(.+?)33075038", data1).group(1)
-       auti = '0680740740'+auti+'33075038 ' 
-       url =oklidecode(auti).decode('hex')
-       info('Good cookie :' + url)
-       TIK='|User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36&Referer='+Url
-          
-       addLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, url+TIK , '')
-def potwmplay():
-    oInputParameterHandler = cInputParameterHandler()
-    name = oInputParameterHandler.getValue('sMovieTitle')[2:]                            
-    Url = oInputParameterHandler.getValue('siteUrl')                                     
-    TIK='|User-Agent=Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'
-
-    url=  potwm()
-    logger.info("player_auth: %s" %url ) 
-
-qualitylist = []
-videolist = []
-def potwm():
-    urla= 'http://pt.potwm.com/'
-    
-    url= "http://pt.potwm.com/live-feed/fk/?c=object_container&site=wl3&cobrandId=241040&psid=oklivetv&pstool=319_1&psprogram=cbrnd&campaign_id=94891&vp%5BshowChat%5D=false&vp%5BchatAutoHide%5D=false&vp%5BshowCallToAction%5D=false&vp%5BshowPerformerName%5D=false&vp%5BshowPerformerStatus%5D=false&subAffId=%7BSUBAFFID%7D&categoryName=girl&embedTool=1&origin="
-    referer=[('Referer',urla)]                
-    page=gegetUrl(url,headers=referer).replace("\t",'').replace("\n",'')
-    logger.info('oklive>%s' % page)
-    values = re.findall('gaLabel: "(.*?)".*?url: "(.*?)"', page)
-    for name,urll in values:
-        urll= 'http:'+ urll
-        import streamer
-        streamer.sstreamer(name,urll)
-  
-        return  
-       
-  
-                      
-
-
-
-def madulto():
-       oInputParameterHandler = cInputParameterHandler()
-       Url = oInputParameterHandler.getValue('siteUrl')
-       refUrl = oInputParameterHandler.getValue('refsiteUrl')
-       name = oInputParameterHandler.getValue('sMovieTitle')
-       data3= getHtml(Url)
-       Url2 ='http:'+re.search("""<iframe.+?src=["'](.+?)["']""",  data3).group(1)
-       cookie =SetCookie(Url2 )
-       data1 = requests.session().get(Url2, headers={"Cookie": cookie,"Referer": Url ,"Content-Type": "application/x-www-form-urlencoded","User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36',"sec-ch-ua": '"Google Chrome";v="89", "Chromium";v="89", ";Not A Brand";v="99"',"x-requested-with": "XMLHttpRequest"}).text        
-       data1=to_utf8( data1)
-       data=oklidecode(data1)
-       auti =re.search('(687474703a.+?6d337538)', data).group(1)
-       logger.info('oklive>%s' % auti) 
-       auti =okliDecode(auti)
-       logger.info('oklive>%s' % auti)
-       TIK='|Referer='+Url2 +'&User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36' 
-       baddLink('[COLOR lightblue][B]OTV MEDIA >>  [/B][/COLOR]' + name, auti+TIK, '')
-        
-     
-def baddLink(name, url, iconimage):
+def baddLink(name, url,Url2 , iconimage):
     ok = True                                  
                                           
    # url = str(url).replace('.m3u8','.m3u8|Cookie=__cfduid=daf238e349b76e7174a4eeb73854a7b651617059685; _ga=GA1.2.19173863.1617059687; _gid=GA1.2.1342217077.1617059687; _awl=2.1617063081.0.4-d202cd53-f5a07719162167cc6c34809c7770960b-6763652d6575726f70652d7765737431-60626ca9-0; euconsent-v2=CPD17oIPD17oIAKAXAENBTCsAP_AAH_AAAwIHqtf_X__b39j-_59__t0eY1f9_7_v-0zjhfdt-8N2f_X_L8X42M7vF36pq4KuR4Eu3LBIQFlHOHUTUmw6okVrTPsak2Mr7NKJ7LEinMbe2dYGHtfn91TuZKYr_78_9fz__-__v__79f_r-3_3_vp9X---_e_V399xLv9f-B6oBJhqXwAWYljgyTRpVCiBCFcSHQCgAooRhaJrCBlcFOyuAj1BAwAQGoCMCIEGIKMWAQAAAQBIREBIAeCARAEQCAAEAKkBCAAiYBBYAWBgEAAoBoWIEUAQgSEGRwVHKYEBEi0UE8lYAlF3saYQhlFgBQKP6KjARKkECwMgAAA.YAAAAAAAAAAA; cwv3_cookie__cat_268=true; JuicyPop0=1; __viCookieActive=true; _gat_gtag_UA_57647313_3=1; _gat=1Accept-Encoding: gzip, deflate Content-Length: 51').replace("b'",'')
@@ -1592,97 +2128,56 @@ def redtubeNextPage(sHtmlContent,sUrl):
 
 def pornhubGenre():
     oGui = cGui()
-   
     oInputParameterHandler = cInputParameterHandler()
     url = oInputParameterHandler.getValue('siteUrl')
-   
-    data = getHtml(url)                                                                                                       	
-
-						                                                                                                                                                       
-							                                                                                 
-    tarzlistesi = re.findall('<div class="category-wrapper ">.*?<a href="(.*?)" alt="(.*?)".*?data-thumb_url="(.*?)"', data , re.S)
-    for sUrl,sTitle,sPicture in tarzlistesi:
-        Url ='https://www.pornhub.com'+ sUrl+ '?page=1'
-       
-        oOutputParameterHandler = cOutputParameterHandler()
-        oOutputParameterHandler.addParameter('siteUrl', Url)
-        oGui.addMovie(SITE_IDENTIFIER, 'pornhubliste', sTitle, sPicture, sPicture, '', oOutputParameterHandler)
-    oGui.setEndOfDirectory() 
-def pornhubliste(sSearch = ''):
-   
-    oGui = cGui()
-       
-    if sSearch:
-        #on redecode la recherhce codé il y a meme pas une seconde par l'addon
-        sSearch = urllib2.unquote(sSearch)
- 
-        query_args = { 'do' : 'search' , 'subaction' : 'search' , 'story' : str(sSearch) , 'x' : '0', 'y' : '0'}
-        
-        #print query_args
-        
-        data = urllib.urlencode(query_args)
-        headers = {'User-Agent' : 'Mozilla 5.10'}
-        url = 'http://www.fox.com.tr/bolum-izle'
-        request = urllib2.Request(url,data,headers)
-          
-  
-      #sPattern = '<div class="imagefilm">.+?<a href="(.+?)" title="(.+?)">.+?<img src="(.+?)"'
-        sPattern = '<div class="preloadLine">.*?<a href="(.*?)" title="(.*?)".*?data-related-url="(.*?)".*?data-mediumthumb="(.*?)"'                    
-    else:
-        oInputParameterHandler = cInputParameterHandler()
-        sUrl= oInputParameterHandler.getValue('siteUrl')
-        logger.info("sUrl: %s" %sUrl)
-        sHtmlContent = getHtml(sUrl)  
-        
-   
-
-                                            
-			                                                                                                     	
-                                            
-                               
-        sPattern = '<li class="pcVideoListItem js-pop videoblock videoBox".*?<a href="(.*?)" title="(.*?)".*?data-related-url="(.*?)".*?data-thumb_url = "(.*?)"'                    
-
-                                         
-    sHtmlContent = sHtmlContent
-   
+    sHtmlContent = getHtml(url)
+    sPattern = '<div class="category-wrapper ">.*?<a href="(.*?)" alt="(.*?)".*?data-thumb_url="(.*?)"'
     oParser = cParser()
     aResult = oParser.parse(sHtmlContent, sPattern)
-   
-   
-   
+    if not (aResult[0] == False):
+        for aEntry in aResult[1]:
+            sTitle = aEntry[1]
+            sPicture = aEntry[2]
+            Url ="https://www.pornhub.com%s"%aEntry[0]+ '&page=1'
+            oOutputParameterHandler = cOutputParameterHandler()
+            oOutputParameterHandler.addParameter('siteUrl', Url)
+            oGui.addTV(SITE_IDENTIFIER, 'pornhubliste', sTitle, sPicture, sPicture, '', oOutputParameterHandler)
+    oGui.setEndOfDirectory()
+def pornhubliste():
+    oGui = cGui()
+    oInputParameterHandler = cInputParameterHandler()
+    sUrl= oInputParameterHandler.getValue('siteUrl')
+    logger.info('sUrl>%s' % sUrl)
+    
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36'}
+    sHtmlContent= getHtml(sUrl).encode('utf-8')
+                     # print(t.encode('cp1252', errors='replace').decode('utf8', errors='replace').encode('cp1252', errors='replace').decode('utf8', errors='replace'))
+    logger.info('sUrl>%s' % sHtmlContent)
+
+                                        
+    #sHtmlContent = sHtmlContent.decode('utf8', errors='replace').encode('cp1252', errors='replace').decode('utf8', errors='replace')                      
+    sPattern = '<div class="preloadLine"></div>.*?<a href="(.*?)" title="(.*?)".*?data-thumb_url = "(.*?)".*?<var class="duration">(.*?)</var>'
+    oParser = cParser()
+    aResult = oParser.parse(sHtmlContent, sPattern)
     if not (aResult[0] == False):
         total = len(aResult[1])
-        
-       
         for aEntry in aResult[1]:
-            sTitle = aEntry[1] 
-           
-            
-                
+            sTitle = aEntry[1] +':'+ aEntry[3]
+            sTitle = malfabekodla(sTitle)
             Url ='https://www.pornhub.com'+ aEntry[0]
-            sPicture =aEntry[3]+getHeaders(Url)
-            logger.info('sPicture>%s' %sPicture) 
-           # sPicture  = unicode(sPicture , errors='replace')
-            #sTitle = sTitle.encode('ascii', 'ignore').decode('ascii')
-           
+            sPicture =aEntry[2]#+getHeaders(Url)
+            logger.info('sPicture>%s' %sPicture)
             oOutputParameterHandler = cOutputParameterHandler()
             oOutputParameterHandler.addParameter('siteUrl', Url)
             oOutputParameterHandler.addParameter('sMovieTitle', str(sTitle))
-#            oOutputParameterHandler.addParameter('sThumbnail', sPicture) #sortis du poster
-            oGui.addMovie(SITE_IDENTIFIER, 'redtubeHosters', sTitle, sPicture, sPicture, '', oOutputParameterHandler)
-        
-           
-        if not sSearch:
-                        
-            sNextPage = hubEcho((str(sUrl)))#cherche la page suivante
-            if (sNextPage != False):
+            oGui.addEpisode(SITE_IDENTIFIER, 'redtubeHosters', sTitle, sPicture, sPicture, '', oOutputParameterHandler)
+        sNextPage = hubEcho((str(sUrl)))#cherche la page suivante
+        if (sNextPage != False):
                 oOutputParameterHandler = cOutputParameterHandler()
                 oOutputParameterHandler.addParameter('siteUrl', sNextPage)
                 oGui.addDir(SITE_IDENTIFIER, 'pornhubliste', '[COLOR teal]Next >>>[/COLOR]', 'next.png', oOutputParameterHandler)
-                              #Ajoute une entrer pour le lien Next | pas de addMisc pas de poster et de description inutile donc
- 
-    if not sSearch:
-        oGui.setEndOfDirectory()
+
+    oGui.setEndOfDirectory()
 def pornhubNextPage(sHtmlContent,sUrl):
     oGui = cGui()
                  

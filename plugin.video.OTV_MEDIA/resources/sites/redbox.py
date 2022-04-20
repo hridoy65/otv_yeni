@@ -6,7 +6,7 @@ from resources.lib.config import cConfig
 import requests
 import re,xbmcgui,unicodedata              
 from resources.lib.gui.hoster import cHosterGui
-from resources.lib.gui.gui import cGui
+from resources.lib.gui.guui import cGui
 from resources.lib.handler.inputParameterHandler import cInputParameterHandler
 from resources.lib.handler.outputParameterHandler import cOutputParameterHandler
 from resources.lib.handler.requestHandler import cRequestHandler
@@ -14,7 +14,7 @@ from resources.lib.parser import cParser
 from resources.lib.comaddon import progress, VSlog
 from resources.lib.player import cPlayer
 
-from resources.lib.gui.guiElement import cGuiElement
+from resources.lib.gui.guuiElement import cGuiElement
 
 import sys
 from xbmcgui import ListItem
@@ -40,7 +40,7 @@ addon = xbmcaddon.Addon()
 plugin = Plugin()
 s = requests.Session()
 plugin.name = addon.getAddonInfo("name")
-user_agent = "Dalvik/2.1.0 (Linux; U; Android 5.1.1; AFTT Build/LVY48F)"
+user_agent = "|stagefright%2F1.2+%28Linux%3BAndroid+7.1.2%29"
 
 implemented = ["0", "38", "21", "48"]
 try:

@@ -204,7 +204,7 @@ def turkTV():
         oGui.addDir('xcanlitvzone', 'Canlitv','Canli TV zone', 'canlitvzone.png', oOutputParameterHandler)
         
         oOutputParameterHandler = cOutputParameterHandler()
-        oOutputParameterHandler.addParameter('siteUrl', 'https://kumanda.tv/?sayfa=1')
+        oOutputParameterHandler.addParameter('siteUrl', 'https://kumanda.tv/canli?sayfa=1')
        
         oGui.addDir('xCanLiTVlive', 'CanLiTVlive','Canli TV live', 'canlitvs.png', oOutputParameterHandler)
 
@@ -214,6 +214,7 @@ def turkTV():
 #        oGui.addDir(SITE_IDENTIFIER, 'turkom2','ULUSAL YEREL Canli TV ', 'canlitvs.png', oOutputParameterHandler)
         
         oOutputParameterHandler = cOutputParameterHandler()
+                                                        # http://cekke.tk/sey/kodi/iptv.php?ct=b106dc966238b027c5fc2af0327f6280
         oOutputParameterHandler.addParameter('siteUrl', 'http://cekke.tk/sey/kodi/iptv.php?ct=b106dc966238b027c5fc2af0327f6280')
         oGui.addDir('seyiret', 'Basla','ULUSAL YEREL ', 'canlitvs.png', oOutputParameterHandler)
         oGui.setEndOfDirectory()

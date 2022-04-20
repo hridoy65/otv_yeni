@@ -17,7 +17,7 @@ from resources.lib.config import cConfig
 import requests
 import re,xbmcgui,unicodedata              
 from resources.lib.gui.hoster import cHosterGui
-from resources.lib.gui.gui import cGui
+from resources.lib.guiu.gui import cGui
 from resources.lib.handler.inputParameterHandler import cInputParameterHandler
 from resources.lib.handler.outputParameterHandler import cOutputParameterHandler
 from resources.lib.handler.requestHandler import cRequestHandler
@@ -25,7 +25,7 @@ from resources.lib.parser import  cParser
 
 from resources.lib.player import cPlayer
 from resources.lib.backtothefuture import PY2, PY3, unichr
-from resources.lib.gui.guiElement import cGuiElement
+from resources.lib.gui.guuiElement import cGuiElement
 from resources.sites.LIVETV2 import *
 import sys
 import os

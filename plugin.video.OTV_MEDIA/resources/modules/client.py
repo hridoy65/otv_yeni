@@ -3,7 +3,9 @@
 '''
     Tulip routine libraries, based on lambda's lamlib
     Author Twilight0
+
         License summary below, for more details please read license.txt file
+
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
         the Free Software Foundation, either version 2 of the License, or
@@ -45,9 +47,7 @@ elif six.PY2:
 
 def request(url, close=True, redirect=True, error=False, proxy=None, post=None, headers=None, mobile=False, limit=None,
             referer=None, cookie=None, output='', timeout='30'):
-        r = requests.get(url)                              
-        r.headers
-        cookie=r.headers['Set-Cookie']
+ 
         handlers = []
 
         if proxy is not None:

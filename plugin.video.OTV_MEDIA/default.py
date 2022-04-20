@@ -17,7 +17,8 @@ def get_params():
 	return param
 
 PY3 = False
-
+from resources.lib.youtube_api.youtube_api import YouTube  
+from resources.lib.parser import cParser
 try:
     from urllib.parse import urlencode as Urlencode
     from urllib.parse import unquote_plus as Unquote_plus
@@ -48,15 +49,22 @@ from resources.lib.util import UnquotePlus, Unquote
 from resources.lib.util import QuotePlus
 from resources.lib.gui.hoster import cHosterGui
 from resources.lib.home import cHome
-from resources.lib.gui.gui import cGui
+from resources.lib.gui.guui import cGui
 from resources.lib.handler.pluginHandler import cPluginHandler
 from resources.lib.handler.rechercheHandler import cRechercheHandler
 from resources.lib.handler.inputParameterHandler import cInputParameterHandler
 from resources.lib.handler.outputParameterHandler import cOutputParameterHandler
 from resources.lib.comaddon import progress, VSlog, addon, window, xbmc
 from resources.lib.util import Quote
-# http://kodi.wiki/view/InfoLabels
-# http://kodi.wiki/view/List_of_boolean_conditions
+try:
+    # Python 3.x
+    from urllib.parse import urlencode
+    from urllib.parse import parse_qs
+except ImportError:
+    # Python 2.x
+    from urllib import urlencode
+    from urlparse import parse_qs
+
 import xbmc, xbmcgui, xbmcaddon, xbmcplugin
 from resources.lib.config import cConfig
 #import j2py
@@ -74,13 +82,15 @@ path.append(join(_addonPath_, 'resources', 'lib'))
 path.append(join(_addonPath_, 'resources', 'lib', 'gui'))
 path.append(join(_addonPath_, 'resources', 'lib', 'handler'))
 path.append(join(_addonPath_, 'resources', 'art', 'sites'))
-path.append(join(_addonPath_, 'resources','sites'))
-#path.append(join(__cwd__, "sites"))
+path.append(join(_addonPath_,'resources', 'sites'))
+#path.append(join(_addonPath_, 'resources', 'lib', 'youtube_api', 'tube'))
+#from resources.lib.youtube_api import default
 addons = addon()
-class main:
+class main:                                 
  def __init__(self,argv=None):
     if sys.argv:
         argv = sys.argv
+    
     self.parseUrl()
    
     
@@ -88,12 +98,15 @@ class main:
 
  
  def parseUrl(self):
+        #if 'search'and 'play' and  'special'and  'users' and  'config' or 'sign' in param:
+             
+           #  exec("from resources.lib.youtube_api import tube  ")
+       # from resources.lib.about import cAbout
+       # cAbout().getUpdate()    
         
-        from resources.lib.about import cAbout
-        cAbout().getUpdate()    
-        params = cInputParameterHandler()
-        oInputParameterHandler = cInputParameterHandler()
-        #print 'Debug 2'
+        params = ParameterHandler()
+        oInputParameterHandler =ParameterHandler()
+        
         if (oInputParameterHandler.exist('function')):
             #print 'Debug 3'
             sFunction = oInputParameterHandler.getValue('function')
@@ -102,14 +115,35 @@ class main:
             cConfig().log('call load methode')
             sFunction = "load"
 
-        #print 'Debug 5'   
-        if (sFunction=='DoNothing'):
+        if sFunction == 'setSetting':
+            if oInputParameterHandler.exist('id'):
+                plugin_id = oInputParameterHandler.getValue('id')
+            else:
+                return
+
+            if oInputParameterHandler.exist('value'):
+                value = oInputParameterHandler.getValue('value')
+            else:
+                return
+
+            setSetting(plugin_id, value)
+            return
+
+        if sFunction == 'setSettings':
+            setSettings(oInputParameterHandler)
+            return
+
+        if sFunction == 'DoNothing':
             return
 
         if (oInputParameterHandler.exist('site')):
             sSiteName = oInputParameterHandler.getValue('site')
+#            if params.exist('mode'):
+#               from resources.sites import adult 
+               
             
             if params.exist('playMode'):
+               
                from resources.lib.gui.ahoster import HosterGui
                url = False
                playMode = params.getValue('playMode')
@@ -209,11 +243,14 @@ class main:
             # if isAboutGui(sSiteName, sFunction) == True:
                 # return
 
-            # charge sites
+            
             try:
-                plugin = __import__(sSiteName, globals(), locals())
-                function = getattr(plugin, sFunction)
-                function()
+                        
+
+                        plugins = __import__('resources.sites.%s' %sSiteName, fromlist=[sSiteName])
+                        function = getattr(plugins, sFunction)
+                        function()
+
 
             except Exception as e:
                 progress().VSclose()  # Referme le dialogue en cas d'exception, sinon blocage de Kodi
@@ -222,8 +259,32 @@ class main:
                 traceback.print_exc()
                 return
 
-               
 
+
+def setSetting(plugin_id, value):
+    addons = addon()
+    setting = addons.getSetting(plugin_id)
+
+    if setting != value:
+        addons.setSetting(plugin_id, value)
+        return True
+
+    return False
+               
+def setSettings(oInputParameterHandler):
+    addons = addon()
+
+    for i in range(1, 100):
+        plugin_id = oInputParameterHandler.getValue('id' + str(i))
+        if plugin_id:
+            value = oInputParameterHandler.getValue('value' + str(i))
+            value = value.replace('\n', '')
+            oldSetting = addons.getSetting(plugin_id)
+            # modifier si différent
+            if oldSetting != value:
+                addons.setSetting(plugin_id, value)
+
+    return True
        
         
 def isHosterGui(sSiteName, sFunction):
@@ -381,442 +442,27 @@ def get_caller(message=None):
         if function == "<module>":
             return module
         else:
-            return module + "." + function
+            return module + "." + function       
 
-
-
-from resources.sites import puhu
+from resources.lib.youtube_api.kodion.impl import Context
+context = Context(plugin_id='plugin.video.OTV_MEDIA')                                                     
+                                                          
+plugin_path = context.get_path()
+plugin_path = str(plugin_path).replace('/channel/', '/search/channel/').replace('/play/', '/search/').replace('/special/', '/search/').replace('/location/', '/search/').replace('/users/', '/search/').replace('/sign/', '/search/')
+logger.info("plugin_path: %s" % str(plugin_path ))
+if  '/search/' in plugin_path:
+  	from resources.lib.youtube_api import default
+            #name='video_id'                                             
+#  	        v_id = plugin_param['video_id']                                                
+# or '/youtube/' 	        vidbox(v_id)                                                                                                                                                  
+plugin_param = context.get_params()
+logger.info("param-: %s" % str(plugin_param))                                                                                                                 
 params= get_params()
-def router(paramstring):
-    
-    params = get_params()
-    if params:
-        if params['action'] == 'genres':
-            list_genres(params['category'])
-        elif params['action'] == 'programs':
-            list_programs(params['category'])
-        elif params['action'] == 'season':
-            list_season(params['category'])
-        elif params['action'] == 'episodes':
-            list_episodes(params['category'])
-        elif params['action'] == 'videos':
-            list_videos(params['category'])
-        elif params['action'] == 'play':
-            play_video(params['category'])
-        elif params['action'] == 'search_item':
-            list_search(params['category'])
-        elif params['action'] == 'segments':
-            list_segment_items(params['category'])
-        elif params['action'] == 'playlist':
-            list_playlist_items(params['category'])
-        else:
-            raise ValueError('Invalid paramstring: {0}'.format(paramstring))
-    else:
-        list_categories()
+logger.info('params-- %s' % (params))
+if  'isTv'in params :
+   from resources.sites.seyiret import *
+ 
+if  'adult'in params :
+   from resources.sites.adult import *
 
-url = None
-name = None
-mode = None
-iconimage = None
-
-#url=None
-#name=None
-#mode=None
-desc=None
-pic=None
-m_id=None
-konu=None
-isTv = '0'
-timestamp = 0
-try:
-	url = Unquote_plus(params["url"])
-        
-except:
-	pass
-try:
-	name = Unquote_plus(params["name"])
-except:
-	pass
-try:
-	mode = int(params["mode"])
-except:
-	pass
-try:
-	iconimage = Unquote_plus(params["iconimage"])
-except:
-	pass
-try:
-    fanart = unquote_plus(params["fanart"])
-except:
-    pass
-try:
-    description = unquote_plus(params["description"])
-except:
-    pass
-try:
-    query = unquote_plus(params["query"])
-except:
-    pass
-try:
-        timestamp=int(params["timestamp"])
-except:
-        pass
-try:
-        desc=params["plot"]
-except:
-        pass
-try:
-        konu=params["konu"]
-except:
-        pass
-try:
-        m_id=int(params["m_id"])
-except:
-        pass
-try:
-        isTv = params["isTv"]
-except:
-        pass
-try:
-        resim=Unquote_plus(params["pic"])
-except:
-        pass
-try:
-        action = params["action"]
-except:
-        pass
-
-VSlog("Mode: " + str(mode))
-
-VSlog( "Name: " + str(name))
-VSlog("iconimage: " + str(iconimage))
-    
-
-if mode == None or url == None or len(url) < 1:
-     sys.exit(main())
-elif mode == 1:
-     from resources.sites.adult import search
-     search()
-
-elif mode == 302:
-     from resources.sites.seyiret import *
-     listele(url)
-elif mode == 303:
-     from resources.sites.seyiret import oynat
-     oynat(url,name,resim,desc,m_id,timestamp,isTv)
-
-elif mode == 2:
-#     xbmc.log("mode==2, starturl=%s" % url, xbmc.LOGERROR)
-     from resources.sites.adult import start
-     start(url)
-#     from resources.sites.seyiret import listele
-#     listele(url)
-elif mode == 3:
-#     from resources.sites.seyiret import oynat
-#     oynat(url,name,resim,desc,m_id,timestamp,isTv)
-     from resources.sites.adult import media_list
-     media_list(url)
-elif mode == 4:
-     from resources.sites.adult import *
-     resolve_url(url)
-elif mode == 8:
-     from resources.sites.adult import redtube_sorting
-     redtube_sorting(url)
-elif mode == 9:
-     from resources.sites.adult import redtube_categories
-     redtube_categories(url)
-elif mode == 12:
-     from resources.sites.adult import lubtetube_pornstars
-     lubtetube_pornstars(url)
-elif mode == 13:
-     from resources.sites.adult import flv_channels_list
-     flv_channels_list(url)
-elif mode == 16:
-     from resources.sites.adult import vikiporn_categories
-     vikiporn_categories(url)
-elif mode == 17:
-     from resources.sites.adult import xhamster_categories
-     xhamster_categories(url)
-elif mode == 18:
-     from resources.sites.adult import fantasti_categories
-     fantasti_categories(url)
-elif mode == 23:
-     from resources.sites.adult import zbporn_categories
-     zbporn_categories(url)
-elif mode == 24:
-     from resources.sites.adult import xhamster_content
-     xhamster_content(url)
-elif mode == 27:
-     from resources.sites.adult import xvideos_categories
-     xvideos_categories(url)
-elif mode == 28:
-     from resources.sites.adult import youjizz_categories
-     youjizz_categories(url)
-elif mode == 29:
-     from resources.sites.adult import hentaigasm_categories
-     hentaigasm_categories(url)
-elif mode == 30:
-     from resources.sites.adult import ashemaletube_categories
-     ashemaletube_categories(url)
-elif mode == 32:
-     from resources.sites.adult import xvideos_pornstars
-     xvideos_pornstars(url)
-elif mode == 33:
-     from resources.sites.adult import heavyr_categories
-     heavyr_categories(url)
-elif mode == 39:
-     from resources.sites.adult import pornxs_categories
-     pornxs_categories(url)
-elif mode == 41:
-     from resources.sites.adult import gotporn_content
-     gotporn_content(url)
-elif mode == 42:
-     from resources.sites.adult import xhamster_rankigs
-     xhamster_rankigs(url)
-elif mode == 44:
-     from resources.sites.adult import motherless_sorting
-     motherless_sorting(url)
-elif mode == 45:
-     from resources.sites.adult import emplix_categories
-     emplix_categories(url)
-elif mode == 46:
-     from resources.sites.adult import emplix_sorting
-     emplix_sorting(url)
-elif mode == 48:
-     from resources.sites.adult import fantasti_collections
-     fantasti_collections(url)
-elif mode == 49:
-     from resources.sites.adult import fatasti_sorting
-     fatasti_sorting(url)
-elif mode == 52:
-     from resources.sites.adult import yespornplease_categories
-     yespornplease_categories(url)
-elif mode == 54:
-     from resources.sites.adult import uflash_categories
-     uflash_categories(url)
-elif mode == 55:
-     from resources.sites.adult import ashemaletube_pornstars
-     ashemaletube_pornstars(url)
-elif mode == 60:
-     from resources.sites.adult import motherless_galeries_ca
-     motherless_galeries_cat(url)
-elif mode == 61:
-     from resources.sites.adult import motherless_being_watched_now
-     motherless_being_watched_now(url)
-elif mode == 62:
-     from resources.sites.adult import motherless_groups_cat
-     motherless_groups_cat(url)
-elif mode == 64:
-     from resources.sites.adult import javbangers_categories
-     javbangers_categories(url)
-elif mode == 68:
-     from resources.sites.adult import luxuretv_categories
-     luxuretv_categories(url)
-elif mode == 71:
-      from resources.sites.adult import xvideos_sorting
-      xvideos_sorting(url)
-                       
-elif mode == 114:
-     from resources.sites.stb_emula import *
-     m3uCategory(url,False )
-elif mode == 120:
-     from resources.sites.stb_emula import *
-     AddNewList()
-elif mode == 121 or mode == 154 or mode == 160 or mode == 164:
-    
-     from resources.sites.stb_emula import *
-     PMFolder( url )	
-elif mode == 122:
-    from resources.sites.stb_emula import *
-    RemoveFromLists(url)
-elif mode == 123:
-    from resources.sites.stb_emula import *
-    ChangeName(name,playlistsFile2,"name",10004)
-elif mode == 124:
-    from resources.sites.stb_emula import *
-    ChangeUrl(url,playlistsFile2,"url",10005)
-elif mode == 161:
-    from resources.sites.stb_emula import *
-    ChangeName(name,playlistsFile4,"name",10004)        
-elif mode == 169:
-    from resources.sites.stb_emula import *
-    ChangeName(name,favoritesFile,"name",10004)
-elif mode == 125:
-    from resources.sites.stb_emula import importList
-    importList()
-elif mode == 126:
-    from resources.sites.stb_emula import *
-    if os.path.isfile( playlistsFile3 ) :
-        if os.path.isfile( playlistsFile2 ) : os.remove( playlistsFile2 )
-        shutil.copyfile( playlistsFile3, playlistsFile2 )
-        xbmc.sleep ( 200 )
-        os.remove( playlistsFile3 )
-        xbmc.executebuiltin("XBMC.Container.Update('plugin://{0}')".format(AddonID))
-        xbmc.executebuiltin('Notification(%s, %s, %d, %s)'%(AddonName,addons.VSlang(10125).encode('utf-8'), 3600, icon)) 
-    else:
-        xbmc.executebuiltin('Notification(%s, %s, %d, %s)'%(AddonName,addons.VSlang(10126).encode('utf-8'), 3600, icon))
-
-
-elif mode == 191:
-     from resources.sites.stb_emula import PM_index
-     PM_index()
-elif mode == 192:
-     from resources.sites.stb_emula import unzip_PM_data
-     unzip_PM_data()
-
-elif mode == 115:
-    from resources.sites.stb_emula import *
-    if url.find("urhd.tv")>0:
-        try:
-            url = common.urhd(url)
-        except:
-            pass
-    if url.startswith("opus"):
-        url = Opus(url)    
-        
-    Play_f4mProxy(url, name, iconimage)
-
-elif mode == 180:
-     from resources.sites.stb_emula import PM_index
-     PM_index()
-elif mode == 116 or mode == 117:
-    from resources.sites.stb_emula import *
-    DF = xbmcaddon.Addon('plugin.video.OTV_MEDIA').getSetting('download_path')
-    
-    if not DF=='':  
-        dpath = DF
-    else:    
-        dpath = DFolder
-    
-    ext = url.split('.')[-1]
-    
-    fileS = dpath + name + "." + ext + ".stopped"
-    if not os.path.isfile(fileS):
-        
-        title = addons.VSlang(10203).encode('utf-8')
-        string = GetKeyboardText(title, name)
-        if len(string) >0:    
-            common.StartDowloader(url,string,mode,DFolder)
-    else:
-        common.StartDowloader(url,name,mode,DFolder)
-
-elif mode == 157 or mode == 172:
-     from resources.sites.stb_emula import comon
-     comon.StopDowloader(url,name,mode,DFolder)
-elif mode == 158 or mode == 171:
-    from resources.sites.stb_emula import comon
-    comon.DeletePartialDowload(url,name,mode,DFolder)       
-       
-elif mode == 165 or mode == 181:
-    from resources.sites.stb_emula import *
-    title = addons.VSlang(10250).encode('utf-8')
-    string = GetKeyboardText(title, "")
-    if len(string) >0:
-        string = string.lower()
-        if url == "search":
-            sch_global(string)
-        elif mode == 81:
-            findm3u(url, string)
-        else:
-            sch_folder(url,string)
-elif mode == 113:
-    from resources.sites.xiptvozel  import  STB_EMU
-    STB_EMU(url,name)
-        
-elif mode == 116 or mode == 117:
-    from resources.sites.stb_emula import comon
-    DF = xbmcaddon.Addon('plugin.video.OTV_MEDIA').getSetting('download_path')
-    
-    if not DF=='':  
-        dpath = DF
-    else:    
-        dpath = DFolder
-    
-    ext = url.split('.')[-1]
-    
-    fileS = dpath + name + "." + ext + ".stopped"
-    if not os.path.isfile(fileS):
-        
-        title = addons.VSlang(10203).encode('utf-8')
-        string = GetKeyboardText(title, name)
-        if len(string) >0:    
-            comon.StartDowloader(url,string,mode,DFolder)
-    else:
-        comon.StartDowloader(url,name,mode,DFolder)
-        
-elif mode == 159:
-    from resources.sites.stb_emula import comon
-    comon.StartDowloader(url,name,mode,DFolder)                 
-elif mode == 157 or mode == 172:
-    from resources.sites.stb_emula import *
-    common.StopDowloader(url,name,mode,DFolder)
-elif mode == 158 or mode == 171:
-    from resources.sites.stb_emula import *
-    common.DeletePartialDowload(url,name,mode,DFolder)
-elif mode == 110:
-    # deleted
-    sys.exit()
-elif mode == 120:
-    from resources.sites.stb_emula import AddNewList
-    AddNewList()
-elif mode == 121 or mode == 54 or mode == 60 or mode == 64:
-    from resources.sites.stb_emula import PMFolder
-    PMFolder( url )
-elif mode == 122:
-    RemoveFromLists(url)
-elif mode == 123:
-    from resources.sites.stb_emula import ChangeName
-    ChangeName(name,playlistsFile2,"name",10004)
-elif mode == 124:
-    from resources.sites.stb_emula import ChangeUrl
-    ChangeUrl(url,playlistsFile2,"url",10005)
-elif mode == 161:
-    from resources.sites.stb_emula import ChangeName
-    ChangeName(name,playlistsFile4,"name",10004)        
-elif mode == 169:
-    ChangeName(name,favoritesFile,"name",10004)
-elif mode == 125:
-    from resources.sites.stb_emula import importList
-    importList()
-elif mode == 126:
-    from resources.sites.stb_emula import *
-    if os.path.isfile( playlistsFile3 ) :
-        if os.path.isfile( playlistsFile2 ) : os.remove( playlistsFile2 )
-        shutil.copyfile( playlistsFile3, playlistsFile2 )
-        xbmc.sleep ( 200 )
-        os.remove( playlistsFile3 )
-        xbmc.executebuiltin("XBMC.Container.Update('plugin://{0}')".format(AddonID))
-        xbmc.executebuiltin('Notification(%s, %s, %d, %s)'%(AddonName,addons.VSlang(10125).encode('utf-8'), 3600, icon)) 
-    else:
-        xbmc.executebuiltin('Notification(%s, %s, %d, %s)'%(AddonName,addons.VSlang(10126).encode('utf-8'), 3600, icon))
-elif mode == 130:
-    from resources.sites.stb_emula import ListFavorites
-    ListFavorites()
-elif mode == 131: 
-    from resources.sites.stb_emula import AddFavorites
-    AddFavorites(url, iconimage, name)
-elif mode == 155:
-    from resources.sites.stb_emula import RemoveDirFromLists
-    RemoveDirFromLists(url,name)
-elif mode == 156:
-    from resources.sites.stb_emula import *
-    os.remove( os.path.join(pwdir, base64.standard_b64encode(url))) 
-    xbmc.executebuiltin("XBMC.Container.Refresh()")
-elif mode == 133:
-    from resources.sites.stb_emula import RemoveFavorties
-    RemoveFavorties(url)       
-elif mode == 112:
-    from resources.sites.stb_emula import m3uCategory 
-    m3uCategory(url)
-elif mode == 139:
-    from resources.sites.stb_emula import PM_index
-    PM_index()
-
-
-#elif mode == 70:   
-	#Header = 'User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
-        #url = url+ '|' + Header 
-#    item = xbmcgui.ListItem(name, path = url)
-#    item.setMimeType('video/mp4')
-#    xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, item)
-xbmcplugin.endOfDirectory(int(sys.argv[1]))
+sys.exit(main())
